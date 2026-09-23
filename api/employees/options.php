@@ -1,17 +1,17 @@
 <?php
 /**
- * API Employee Options (Departments & Positions)
+ * API Employee Options (Departments & Positions & Roles)
  * GET /api/employees/options.php
  */
 
 require_once __DIR__ . '/../middleware/auth_middleware.php';
 
 $user = authenticateApiUser();
-requireApiRole(['admin'], $user);
+requireApiRole(['admin', 'hrd', 'superadmin'], $user);
 
 $pdo = getDbConnection();
 
-$deptStmt = $pdo->query("SELECT id, nama_dept, kode_dept FROM departemen ORDER BY nama_dept ASC");
+$deptStmt = $pdo->query("SELECT id, nama_dept, kode_dept FROM departemen ORDER BY id ASC");
 $departments = $deptStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $posStmt = $pdo->query("SELECT id, nama_jabatan, level_hierarki FROM jabatan ORDER BY level_hierarki ASC");
@@ -23,10 +23,12 @@ echo json_encode([
         'departments' => $departments,
         'positions' => $positions,
         'roles' => [
-            ['id' => 'operator', 'label' => 'Operator (Karyawan Produksi)'],
-            ['id' => 'staff', 'label' => 'Staff (Administrasi / Teknis)'],
-            ['id' => 'atasan', 'label' => 'Atasan (Leader / Spv / Manager)'],
-            ['id' => 'admin', 'label' => 'HRD / Admin'],
+            ['id' => 'operator', 'label' => 'Operator Produksi'],
+            ['id' => 'staff', 'label' => 'Staff'],
+            ['id' => 'leader', 'label' => 'Leader / Supervisor'],
+            ['id' => 'manager', 'label' => 'Manager'],
+            ['id' => 'hrd', 'label' => 'HRD'],
+            ['id' => 'superadmin', 'label' => 'Super Admin (Sistem)'],
         ],
         'genders' => ['Laki-laki', 'Perempuan'],
         'marital_statuses' => ['Belum Menikah', 'Menikah', 'Duda', 'Janda']

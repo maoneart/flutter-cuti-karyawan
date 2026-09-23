@@ -79,7 +79,23 @@ function authenticateApiUser() {
  * Check User Role Requirement
  */
 function requireApiRole(array $allowedRoles, $user) {
-    if (!in_array($user['role'], $allowedRoles, true)) {
+    // If superadmin or admin, automatically allow any admin-level or atasan-level action
+    $role = $user['role'];
+    $hierarki = (int)($user['level_hierarki'] ?? 1);
+
+    if ($role === 'superadmin' || $role === 'admin' || $role === 'hrd' || $hierarki >= 7) {
+        if (in_array('admin', $allowedRoles, true) || in_array('hrd', $allowedRoles, true) || in_array('atasan', $allowedRoles, true) || in_array('manager', $allowedRoles, true) || in_array('leader', $allowedRoles, true)) {
+            return;
+        }
+    }
+
+    if (in_array('atasan', $allowedRoles, true)) {
+        if ($role === 'manager' || $role === 'leader' || $role === 'supervisor' || $hierarki >= 3) {
+            return;
+        }
+    }
+
+    if (!in_array($role, $allowedRoles, true)) {
         jsonResponse(false, 'Akses ditolak. Anda tidak memiliki izin untuk tindakan ini.', null, 403);
     }
 }

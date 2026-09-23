@@ -1,23 +1,15 @@
 -- ========================================================
 -- Database: db_cuti_nakakin
--- Aplikasi Cuti Karyawan & Papan Kehadiran Live
--- Generated on: 2026-09-18 06:53:25
+-- PT. Nakakin Indonesia Leave Management System
+-- Complete Schema & Seeded Dummy Data (15 Departments & Roles)
 -- ========================================================
 
 CREATE DATABASE IF NOT EXISTS `db_cuti_nakakin` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE `db_cuti_nakakin`;
 
-DROP TABLE IF EXISTS `riwayat_kuota_cuti`;
-DROP TABLE IF EXISTS `pengajuan_cuti`;
-DROP TABLE IF EXISTS `karyawan`;
-DROP TABLE IF EXISTS `jenis_cuti`;
-DROP TABLE IF EXISTS `jabatan`;
-DROP TABLE IF EXISTS `departemen`;
-DROP TABLE IF EXISTS `pengaturan_aplikasi`;
+SET FOREIGN_KEY_CHECKS = 0;
 
--- --------------------------------------------------------
--- Table structure for `departemen`
--- --------------------------------------------------------
+DROP TABLE IF EXISTS `departemen`;
 CREATE TABLE `departemen` (
   `id` int NOT NULL AUTO_INCREMENT,
   `kode_dept` varchar(20) NOT NULL,
@@ -26,22 +18,26 @@ CREATE TABLE `departemen` (
   `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `kode_dept` (`kode_dept`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table `departemen`
 INSERT INTO `departemen` (`id`, `kode_dept`, `nama_dept`, `deskripsi`, `created_at`) VALUES
-('1', 'HRD-GA', 'HRD & General Affairs', 'Human Resources & General Affairs Department', '2026-09-18 13:04:38'),
-('2', 'QC', 'Quality Control', 'Quality Control & Inspection Department', '2026-09-18 13:04:38'),
-('3', 'PROD-MC', 'Machining', 'Machining & Tooling Production Department', '2026-09-18 13:04:38'),
-('4', 'PROD-CAST', 'Casting', 'Casting & Foundry Department', '2026-09-18 13:04:38'),
-('5', 'PROD-ASSY', 'Assembly & Produksi', 'Assembly & Final Production Department', '2026-09-18 13:04:38'),
-('6', 'MAINT', 'Maintenance', 'Facility & Machine Maintenance Department', '2026-09-18 13:04:38'),
-('7', 'PPIC-WHS', 'PPIC & Warehouse', 'Production Planning & Warehouse Inventory', '2026-09-18 13:04:38'),
-('8', 'FIN-ACC', 'Finance & Accounting', 'Finance, Tax & Accounting Department', '2026-09-18 13:04:38');
+('1', 'ACC', 'Accounting', 'Accounting & Finance Department', '2026-09-23 09:40:13'),
+('2', 'CAST', 'Casting', 'Casting & Foundry Department', '2026-09-23 09:40:13'),
+('3', 'CORE', 'Core', 'Core Production Department', '2026-09-23 09:40:13'),
+('4', 'DC', 'Diecasting', 'Die Casting Production Department', '2026-09-23 09:40:13'),
+('5', 'ENG', 'Engineering', 'Engineering & Technical Department', '2026-09-23 09:40:13'),
+('6', 'FET', 'Fettling', 'Fettling & Finishing Department', '2026-09-23 09:40:13'),
+('7', 'GA', 'GA', 'General Affairs Department', '2026-09-23 09:40:13'),
+('8', 'HRD', 'HRD', 'Human Resources Department', '2026-09-23 09:40:13'),
+('9', 'MC', 'Machining', 'Machining Production Department', '2026-09-23 09:40:13'),
+('10', 'MKT', 'Marketing', 'Sales & Marketing Department', '2026-09-23 09:40:13'),
+('11', 'MAINT', 'Maintenance', 'Machine & Utility Maintenance Department', '2026-09-23 09:40:13'),
+('12', 'PPIC', 'PPIC', 'Production Planning & Inventory Control', '2026-09-23 09:40:13'),
+('13', 'PURCH', 'Purchasing', 'Purchasing & Procurement Department', '2026-09-23 09:40:13'),
+('14', 'QC', 'QC', 'Quality Control Department', '2026-09-23 09:40:13'),
+('15', 'QCL', 'QC Line', 'Quality Control Line Inspection Department', '2026-09-23 09:40:13');
 
--- --------------------------------------------------------
--- Table structure for `jabatan`
--- --------------------------------------------------------
+DROP TABLE IF EXISTS `jabatan`;
 CREATE TABLE `jabatan` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nama_jabatan` varchar(100) NOT NULL,
@@ -50,19 +46,16 @@ CREATE TABLE `jabatan` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table `jabatan`
 INSERT INTO `jabatan` (`id`, `nama_jabatan`, `level_hierarki`, `created_at`) VALUES
-('1', 'Operator Produksi', '1', '2026-09-18 13:04:38'),
-('2', 'Staff Administrasi / Teknis', '2', '2026-09-18 13:04:38'),
-('3', 'Leader (Group Leader)', '3', '2026-09-18 13:04:38'),
-('4', 'Supervisor (Spv)', '4', '2026-09-18 13:04:38'),
-('5', 'Assistant Manager (Asmen)', '5', '2026-09-18 13:04:38'),
-('6', 'Department Manager', '6', '2026-09-18 13:04:38'),
-('7', 'HRD / Admin', '7', '2026-09-18 13:04:38');
+('1', 'Operator Produksi', '1', '2026-09-23 09:40:13'),
+('2', 'Staff', '2', '2026-09-23 09:40:13'),
+('3', 'Leader', '3', '2026-09-23 09:40:13'),
+('4', 'Supervisor (Spv)', '4', '2026-09-23 09:40:13'),
+('5', 'Department Manager', '6', '2026-09-23 09:40:13'),
+('6', 'HRD', '7', '2026-09-23 09:40:13'),
+('7', 'Super Admin', '8', '2026-09-23 09:40:13');
 
--- --------------------------------------------------------
--- Table structure for `jenis_cuti`
--- --------------------------------------------------------
+DROP TABLE IF EXISTS `jenis_cuti`;
 CREATE TABLE `jenis_cuti` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nama_cuti` varchar(100) NOT NULL,
@@ -76,26 +69,23 @@ CREATE TABLE `jenis_cuti` (
   UNIQUE KEY `kode` (`kode`)
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table `jenis_cuti`
 INSERT INTO `jenis_cuti` (`id`, `nama_cuti`, `kode`, `deskripsi`, `potong_kuota`, `max_hari_default`, `butuh_lampiran`, `created_at`) VALUES
-('1', 'Sakit Surat Dokter (Tidak Potong Gaji)', 'SSD', 'Izin sakit resmi dengan melampirkan surat keterangan dokter. Tidak memotong cuti tahunan dan tidak potong gaji.', '0', '14', '1', '2026-09-18 13:04:39'),
-('2', 'Sakit Tanpa Surat Dokter (Potong Jatah/Gaji)', 'STSD', 'Izin tidak masuk karena sakit tanpa surat dokter. Memotong jatah cuti tahunan, atau potong gaji jika jatah cuti habis.', '1', '3', '0', '2026-09-18 13:04:39'),
-('3', 'Cuti Tahunan (Reguler HRD)', 'CT', 'Hak cuti tahunan yang dialokasikan oleh HRD (mengurangi sisa kuota cuti tahunan).', '1', '12', '0', '2026-09-18 13:04:39'),
-('4', 'Cuti Haid (Mengurangi Cuti Tahunan)', 'CH', 'Cuti haid/menstruasi bagi karyawati (mengurangi jatah kuota cuti tahunan).', '1', '2', '0', '2026-09-18 13:04:39'),
-('5', 'Cuti Melahirkan / Bersalin (3 Bulan)', 'CML', 'Hak cuti bersalin bagi karyawati sesuai ketentuan UU Ketenagakerjaan (3 bulan / 90 hari, upah penuh tanpa potong cuti tahunan).', '0', '90', '1', '2026-09-18 13:04:39'),
-('6', 'Cuti Khusus (Keluarga Meninggal - 2 Hari)', 'CKH', 'Cuti duka cita karena anggota keluarga inti meninggal dunia (2 hari kerja tanpa memotong cuti tahunan).', '0', '2', '0', '2026-09-18 13:04:39'),
-('7', 'Ijin Tidak Masuk (Potong Gaji)', 'IJN', 'Izin tidak masuk kerja untuk keperluan pribadi mendesak (potong gaji tanpa mengurangi jatah cuti tahunan).', '0', '7', '0', '2026-09-18 13:04:39');
+('1', 'Sakit Surat Dokter (Tidak Potong Gaji)', 'SSD', 'Izin sakit resmi dengan melampirkan surat keterangan dokter.', '0', '14', '1', '2026-09-23 09:40:13'),
+('2', 'Sakit Tanpa Surat Dokter (Potong Jatah/Gaji)', 'STSD', 'Izin sakit tanpa surat dokter.', '1', '3', '0', '2026-09-23 09:40:13'),
+('3', 'Cuti Tahunan (Reguler HRD)', 'CT', 'Hak cuti tahunan yang dialokasikan oleh HRD.', '1', '12', '0', '2026-09-23 09:40:13'),
+('4', 'Cuti Haid', 'CH', 'Cuti haid/menstruasi bagi karyawati.', '1', '2', '0', '2026-09-23 09:40:13'),
+('5', 'Cuti Melahirkan / Bersalin (3 Bulan)', 'CML', 'Hak cuti bersalin bagi karyawati (3 bulan / 90 hari).', '0', '90', '1', '2026-09-23 09:40:13'),
+('6', 'Cuti Khusus (Keluarga Meninggal)', 'CKH', 'Cuti duka cita karena anggota keluarga inti meninggal.', '0', '2', '0', '2026-09-23 09:40:13'),
+('7', 'Ijin Tidak Masuk (Potong Gaji)', 'IJN', 'Izin tidak masuk kerja untuk keperluan mendesak.', '0', '7', '0', '2026-09-23 09:40:13');
 
--- --------------------------------------------------------
--- Table structure for `karyawan`
--- --------------------------------------------------------
+DROP TABLE IF EXISTS `karyawan`;
 CREATE TABLE `karyawan` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nik` varchar(50) NOT NULL,
   `nama_lengkap` varchar(150) NOT NULL,
   `email` varchar(120) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `role` enum('admin','atasan','staff','operator') NOT NULL DEFAULT 'operator',
+  `role` varchar(50) NOT NULL DEFAULT 'operator',
   `departemen_id` int NOT NULL,
   `jabatan_id` int NOT NULL,
   `tanggal_masuk` date NOT NULL,
@@ -118,28 +108,75 @@ CREATE TABLE `karyawan` (
   KEY `jabatan_id` (`jabatan_id`),
   CONSTRAINT `karyawan_ibfk_1` FOREIGN KEY (`departemen_id`) REFERENCES `departemen` (`id`) ON DELETE CASCADE,
   CONSTRAINT `karyawan_ibfk_2` FOREIGN KEY (`jabatan_id`) REFERENCES `jabatan` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table `karyawan`
 INSERT INTO `karyawan` (`id`, `nik`, `nama_lengkap`, `email`, `password`, `role`, `departemen_id`, `jabatan_id`, `tanggal_masuk`, `kuota_cuti`, `cuti_terpakai`, `sisa_cuti`, `jenis_kelamin`, `agama`, `status_pernikahan`, `no_hp`, `alamat`, `foto`, `status_aktif`, `created_at`, `updated_at`) VALUES
-('1', 'NAK-001', 'Hermawan', 'hrd@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'admin', '1', '7', '2020-03-01', '12', '2', '10', 'Laki-laki', 'Islam', 'Menikah', '082122365620', 'Kawasan Industri KIIC, Karawang Barat', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:52:10'),
-('2', 'NAK-010', 'Hendra Gunawan (Atasan QC)', 'hendra.qc@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'atasan', '2', '4', '2019-06-15', '12', '1', '11', 'Laki-laki', 'Islam', 'Menikah', '081311223344', 'Perumahan Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('3', 'NAK-011', 'Budi Santoso', 'budi.santoso@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'operator', '2', '1', '2022-01-10', '12', '3', '9', 'Laki-laki', 'Islam', 'Menikah', '085712345678', 'Desa Sukaluyu, Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('4', 'NAK-012', 'Rian Pratama', 'rian.pratama@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'operator', '2', '1', '2023-05-20', '12', '0', '12', 'Laki-laki', 'Islam', 'Belum Menikah', '085888999111', 'Kos Griya Indah, Galuh Mas, Karawang', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('5', 'NAK-020', 'Bambang Sutrisno (Atasan Machining)', 'bambang.mc@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'atasan', '3', '5', '2018-02-01', '12', '2', '10', 'Laki-laki', 'Islam', 'Menikah', '081234567890', 'Grand Taruma, Karawang Barat', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('6', 'NAK-021', 'Ahmad Fauzi', 'ahmad.fauzi@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'operator', '3', '1', '2021-08-16', '12', '4', '8', 'Laki-laki', 'Islam', 'Menikah', '087765432109', 'Cariu, Cikampek, Karawang', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('7', 'NAK-030', 'Dedi Supriyadi (Leader Produksi)', 'dedi.prod@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'atasan', '5', '3', '2020-11-05', '12', '1', '11', 'Laki-laki', 'Islam', 'Menikah', '089612345678', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('8', 'NAK-031', 'Dani Kurniawan', 'dani.kurniawan@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'operator', '5', '1', '2022-09-01', '12', '2', '10', 'Laki-laki', 'Islam', 'Belum Menikah', '081299887766', 'Kos Asri, Klari, Karawang', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('9', 'NAK-032', 'Nurul Aini', 'nurul.aini@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'operator', '5', '1', '2023-02-14', '12', '1', '11', 'Perempuan', 'Islam', 'Belum Menikah', '082133445566', 'Kondangjaya, Karawang Timur', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('10', 'NAK-040', 'Agus Setiawan (Spv Maint)', 'agus.maint@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'atasan', '6', '4', '2017-04-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '081399881122', 'Kosambi, Klari, Karawang', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('11', 'NAK-041', 'Eko Wahyudi', 'eko.wahyudi@nakakin.co.id', '$2y$10$TCDhyxsSDQxxpPlMpLdpS.sYTxtK3NQvadX63gWUZlNQcroxYQdny', 'staff', '6', '2', '2021-04-01', '12', '2', '10', 'Laki-laki', 'Islam', 'Menikah', '081277665544', 'Perum Resinda, Karawang Barat', NULL, 'Aktif', '2026-09-18 13:04:39', '2026-09-18 13:04:39'),
-('12', 'NAK-051', 'Dewi Lestari, S.E', 'dewi.lestari@nakakin.co.id', '$2y$10$hvnop8gawcGjCLQvXHfi0uZJ7u1xH94LVETwerA2CMkKIoDHp5ud.', 'operator', '8', '2', '2023-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Belum Menikah', '081298765432', 'Karawang Barat', NULL, 'Aktif', '2026-09-18 13:51:48', '2026-09-18 13:51:48'),
-('13', 'NAK-052', 'Siti Nurhaliza', 'siti.nurhaliza@nakakin.co.id', '$2y$10$hvnop8gawcGjCLQvXHfi0uZJ7u1xH94LVETwerA2CMkKIoDHp5ud.', 'operator', '2', '1', '2023-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Belum Menikah', '081298765432', 'Karawang Barat', NULL, 'Aktif', '2026-09-18 13:51:48', '2026-09-18 13:51:48'),
-('14', 'NAK-053', 'Anisa Rahmadani', 'anisa.rahmadani@nakakin.co.id', '$2y$10$hvnop8gawcGjCLQvXHfi0uZJ7u1xH94LVETwerA2CMkKIoDHp5ud.', 'operator', '5', '1', '2023-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Belum Menikah', '081298765432', 'Karawang Barat', NULL, 'Aktif', '2026-09-18 13:51:49', '2026-09-18 13:51:49');
+('1', 'ADM-001', 'Master Super Admin', 'admin@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'superadmin', '8', '7', '2020-01-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '081100000001', 'Kantor Pusat PT. Nakakin Indonesia', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('2', 'NAK-001', 'Hermawan (HRD)', 'hermawan@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'hrd', '8', '6', '2020-03-01', '12', '2', '10', 'Laki-laki', 'Islam', 'Menikah', '081234567890', 'Kawasan Industri KIIC, Karawang Barat', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('3', 'NAK-002', 'Bambang Setyo (GA)', 'ga@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'staff', '7', '2', '2021-02-15', '12', '1', '11', 'Laki-laki', 'Islam', 'Menikah', '081234567891', 'Perum Resinda, Karawang Barat', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('4', 'MGR-001', 'Ir. Hendra Wijaya (Manager)', 'manager@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'manager', '5', '5', '2018-01-10', '12', '1', '11', 'Laki-laki', 'Islam', 'Menikah', '081399990001', 'Grand Taruma, Karawang Barat', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('5', 'SPV-ACC', 'Spv Accounting', 'spv.acc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '1', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000001', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('6', 'LDR-ACC', 'Leader Accounting', 'ldr.acc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '1', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000001', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('7', 'OP1-ACC', 'Operator 1 Accounting', 'op1.acc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '1', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000001', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('8', 'OP2-ACC', 'Operator 2 Accounting', 'op2.acc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '1', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000001', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('9', 'SPV-CAST', 'Spv Casting', 'spv.cast@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '2', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000002', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('10', 'LDR-CAST', 'Leader Casting', 'ldr.cast@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '2', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000002', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('11', 'OP1-CAST', 'Operator 1 Casting', 'op1.cast@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '2', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000002', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('12', 'OP2-CAST', 'Operator 2 Casting', 'op2.cast@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '2', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000002', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('13', 'SPV-CORE', 'Spv Core', 'spv.core@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '3', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000003', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('14', 'LDR-CORE', 'Leader Core', 'ldr.core@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '3', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000003', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('15', 'OP1-CORE', 'Operator 1 Core', 'op1.core@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '3', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000003', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('16', 'OP2-CORE', 'Operator 2 Core', 'op2.core@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '3', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000003', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('17', 'SPV-DC', 'Spv Diecasting', 'spv.dc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '4', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000004', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('18', 'LDR-DC', 'Leader Diecasting', 'ldr.dc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '4', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000004', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('19', 'OP1-DC', 'Operator 1 Diecasting', 'op1.dc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '4', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000004', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('20', 'OP2-DC', 'Operator 2 Diecasting', 'op2.dc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '4', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000004', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('21', 'SPV-ENG', 'Spv Engineering', 'spv.eng@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '5', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000005', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('22', 'LDR-ENG', 'Leader Engineering', 'ldr.eng@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '5', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000005', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('23', 'OP1-ENG', 'Operator 1 Engineering', 'op1.eng@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '5', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000005', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('24', 'OP2-ENG', 'Operator 2 Engineering', 'op2.eng@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '5', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000005', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('25', 'SPV-FET', 'Spv Fettling', 'spv.fet@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '6', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000006', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('26', 'LDR-FET', 'Leader Fettling', 'ldr.fet@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '6', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000006', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('27', 'OP1-FET', 'Operator 1 Fettling', 'op1.fet@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '6', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000006', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('28', 'OP2-FET', 'Operator 2 Fettling', 'op2.fet@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '6', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000006', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('29', 'SPV-GA', 'Spv GA', 'spv.ga@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '7', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000007', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('30', 'LDR-GA', 'Leader GA', 'ldr.ga@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '7', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000007', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('31', 'OP1-GA', 'Operator 1 GA', 'op1.ga@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '7', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000007', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('32', 'OP2-GA', 'Operator 2 GA', 'op2.ga@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '7', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000007', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('33', 'SPV-HRD', 'Spv HRD', 'spv.hrd@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '8', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000008', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('34', 'LDR-HRD', 'Leader HRD', 'ldr.hrd@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '8', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000008', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('35', 'OP1-HRD', 'Operator 1 HRD', 'op1.hrd@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '8', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000008', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('36', 'OP2-HRD', 'Operator 2 HRD', 'op2.hrd@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '8', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000008', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('37', 'SPV-MC', 'Spv Machining', 'spv.mc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '9', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000009', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('38', 'LDR-MC', 'Leader Machining', 'ldr.mc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '9', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000009', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('39', 'OP1-MC', 'Operator 1 Machining', 'op1.mc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '9', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000009', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('40', 'OP2-MC', 'Operator 2 Machining', 'op2.mc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '9', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000009', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('41', 'SPV-MKT', 'Spv Marketing', 'spv.mkt@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '10', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000010', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('42', 'LDR-MKT', 'Leader Marketing', 'ldr.mkt@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '10', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000010', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('43', 'OP1-MKT', 'Operator 1 Marketing', 'op1.mkt@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '10', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000010', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('44', 'OP2-MKT', 'Operator 2 Marketing', 'op2.mkt@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '10', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000010', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('45', 'SPV-MAINT', 'Spv Maintenance', 'spv.maint@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '11', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000011', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('46', 'LDR-MAINT', 'Leader Maintenance', 'ldr.maint@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '11', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000011', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('47', 'OP1-MAINT', 'Operator 1 Maintenance', 'op1.maint@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '11', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000011', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('48', 'OP2-MAINT', 'Operator 2 Maintenance', 'op2.maint@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '11', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000011', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('49', 'SPV-PPIC', 'Spv PPIC', 'spv.ppic@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '12', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000012', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('50', 'LDR-PPIC', 'Leader PPIC', 'ldr.ppic@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '12', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000012', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('51', 'OP1-PPIC', 'Operator 1 PPIC', 'op1.ppic@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '12', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000012', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('52', 'OP2-PPIC', 'Operator 2 PPIC', 'op2.ppic@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '12', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000012', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('53', 'SPV-PURCH', 'Spv Purchasing', 'spv.purch@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '13', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000013', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('54', 'LDR-PURCH', 'Leader Purchasing', 'ldr.purch@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '13', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000013', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('55', 'OP1-PURCH', 'Operator 1 Purchasing', 'op1.purch@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '13', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000013', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('56', 'OP2-PURCH', 'Operator 2 Purchasing', 'op2.purch@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '13', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000013', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('57', 'SPV-QC', 'Spv QC', 'spv.qc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '14', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000014', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('58', 'LDR-QC', 'Leader QC', 'ldr.qc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '14', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000014', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('59', 'OP1-QC', 'Operator 1 QC', 'op1.qc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '14', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000014', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('60', 'OP2-QC', 'Operator 2 QC', 'op2.qc@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '14', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000014', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('61', 'SPV-QCL', 'Spv QC Line', 'spv.qcl@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'supervisor', '15', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000015', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('62', 'LDR-QCL', 'Leader QC Line', 'ldr.qcl@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'leader', '15', '3', '2022-03-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08150000015', 'Klari, Karawang Timur', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('63', 'OP1-QCL', 'Operator 1 QC Line', 'op1.qcl@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '15', '1', '2023-06-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08160000015', 'Kosambi, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13'),
+('64', 'OP2-QCL', 'Operator 2 QC Line', 'op2.qcl@nakakin.co.id', '$2y$10$rOIiM/lNCKnpGpGiffiLw.xjIcCCsij7mG.AILTomZ2p0xjpbn8SG', 'operator', '15', '1', '2024-01-15', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '08170000015', 'Cikampek, Karawang', NULL, 'Aktif', '2026-09-23 09:40:13', '2026-09-23 09:40:13');
 
--- --------------------------------------------------------
--- Table structure for `pengajuan_cuti`
--- --------------------------------------------------------
+DROP TABLE IF EXISTS `pengajuan_cuti`;
 CREATE TABLE `pengajuan_cuti` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nomor_surat` varchar(60) NOT NULL,
@@ -153,6 +190,12 @@ CREATE TABLE `pengajuan_cuti` (
   `kontak_darurat` varchar(50) DEFAULT NULL,
   `attachment` varchar(255) DEFAULT NULL,
   `status` enum('pending','approved','rejected','cancelled') NOT NULL DEFAULT 'pending',
+  `approved_by` int DEFAULT NULL COMMENT 'ID User Atasan yang menyetujui/menolak',
+  `approved_at` datetime DEFAULT NULL,
+  `rejection_reason` text,
+  `catatan_atasan` text,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `approval_step` varchar(30) NOT NULL DEFAULT 'pending_spv' COMMENT 'pending_spv, pending_manager, pending_hrd, approved, rejected, cancelled',
   `spv_id` int DEFAULT NULL,
   `spv_at` datetime DEFAULT NULL,
@@ -164,12 +207,6 @@ CREATE TABLE `pengajuan_cuti` (
   `hrd_at` datetime DEFAULT NULL,
   `hrd_notes` text,
   `notif_read` tinyint(1) NOT NULL DEFAULT '0',
-  `approved_by` int DEFAULT NULL COMMENT 'ID User Atasan final yang menyetujui/menolak',
-  `approved_at` datetime DEFAULT NULL,
-  `rejection_reason` text,
-  `catatan_atasan` text,
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `nomor_surat` (`nomor_surat`),
   KEY `employee_id` (`employee_id`),
@@ -178,22 +215,26 @@ CREATE TABLE `pengajuan_cuti` (
   CONSTRAINT `pengajuan_cuti_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
   CONSTRAINT `pengajuan_cuti_ibfk_2` FOREIGN KEY (`leave_type_id`) REFERENCES `jenis_cuti` (`id`) ON DELETE CASCADE,
   CONSTRAINT `pengajuan_cuti_ibfk_3` FOREIGN KEY (`approved_by`) REFERENCES `karyawan` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table `pengajuan_cuti`
-INSERT INTO `pengajuan_cuti` (`id`, `nomor_surat`, `employee_id`, `leave_type_id`, `tanggal_mulai`, `tanggal_selesai`, `total_hari`, `alasan`, `alamat_selama_cuti`, `kontak_darurat`, `attachment`, `status`, `approved_by`, `approved_at`, `rejection_reason`, `catatan_atasan`, `created_at`, `updated_at`) VALUES
-('1', 'CUTI/NAK/2026/08/001', '3', '1', '2026-08-10', '2026-08-12', '3', 'Acara silaturahmi keluarga di kampung halaman Ciamis', 'Jl. Raya Ciamis No. 45, Jawa Barat', '081234560000 (Ayah)', NULL, 'approved', '2', '2026-08-08 14:20:00', NULL, 'Disetujui. Pastikan pekerjaan shift diserahterimakan kepada rekan QC.', '2026-08-08 09:15:00', '2026-09-18 13:04:39'),
-('2', 'CUTI/NAK/2026/09/002', '3', '1', '2026-09-25', '2026-09-26', '2', 'Mengurus perpanjangan administrasi berkas kependudukan di kampung', 'Desa Sukaluyu, Telukjambe', '085712345678', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-17 11:30:00', '2026-09-18 13:04:39'),
-('3', 'CUTI/NAK/2026/09/003', '6', '1', '2026-09-28', '2026-09-29', '2', 'Menghadiri wisuda adik kandung di Bandung', 'Jl. Dipatiukur No. 12, Bandung', '087765432109', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-18 08:00:00', '2026-09-18 13:04:39'),
-('4', 'CUTI/NAK/2026/09/004', '8', '1', '2026-09-30', '2026-09-30', '1', 'Keperluan keluarga mendesak', 'Klari, Karawang Timur', '081299887766', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-18 08:30:00', '2026-09-18 13:04:39'),
-('7', 'CUTI/NAK/2026/08/010', '9', '5', '2026-08-01', '2026-10-31', '90', 'Cuti Melahirkan / Bersalin anak pertama sesuai rekomendasi dokter spesialis kandungan.', NULL, NULL, NULL, 'approved', '7', '2026-07-28 10:00:00', NULL, 'Disetujui. Selamat atas kelahiran putranya, semoga sehat selalu.', '2026-09-18 13:52:10', '2026-09-18 13:52:10'),
-('8', 'CUTI/NAK/2026/09/011', '12', '1', '2026-09-17', '2026-09-19', '3', 'Izin sakit tipes ringan dan flu berat, rawat jalan di rumah dengan surat keterangan dokter RS Hermina.', NULL, NULL, NULL, 'approved', '1', '2026-09-17 08:30:00', NULL, 'Disetujui. Istirahat yang cukup sampai pulih kembali.', '2026-09-18 13:52:10', '2026-09-18 13:52:10'),
-('9', 'CUTI/NAK/2026/09/012', '13', '3', '2026-09-18', '2026-09-19', '2', 'Keperluan mendesak mengurus berkas keluarga di dinas kependudukan daerah.', NULL, NULL, NULL, 'approved', '2', '2026-09-16 14:00:00', NULL, 'Disetujui. Tugas shift QC diserahterimakan kepada rekan regu.', '2026-09-18 13:52:11', '2026-09-18 13:52:11'),
-('10', 'CUTI/NAK/2026/09/013', '3', '3', '2026-09-17', '2026-09-19', '3', 'Menghadiri acara pernikahan adik kandung di Ciamis Jawa Barat.', NULL, NULL, NULL, 'approved', '2', '2026-09-15 11:20:00', NULL, 'Disetujui. Selamat untuk adiknya dan kembali bekerja tepat waktu.', '2026-09-18 13:52:11', '2026-09-18 13:52:11');
+INSERT INTO `pengajuan_cuti` (`id`, `nomor_surat`, `employee_id`, `leave_type_id`, `tanggal_mulai`, `tanggal_selesai`, `total_hari`, `alasan`, `alamat_selama_cuti`, `kontak_darurat`, `attachment`, `status`, `approved_by`, `approved_at`, `rejection_reason`, `catatan_atasan`, `created_at`, `updated_at`, `approval_step`, `spv_id`, `spv_at`, `spv_notes`, `manager_id`, `manager_at`, `manager_notes`, `hrd_id`, `hrd_at`, `hrd_notes`, `notif_read`) VALUES
+('1', 'CUTI/NAK/2026/09/001', '7', '3', '2026-09-24', '2026-09-25', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('2', 'CUTI/NAK/2026/09/002', '11', '3', '2026-09-25', '2026-09-26', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('3', 'CUTI/NAK/2026/09/003', '15', '3', '2026-09-26', '2026-09-27', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('4', 'CUTI/NAK/2026/09/004', '19', '3', '2026-09-27', '2026-09-28', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('5', 'CUTI/NAK/2026/09/005', '23', '3', '2026-09-28', '2026-09-29', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('6', 'CUTI/NAK/2026/09/006', '27', '3', '2026-09-29', '2026-09-30', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('7', 'CUTI/NAK/2026/09/007', '31', '3', '2026-09-30', '2026-10-01', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('8', 'CUTI/NAK/2026/09/008', '35', '3', '2026-10-01', '2026-10-02', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('9', 'CUTI/NAK/2026/09/009', '39', '3', '2026-10-02', '2026-10-03', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('10', 'CUTI/NAK/2026/09/010', '43', '3', '2026-10-03', '2026-10-04', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('11', 'CUTI/NAK/2026/09/011', '47', '3', '2026-10-04', '2026-10-05', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('12', 'CUTI/NAK/2026/09/012', '51', '3', '2026-10-05', '2026-10-06', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('13', 'CUTI/NAK/2026/09/013', '55', '3', '2026-10-06', '2026-10-07', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('14', 'CUTI/NAK/2026/09/014', '59', '3', '2026-10-07', '2026-10-08', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0'),
+('15', 'CUTI/NAK/2026/09/015', '63', '3', '2026-10-08', '2026-10-09', '2', 'Keperluan keluarga mendesak dan acara syukuran di kampung halaman.', 'Dusun Sukamaju RT 02/04, Karawang', '081299887766 (Keluarga)', NULL, 'pending', NULL, NULL, NULL, NULL, '2026-09-23 09:40:13', '2026-09-23 09:40:13', 'pending_spv', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '0');
 
--- --------------------------------------------------------
--- Table structure for `riwayat_kuota_cuti`
--- --------------------------------------------------------
+DROP TABLE IF EXISTS `riwayat_kuota_cuti`;
 CREATE TABLE `riwayat_kuota_cuti` (
   `id` int NOT NULL AUTO_INCREMENT,
   `employee_id` int NOT NULL,
@@ -209,43 +250,6 @@ CREATE TABLE `riwayat_kuota_cuti` (
   KEY `created_by` (`created_by`),
   CONSTRAINT `riwayat_kuota_cuti_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `karyawan` (`id`) ON DELETE CASCADE,
   CONSTRAINT `riwayat_kuota_cuti_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `karyawan` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Dumping data for table `riwayat_kuota_cuti`
-INSERT INTO `riwayat_kuota_cuti` (`id`, `employee_id`, `kuota_sebelum`, `perubahan`, `kuota_sesudah`, `tipe`, `keterangan`, `created_by`, `created_at`) VALUES
-('1', '3', '0', '12', '12', 'alokasi_tahunan', 'Alokasi Jatah Cuti Tahunan 2026 oleh HRD', '1', '2026-01-01 08:00:00'),
-('2', '3', '12', '-3', '9', 'potong_cuti', 'Pengajuan Cuti CUTI/NAK/2026/08/001 Disetujui (3 hari)', '2', '2026-08-08 14:20:00'),
-('3', '6', '0', '12', '12', 'alokasi_tahunan', 'Alokasi Jatah Cuti Tahunan 2026 oleh HRD', '1', '2026-01-01 08:00:00'),
-('4', '6', '12', '-4', '8', 'potong_cuti', 'Penggunaan cuti tahunan periode sebelumnya', '1', '2026-05-10 10:00:00');
-
--- --------------------------------------------------------
--- Table structure for `pengaturan_aplikasi`
--- --------------------------------------------------------
-CREATE TABLE `pengaturan_aplikasi` (
-  `id` int NOT NULL,
-  `nama_aplikasi` varchar(150) NOT NULL DEFAULT 'Sistem Informasi Cuti Karyawan',
-  `singkatan_aplikasi` varchar(50) NOT NULL DEFAULT 'E-Cuti',
-  `tagline` varchar(255) NOT NULL DEFAULT 'Precision Machinery, Pumps & Tooling Manufacturing',
-  `nama_perusahaan` varchar(150) NOT NULL DEFAULT 'PT. Nakakin Indonesia',
-  `singkatan_perusahaan` varchar(50) NOT NULL DEFAULT 'NAKAKIN',
-  `sub_singkatan_perusahaan` varchar(50) NOT NULL DEFAULT 'INDONESIA',
-  `alamat_perusahaan` text,
-  `telepon` varchar(50) DEFAULT '(0267) 845-1234',
-  `email_perusahaan` varchar(100) DEFAULT 'hrd@nakakin.co.id',
-  `website` varchar(100) DEFAULT 'www.nakakin.co.id',
-  `logo` varchar(255) DEFAULT 'Nakakin.png',
-  `favicon` varchar(255) DEFAULT 'Nakakin.png',
-  `prefix_nomor_surat` varchar(30) NOT NULL DEFAULT 'CUTI/NAK',
-  `default_kuota_cuti` int NOT NULL DEFAULT '12',
-  `nama_kepala_hrd` varchar(150) NOT NULL DEFAULT 'Siti Rahmawati, S.Psi',
-  `jabatan_kepala_hrd` varchar(100) NOT NULL DEFAULT 'HRD & GA Manager',
-  `lokasi_surat` varchar(100) NOT NULL DEFAULT 'Karawang',
-  `footer_text` varchar(255) NOT NULL DEFAULT 'Sistem Informasi Manajemen Cuti Karyawan',
-  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table `pengaturan_aplikasi`
-INSERT INTO `pengaturan_aplikasi` (`id`, `nama_aplikasi`, `singkatan_aplikasi`, `tagline`, `nama_perusahaan`, `singkatan_perusahaan`, `sub_singkatan_perusahaan`, `alamat_perusahaan`, `telepon`, `email_perusahaan`, `website`, `logo`, `favicon`, `prefix_nomor_surat`, `default_kuota_cuti`, `nama_kepala_hrd`, `jabatan_kepala_hrd`, `lokasi_surat`, `footer_text`, `updated_at`) VALUES
-('1', 'Sistem Informasi Cuti Karyawan', 'FORM CUTI ONLINE', 'asasasadadasdasdad', 'PT. Mayora Teknik', 'Mayora', 'Teknik', 'safasfasfasfasfasf', '(0267) 845-1234', 'hrd@nakakin.co.id', 'www.nakakin.co.id', 'Nakakin.png', 'Nakakin.png', 'CUTI/NAK', '10', 'Hermawan', 'HRD GA Manager', 'Bekasi', 'Sistem Informasi Manajemen Cuti Karyawan', '2026-09-18 13:37:00');
-
+SET FOREIGN_KEY_CHECKS = 1;

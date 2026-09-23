@@ -41,9 +41,9 @@ class UserModel {
     this.foto,
   });
 
-  bool get isAdmin => role == 'admin' || levelHierarki >= 7;
-  bool get isManager => levelHierarki >= 5 && levelHierarki <= 6;
-  bool get isSupervisor => levelHierarki >= 3 && levelHierarki <= 4;
+  bool get isAdmin => role == 'admin' || role == 'superadmin' || role == 'hrd' || levelHierarki >= 7;
+  bool get isManager => role == 'manager' || (levelHierarki >= 5 && levelHierarki <= 6);
+  bool get isSupervisor => role == 'supervisor' || role == 'leader' || (levelHierarki >= 3 && levelHierarki <= 4);
   bool get canApprove => isAdmin || isManager || isSupervisor || role == 'atasan';
 
   /// Kalkulasi masa/lama bekerja dari tanggal masuk
