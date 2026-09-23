@@ -206,17 +206,51 @@ header('Content-Type: text/html; charset=UTF-8');
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #0f172a;
+            background: #0284c7;
             color: #fff;
             padding: 10px 20px;
             border-radius: 10px;
             text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 13.5px;
+            font-weight: 700;
             cursor: pointer;
             border: none;
-            float: right;
-            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+            transition: all 0.2s ease;
+        }
+        .btn-print:hover {
+            background: #0369a1;
+            transform: translateY(-1px);
+        }
+        .mobile-sticky-bar {
+            display: none;
+        }
+        @media (max-width: 640px) {
+            body { padding: 12px 10px 80px 10px; }
+            .container { padding: 20px 16px; border-radius: 12px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header-logo h1 { font-size: 17px; }
+            .btn-print.top-btn { display: none; }
+            .mobile-sticky-bar {
+                display: block;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(10px);
+                border-top: 1px solid #cbd5e1;
+                padding: 12px 20px;
+                box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+                z-index: 9999;
+                text-align: center;
+            }
+            .mobile-sticky-bar .btn-print {
+                width: 100%;
+                justify-content: center;
+                padding: 12px;
+                font-size: 14px;
+            }
         }
         .footer {
             margin-top: 40px;
@@ -229,22 +263,27 @@ header('Content-Type: text/html; charset=UTF-8');
         @media print {
             body { background: #fff; padding: 0; }
             .container { box-shadow: none; border: none; padding: 0; }
-            .nav-roles, .btn-print { display: none !important; }
+            .nav-roles, .btn-print, .mobile-sticky-bar { display: none !important; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Action Buttons -->
-        <button class="btn-print" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+    <!-- Mobile Sticky Action Bar -->
+    <div class="mobile-sticky-bar">
+        <button class="btn-print" onclick="window.print()">📥 Unduh / Simpan PDF (<?= htmlspecialchars($roleName) ?>)</button>
+    </div>
 
-        <!-- Role Selector Switcher -->
-        <div class="nav-roles">
-            <span style="font-size: 12px; font-weight: bold; padding: 6px 0; margin-right: 6px;">Pilih Panduan:</span>
-            <a href="?role=operator" class="<?= $roleKey === 'operator' ? 'active' : '' ?>">1. Operator & Staff</a>
-            <a href="?role=leader" class="<?= $roleKey === 'leader' ? 'active' : '' ?>">2. Leader & Supervisor</a>
-            <a href="?role=manager" class="<?= $roleKey === 'manager' ? 'active' : '' ?>">3. Plant Manager</a>
-            <a href="?role=hrd" class="<?= $roleKey === 'hrd' ? 'active' : '' ?>">4. HRD & Super Admin</a>
+    <div class="container">
+        <!-- Top Action Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <div class="nav-roles" style="margin-bottom: 0;">
+                <span style="font-size: 12px; font-weight: bold; padding: 6px 0; margin-right: 6px;">Pilih Panduan:</span>
+                <a href="?role=operator" class="<?= $roleKey === 'operator' ? 'active' : '' ?>">1. Operator & Staff</a>
+                <a href="?role=leader" class="<?= $roleKey === 'leader' ? 'active' : '' ?>">2. Leader & Spv</a>
+                <a href="?role=manager" class="<?= $roleKey === 'manager' ? 'active' : '' ?>">3. Plant Manager</a>
+                <a href="?role=hrd" class="<?= $roleKey === 'hrd' ? 'active' : '' ?>">4. HRD & Admin</a>
+            </div>
+            <button class="btn-print top-btn" onclick="window.print()">📥 Cetak / Simpan PDF</button>
         </div>
 
         <!-- Document Header -->

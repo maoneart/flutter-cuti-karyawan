@@ -8,8 +8,9 @@ import '../services/auth_service.dart';
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
-  Future<void> _openGuideDoc(BuildContext context, String role) async {
-    final guideUrl = '${ApiConfig.baseUrl}/docs/panduan.php?role=$role';
+  static Future<void> openGuideDoc(BuildContext context, String role, {bool autoPrint = false}) async {
+    final printParam = autoPrint ? '&print=1' : '';
+    final guideUrl = '${ApiConfig.baseUrl}/docs/panduan.php?role=$role$printParam';
     final uri = Uri.parse(guideUrl);
     try {
       if (await canLaunchUrl(uri)) {
@@ -30,7 +31,7 @@ class AboutScreen extends StatelessWidget {
     }
   }
 
-  void _showGuideSelectionModal(BuildContext context) {
+  static void showGuideSelectionModal(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
     final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
@@ -134,7 +135,7 @@ class AboutScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGuideTile(
+  static Widget _buildGuideTile(
     BuildContext context, {
     required IconData icon,
     required Color color,
@@ -149,7 +150,7 @@ class AboutScreen extends StatelessWidget {
     return InkWell(
       onTap: () {
         Navigator.pop(context);
-        _openGuideDoc(context, role);
+        openGuideDoc(context, role);
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -349,7 +350,7 @@ class AboutScreen extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
-                              onPressed: () => _openGuideDoc(context, defaultRole),
+                              onPressed: () => openGuideDoc(context, defaultRole),
                               icon: const Icon(CupertinoIcons.arrow_down_doc_fill, size: 18),
                               label: Text('Panduan Saya (${user?.role.toUpperCase() ?? "PDF"})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                             ),
@@ -363,7 +364,7 @@ class AboutScreen extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
-                            onPressed: () => _showGuideSelectionModal(context),
+                            onPressed: () => showGuideSelectionModal(context),
                             child: const Text('Semua (4 PDF)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                           ),
                         ],

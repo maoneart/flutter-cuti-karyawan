@@ -9,6 +9,8 @@ import 'leave_detail_screen.dart';
 import 'notification_screen.dart';
 import 'public_board_screen.dart';
 import 'add_employee_screen.dart';
+import 'employee_list_screen.dart';
+import 'about_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -445,6 +447,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                             ],
                           ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Quick Tutorial & PDF Guide Banner
+                        InkWell(
+                          onTap: () => AboutScreen.showGuideSelectionModal(context),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: cardBg,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: borderCol),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0284C7).withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(CupertinoIcons.book_fill, color: Color(0xFF0284C7), size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Buku Panduan & Unduh PDF',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13.5,
+                                          color: textHead,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'Tutorial alur pengajuan cuti (4 PDF Per Role)',
+                                        style: TextStyle(fontSize: 11.5, color: textSub),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0284C7),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 14),
+                                      SizedBox(width: 4),
+                                      Text('Unduh PDF', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 20),
 
