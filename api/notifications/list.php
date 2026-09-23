@@ -21,9 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $notifications = [];
 
 // 1. Check pending items waiting for this user's approval
-if ($user['role'] === 'admin' || $hierarki >= 7) {
-    // HRD sees pending_hrd
-    $stmt = $pdo->query("
+if ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role'] === 'hrd' || $hierarki >= 7) {
+    // 1. Items waiting for HRD Final Approval
+    $stmtHrd = $pdo->query("
         SELECT p.id, p.nomor_surat, p.total_hari, p.tanggal_mulai, p.tanggal_selesai, p.created_at,
                k.nama_lengkap, d.nama_dept, l.nama_cuti
         FROM pengajuan_cuti p
@@ -34,13 +34,38 @@ if ($user['role'] === 'admin' || $hierarki >= 7) {
         ORDER BY p.created_at DESC
         LIMIT 10
     ");
-    while ($row = $stmt->fetch()) {
+    while ($row = $stmtHrd->fetch()) {
         $notifications[] = [
-            'id' => 'appr_' . $row['id'],
+            'id' => 'appr_hrd_' . $row['id'],
             'leave_id' => (int)$row['id'],
             'type' => 'approval_required',
             'title' => 'Menunggu Persetujuan Final HRD',
-            'message' => "Pengajuan {$row['nama_cuti']} ({$row['total_hari']} hari) oleh {$row['nama_lengkap']} ({$row['nama_dept']}).",
+            'message' => "Pengajuan {$row['nama_cuti']} ({$row['total_hari']} hari) oleh {$row['nama_lengkap']} ({$row['nama_dept']}) siap disetujui HRD.",
+            'time' => $row['created_at'],
+            'read' => false,
+        ];
+    }
+
+    // 2. Real-time Monitoring of submissions currently with Spv / Manager
+    $stmtMon = $pdo->query("
+        SELECT p.id, p.nomor_surat, p.total_hari, p.tanggal_mulai, p.tanggal_selesai, p.created_at, p.approval_step,
+               k.nama_lengkap, d.nama_dept, l.nama_cuti
+        FROM pengajuan_cuti p
+        JOIN karyawan k ON p.employee_id = k.id
+        JOIN departemen d ON k.departemen_id = d.id
+        JOIN jenis_cuti l ON p.leave_type_id = l.id
+        WHERE p.approval_step IN ('pending_spv', 'pending_manager') AND p.status = 'pending'
+        ORDER BY p.created_at DESC
+        LIMIT 10
+    ");
+    while ($row = $stmtMon->fetch()) {
+        $stepLabel = ($row['approval_step'] === 'pending_spv') ? 'Leader/Spv' : 'Manager';
+        $notifications[] = [
+            'id' => 'mon_' . $row['id'],
+            'leave_id' => (int)$row['id'],
+            'type' => 'approval_required',
+            'title' => "Monitoring: {$row['nama_dept']}",
+            'message' => "Pengajuan {$row['nama_cuti']} ({$row['total_hari']} hari) oleh {$row['nama_lengkap']} sedang dalam proses review {$stepLabel}.",
             'time' => $row['created_at'],
             'read' => false,
         ];

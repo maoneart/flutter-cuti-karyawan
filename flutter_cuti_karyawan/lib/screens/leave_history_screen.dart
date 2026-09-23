@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../config/app_theme.dart';
 import '../models/leave_model.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import 'leave_detail_screen.dart';
 
 class LeaveHistoryScreen extends StatefulWidget {
@@ -18,6 +20,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
   List<LeaveModel> _leaves = [];
   bool _isLoading = true;
   String? _errorMessage;
+  String _selectedScope = 'my'; // 'my' or 'all'/'team'
 
   final List<String> _statusFilters = ['all', 'pending', 'approved', 'rejected', 'cancelled'];
   final List<String> _tabTitles = ['Semua', 'Menunggu', 'Disetujui', 'Ditolak', 'Dibatalkan'];
@@ -50,6 +53,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
     final currentStatus = _statusFilters[_tabController.index];
     final res = await ApiService.getLeavesList(
       status: currentStatus,
+      scope: _selectedScope,
       search: _searchController.text.trim(),
     );
 
@@ -68,7 +72,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
     }
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, String? step) {
     Color bg;
     Color text;
     String label;
@@ -92,7 +96,15 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
       default:
         bg = AppTheme.statusPendingBg;
         text = AppTheme.statusPending;
-        label = 'Menunggu';
+        if (step == 'pending_spv') {
+          label = 'Menunggu Spv';
+        } else if (step == 'pending_manager') {
+          label = 'Menunggu Manager';
+        } else if (step == 'pending_hrd') {
+          label = 'Menunggu HRD';
+        } else {
+          label = 'Menunggu';
+        }
     }
 
     return Container(
@@ -114,6 +126,8 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService.currentUser;
+    final canApprove = user?.canApprove ?? false;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
     final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
@@ -121,9 +135,15 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
     final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
     final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
 
+    final teamLabel = (user?.isAdmin == true || user?.isManager == true) ? 'Semua Karyawan' : 'Tim Departemen';
+
     return Scaffold(
+      backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
       appBar: AppBar(
-        title: Text('Riwayat Cuti Saya', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
+        title: Text(
+          _selectedScope == 'my' ? 'Riwayat Cuti Saya' : 'Monitoring $teamLabel',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead),
+        ),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -136,13 +156,108 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
       ),
       body: Column(
         children: [
+          // Scope Switcher if User can Approve / HRD / Manager / Superadmin
+          if (canApprove) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          if (_selectedScope != 'my') {
+                            setState(() => _selectedScope = 'my');
+                            _loadLeaves();
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _selectedScope == 'my'
+                                ? (isDark ? const Color(0xFF334155) : Colors.white)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: _selectedScope == 'my'
+                                ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4, offset: const Offset(0, 2))]
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Text(
+                            'Cuti Saya',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: _selectedScope == 'my' ? FontWeight.bold : FontWeight.w500,
+                              color: _selectedScope == 'my' ? primaryAccent : textSub,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () {
+                          if (_selectedScope != 'all') {
+                            setState(() => _selectedScope = 'all');
+                            _loadLeaves();
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _selectedScope == 'all'
+                                ? (isDark ? const Color(0xFF334155) : Colors.white)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: _selectedScope == 'all'
+                                ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 4, offset: const Offset(0, 2))]
+                                : null,
+                          ),
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                CupertinoIcons.eye_fill,
+                                size: 14,
+                                color: _selectedScope == 'all' ? primaryAccent : textSub,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                teamLabel,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: _selectedScope == 'all' ? FontWeight.bold : FontWeight.w500,
+                                  color: _selectedScope == 'all' ? primaryAccent : textSub,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
           // Search Box
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Cari nomor surat atau alasan cuti...',
+                hintText: _selectedScope == 'my'
+                    ? 'Cari nomor surat atau alasan cuti...'
+                    : 'Cari nama karyawan, departemen, alasan...',
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -214,6 +329,8 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                               separatorBuilder: (_, __) => const SizedBox(height: 12),
                               itemBuilder: (ctx, idx) {
                                 final leave = _leaves[idx];
+                                final isOtherEmployee = _selectedScope != 'my';
+
                                 return InkWell(
                                   onTap: () {
                                     Navigator.push(
@@ -234,6 +351,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
+                                        // Header: ID/Nomor Surat & Status Badge
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
@@ -245,9 +363,47 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                                 color: primaryAccent,
                                               ),
                                             ),
-                                            _buildStatusBadge(leave.status),
+                                            _buildStatusBadge(leave.status, leave.approvalStep),
                                           ],
                                         ),
+
+                                        // Employee Name & Dept if viewing team/company
+                                        if (isOtherEmployee && leave.namaLengkap != null) ...[
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(6),
+                                                decoration: BoxDecoration(
+                                                  color: primaryAccent.withOpacity(0.12),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(CupertinoIcons.person_fill, size: 14, color: primaryAccent),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      leave.namaLengkap!,
+                                                      style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 14,
+                                                        color: textHead,
+                                                      ),
+                                                    ),
+                                                    Text(
+                                                      '${leave.namaDept ?? "-"} • ${leave.namaJabatan ?? "-"}',
+                                                      style: TextStyle(fontSize: 11.5, color: textSub),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+
                                         const SizedBox(height: 8),
                                         Text(
                                           leave.namaCuti ?? 'Cuti',

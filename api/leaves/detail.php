@@ -17,7 +17,7 @@ if ($id <= 0) {
 $stmt = $pdo->prepare("
     SELECT 
         p.*, 
-        k.nama_lengkap, k.nik, k.email, k.no_hp, k.foto as employee_foto,
+        k.nama_lengkap, k.nik, k.email, k.no_hp, k.foto as employee_foto, k.departemen_id,
         d.nama_dept, d.kode_dept,
         j.nama_jabatan, j.level_hierarki as employee_level,
         l.nama_cuti, l.kode as kode_cuti, l.potong_kuota, l.butuh_lampiran, l.deskripsi as deskripsi_cuti,
