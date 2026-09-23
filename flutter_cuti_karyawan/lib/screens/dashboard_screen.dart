@@ -426,7 +426,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'Data Karyawan',
+                                                'List Karyawan',
                                                 style: TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
@@ -434,7 +434,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 ),
                                               ),
                                               Text(
-                                                'Daftar & Tambah',
+                                                'Daftar & Kuota Pegawai',
                                                 style: TextStyle(color: Colors.white70, fontSize: 11),
                                               ),
                                             ],

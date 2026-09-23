@@ -260,16 +260,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   _buildIosGroup([
                     _buildIosTile(
-                      icon: CupertinoIcons.person_badge_plus,
+                      icon: CupertinoIcons.person_3_fill,
                       iconColor: const Color(0xFFE11D48),
-                      title: 'Tambah Karyawan Baru',
-                      subtitle: 'Daftarkan pegawai & buat akun login',
+                      title: 'List Karyawan',
+                      subtitle: 'Daftar pegawai & tambah karyawan baru',
                       isDark: isDark,
                       showDivider: false,
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const AddEmployeeScreen()),
+                          MaterialPageRoute(builder: (_) => const EmployeeListScreen()),
                         );
                       },
                     ),
