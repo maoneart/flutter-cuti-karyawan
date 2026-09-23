@@ -32,12 +32,32 @@ function requireRole($roles = []) {
         $roles = [$roles];
     }
     
-    $userRole = $_SESSION['user_role'] ?? '';
-    if (!in_array($userRole, $roles)) {
-        setFlash('error', 'Akses ditolak! Anda tidak memiliki izin untuk membuka halaman ini.');
-        header('Location: ' . BASE_URL . '/index.php?page=dashboard');
-        exit;
+    $currentUser = getCurrentUser();
+    $userRole = strtolower($currentUser['role'] ?? ($_SESSION['user_role'] ?? ''));
+    $userLevel = (int)($currentUser['level_hierarki'] ?? 1);
+
+    // If 'admin' is required, allow 'superadmin', 'admin', 'hrd', or level >= 7
+    if (in_array('admin', $roles)) {
+        if (in_array($userRole, ['admin', 'superadmin', 'hrd']) || $userLevel >= 7) {
+            return;
+        }
     }
+
+    // If 'atasan' is required, allow any supervisor/leader/manager/hrd or level >= 3
+    if (in_array('atasan', $roles)) {
+        if (in_array($userRole, ['atasan', 'supervisor', 'leader', 'manager', 'admin', 'superadmin', 'hrd']) || $userLevel >= 3) {
+            return;
+        }
+    }
+
+    // Exact role match
+    if (in_array($userRole, $roles)) {
+        return;
+    }
+
+    setFlash('error', 'Akses ditolak! Anda tidak memiliki izin untuk membuka halaman ini.');
+    header('Location: ' . BASE_URL . '/index.php?page=dashboard');
+    exit;
 }
 
 // Get Current Logged In Employee Data fresh from DB

@@ -32,7 +32,7 @@ jobs:
       - name: Generate Platform Files & Dependencies
         run: |
           cd flutter_cuti_karyawan
-          flutter create --platforms=android,web,ios .
+          flutter create --org com.nakakin.cutikaryawan --project-name flutter_cuti_karyawan --platforms=android,web,ios .
           flutter pub get
 
       - name: Build Android Release APK

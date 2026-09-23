@@ -110,8 +110,15 @@ $sidebarLogoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . 
             <span class="sidebar-text">Riwayat Cuti Saya</span>
         </a>
 
-        <!-- Menu for Atasan & Admin -->
-        <?php if (in_array($currentUser['role'] ?? '', ['atasan', 'admin'])): ?>
+        <!-- Menu for Atasan, Manager, & Admin/HRD -->
+        <?php 
+        $userRole = strtolower($currentUser['role'] ?? '');
+        $userLevel = (int)($currentUser['level_hierarki'] ?? 1);
+        $isApprover = in_array($userRole, ['atasan', 'admin', 'superadmin', 'hrd', 'manager', 'supervisor', 'leader']) || $userLevel >= 3;
+        $isHRD = in_array($userRole, ['admin', 'superadmin', 'hrd']) || $userLevel >= 7;
+        ?>
+
+        <?php if ($isApprover): ?>
             <div class="sidebar-text px-3 pt-3 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Persetujuan (Approval)</div>
             <div class="sidebar-section-divider hidden border-t border-slate-800 my-2"></div>
             <a href="<?= BASE_URL ?>/index.php?page=leave-approvals" 
@@ -121,7 +128,7 @@ $sidebarLogoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . 
                     <i class="fa-solid fa-clipboard-check text-sm w-5 text-center flex-shrink-0 <?= $currentPage === 'leave-approvals' ? 'text-white' : 'text-slate-500 group-hover:text-blue-400' ?>"></i>
                     <span class="sidebar-text truncate">Approval Cuti Tim</span>
                 </div>
-                <?php if ($pendingApprovalCount > 0): ?>
+                <?php if (isset($pendingApprovalCount) && $pendingApprovalCount > 0): ?>
                     <span class="sidebar-text px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500 text-white shadow-sm flex-shrink-0">
                         <?= $pendingApprovalCount ?>
                     </span>
@@ -135,8 +142,8 @@ $sidebarLogoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . 
             </a>
         <?php endif; ?>
 
-        <!-- Menu for HRD Only -->
-        <?php if (($currentUser['role'] ?? '') === 'admin'): ?>
+        <!-- Menu for HRD / Superadmin Only -->
+        <?php if ($isHRD): ?>
             <div class="sidebar-text px-3 pt-3 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Manajemen HRD</div>
             <div class="sidebar-section-divider hidden border-t border-slate-800 my-2"></div>
             <a href="<?= BASE_URL ?>/index.php?page=quotas" 
