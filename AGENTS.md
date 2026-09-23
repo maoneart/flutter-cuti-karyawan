@@ -4,15 +4,58 @@ Dokumen ini berisi seluruh ringkasan aturan bisnis, arsitektur sistem, hierarki 
 
 ---
 
-## 1. Alur Persetujuan Cuti Bertingkat (Strict Multi-Tier Approval)
+## 1. Master Data Role, Jabatan & 15 Departemen
 
-### A. Alur Hirarki Pengajuan
-1. **Pengajuan oleh Operator / Staff (Level 1 - 2)**:
-   $$\text{Operator/Staff} \longrightarrow \text{Leader/Supervisor (Tier 1)} \longrightarrow \text{Plant Manager (Tier 2)} \longrightarrow \text{HRD / Super Admin (Tier 3 - Final)}$$
-2. **Pengajuan oleh Leader / Supervisor (Level 3 - 4)**:
-   $$\text{Leader/Supervisor} \longrightarrow \text{Plant Manager (Tier 2)} \longrightarrow \text{HRD / Super Admin (Tier 3 - Final)}$$
-3. **Pengajuan oleh Plant Manager (Level 5 - 6)**:
-   $$\text{Plant Manager} \longrightarrow \text{HRD / Super Admin (Tier 3 - Final)}$$
+### A. Daftar Lengkap Role & Tingkat Hierarki
+1. **Operator Produksi** (`role = 'operator'`, Level 1):
+   * Mengajukan cuti pribadi, upload surat dokter (format gambar/PDF), cek sisa kuota, lihat riwayat cuti & kalender bersama.
+2. **Staff** (`role = 'staff'`, Level 2):
+   * Mengajukan cuti pribadi, cek sisa kuota, lihat riwayat cuti & kalender bersama.
+3. **Leader** (`role = 'leader'`, Level 3):
+   * Approval Tier 1 bagi operator & staff di **1 departemen yang sama**.
+   * Pengajuan cuti pribadi (otomatis bypass Tier 1 ke Tier 2).
+4. **Supervisor / Spv** (`role = 'supervisor'`, Level 4):
+   * Approval Tier 1 bagi operator & staff di **1 departemen yang sama**.
+   * Pengajuan cuti pribadi (otomatis bypass Tier 1 ke Tier 2).
+5. **Department / Plant Manager** (`role = 'manager'`, Level 6):
+   * Approval Tier 2 mencakup **seluruh 15 departemen** pabrik.
+   * Monitoring status kehadiran & kalender produksi pabrik.
+6. **HRD** (`role = 'hrd'`, Level 7):
+   * Approval Tier 3 (Final) seluruh departemen & eksekusi pemotongan kuota cuti resmi.
+   * Pengelolaan data seluruh karyawan (CRUD data karyawan).
+7. **Super Admin / Admin** (`role = 'superadmin'` / `admin`, Level 8):
+   * Hak akses penuh sistem (Master Data Departemen, Jabatan, Pengaturan Web, Kop Surat, Logo Perusahaan, dan Hak Istimewa Approval).
+
+### B. Daftar 15 Departemen Resmi (PT. Nakakin Indonesia)
+1. **Accounting** (ID 1)
+2. **Casting** (ID 2)
+3. **Core** (ID 3)
+4. **Diecasting** (ID 4)
+5. **Engineering** (ID 5)
+6. **Fettling** (ID 6)
+7. **GA (General Affairs)** (ID 7)
+8. **HRD (Human Resources Department)** (ID 8)
+9. **Machining** (ID 9)
+10. **Marketing** (ID 10)
+11. **Maintenance** (ID 11)
+12. **PPIC** (ID 12)
+13. **Purchasing** (ID 13)
+14. **QC (Quality Control)** (ID 14)
+15. **QC Line** (ID 15)
+
+---
+
+## 2. Alur Persetujuan Cuti Bertingkat (Strict Multi-Tier Approval)
+
+### A. Matriks Alur Hirarki Berdasarkan Role Pemohon
+| Role Pemohon | Level | Tier 1 (Leader/Spv Dept) | Tier 2 (Plant Manager) | Tier 3 (HRD / Super Admin) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Operator Produksi** | 1 | Wajib Review | Wajib Review | Persetujuan Final & Potong Kuota |
+| **Staff** | 2 | Wajib Review | Wajib Review | Persetujuan Final & Potong Kuota |
+| **Leader** | 3 | *Bypass (Langsung ke Tier 2)* | Wajib Review | Persetujuan Final & Potong Kuota |
+| **Supervisor** | 4 | *Bypass (Langsung ke Tier 2)* | Wajib Review | Persetujuan Final & Potong Kuota |
+| **Plant Manager** | 6 | *Bypass* | *Bypass* | Persetujuan Final & Potong Kuota |
+| **HRD / SuperAdmin** | 7-8 | *Bypass* | *Bypass* | Persetujuan Final Mandiri |
 
 ### B. Aturan & Validasi Approval
 * **Status Tahapan (`approval_step`)**:
@@ -27,18 +70,7 @@ Dokumen ini berisi seluruh ringkasan aturan bisnis, arsitektur sistem, hierarki 
   * Pengajuan langsung berstatus `rejected`, `approval_step = completed`.
   * Proses approval berhenti seketika dan tidak diteruskan ke tingkat atasnya.
 * **Pemotongan Kuota Cuti**:
-  * Sisa cuti karyawan **HANYA TERPOTONG** setelah HRD / Super Admin menyetujui pengajuan di tahap final (`status = approved`).
-
----
-
-## 2. Hak Akses & Peran Pengguna (Role & Permissions)
-
-| Role / Jabatan | Level | Cakupan Akses Approval | Fitur Khusus |
-| :--- | :---: | :--- | :--- |
-| **Operator / Staff** | 1 - 2 | Hanya cuti pribadi | Pengajuan cuti, upload surat dokter, lihat kuota & riwayat |
-| **Leader / Supervisor** | 3 - 4 | Cuti tim dalam **1 Departemen yang sama** | Review Tier 1 tim departemen, filter departemen sendiri |
-| **Plant Manager** | 5 - 6 | Pengajuan cuti dari **Seluruh 15 Departemen** | Review Tier 2 pabrik, monitoring produksi |
-| **HRD / Admin / SuperAdmin** | 7 - 9 | Seluruh departemen (Final Tier 3) | Approval Final, Pengaturan Web, Kelola Karyawan, Master Data |
+  * Sisa kuota cuti karyawan **HANYA TERPOTONG** setelah HRD / Super Admin menyetujui pengajuan di tahap final (`status = approved`).
 
 ---
 
