@@ -9,8 +9,14 @@ require_once __DIR__ . '/../layouts/header.php';
 
 $pdo = getDbConnection();
 $userId = $currentUser['id'];
-$userRole = $currentUser['role'];
+$userRole = strtolower($currentUser['role'] ?? '');
+$userLevel = (int)($currentUser['level_hierarki'] ?? 1);
 $deptId = $currentUser['departemen_id'];
+
+$isHRD = in_array($userRole, ['admin', 'superadmin', 'hrd']) || $userLevel >= 7;
+$isManager = $userRole === 'manager' || ($userLevel >= 5 && $userLevel <= 6);
+$isSpv = in_array($userRole, ['supervisor', 'leader', 'atasan']) || ($userLevel >= 3 && $userLevel <= 4);
+$isApprover = $isHRD || $isManager || $isSpv;
 
 // 1. Personal Stats
 $stmtPersonal = $pdo->prepare("
@@ -37,40 +43,55 @@ $stmtMyLeaves = $pdo->prepare("
 $stmtMyLeaves->execute([$userId]);
 $myRecentLeaves = $stmtMyLeaves->fetchAll();
 
-// 3. Pending Approvals for Atasan
+// 3. Pending Approvals & Monitoring Queue
 $deptPendingLeaves = [];
-if (in_array($userRole, ['atasan', 'admin'])) {
-    if ($userRole === 'admin') {
+if ($isApprover) {
+    if ($isHRD) {
         $stmtDeptPending = $pdo->query("
-            SELECT lr.*, e.nama_lengkap, e.nik, d.nama_dept, p.nama_jabatan, lt.nama_cuti
+            SELECT lr.*, e.nama_lengkap, e.nik, e.departemen_id, d.nama_dept, p.nama_jabatan, lt.nama_cuti, lt.potong_kuota
             FROM pengajuan_cuti lr
             JOIN karyawan e ON lr.employee_id = e.id
             JOIN departemen d ON e.departemen_id = d.id
             JOIN jabatan p ON e.jabatan_id = p.id
             JOIN jenis_cuti lt ON lr.leave_type_id = lt.id
             WHERE lr.status = 'pending'
-            ORDER BY lr.created_at ASC
-            LIMIT 5
+            ORDER BY CASE WHEN lr.approval_step = 'pending_hrd' THEN 1 ELSE 2 END, lr.created_at ASC
+            LIMIT 10
         ");
-    } else {
+        $deptPendingLeaves = $stmtDeptPending->fetchAll();
+    } elseif ($isManager) {
         $stmtDeptPending = $pdo->prepare("
-            SELECT lr.*, e.nama_lengkap, e.nik, d.nama_dept, p.nama_jabatan, lt.nama_cuti
+            SELECT lr.*, e.nama_lengkap, e.nik, e.departemen_id, d.nama_dept, p.nama_jabatan, lt.nama_cuti, lt.potong_kuota
             FROM pengajuan_cuti lr
             JOIN karyawan e ON lr.employee_id = e.id
             JOIN departemen d ON e.departemen_id = d.id
             JOIN jabatan p ON e.jabatan_id = p.id
             JOIN jenis_cuti lt ON lr.leave_type_id = lt.id
-            WHERE lr.status = 'pending' AND e.departemen_id = ? AND e.id != ?
+            WHERE lr.status = 'pending' AND lr.employee_id != ?
+            ORDER BY CASE WHEN lr.approval_step = 'pending_manager' THEN 1 ELSE 2 END, lr.created_at ASC
+            LIMIT 10
+        ");
+        $stmtDeptPending->execute([$userId]);
+        $deptPendingLeaves = $stmtDeptPending->fetchAll();
+    } else {
+        $stmtDeptPending = $pdo->prepare("
+            SELECT lr.*, e.nama_lengkap, e.nik, e.departemen_id, d.nama_dept, p.nama_jabatan, lt.nama_cuti, lt.potong_kuota
+            FROM pengajuan_cuti lr
+            JOIN karyawan e ON lr.employee_id = e.id
+            JOIN departemen d ON e.departemen_id = d.id
+            JOIN jabatan p ON e.jabatan_id = p.id
+            JOIN jenis_cuti lt ON lr.leave_type_id = lt.id
+            WHERE lr.status = 'pending' AND e.departemen_id = ? AND lr.employee_id != ?
             ORDER BY lr.created_at ASC
-            LIMIT 5
+            LIMIT 10
         ");
         $stmtDeptPending->execute([$deptId, $userId]);
+        $deptPendingLeaves = $stmtDeptPending->fetchAll();
     }
-    $deptPendingLeaves = $stmtDeptPending->fetchAll();
 }
 
 // 4. Admin HRD Overview Metrics
-if ($userRole === 'admin') {
+if ($isHRD) {
     $totalKaryawan = $pdo->query("SELECT COUNT(*) FROM karyawan WHERE status_aktif = 'Aktif'")->fetchColumn();
     $totalCutiBulanIni = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) AND YEAR(created_at) = YEAR(CURRENT_DATE())")->fetchColumn();
     $totalPendingAll = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending'")->fetchColumn();
@@ -192,8 +213,8 @@ if ($userRole === 'admin') {
         </div>
     </div>
 
-    <!-- HRD Quick Metrics (If Admin) -->
-    <?php if ($userRole === 'admin'): ?>
+    <!-- HRD Quick Metrics (If HRD / Super Admin) -->
+    <?php if ($isHRD): ?>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white rounded-2xl p-4 border-l-4 border-rose-600 border-y border-r border-slate-200/80 shadow-sm flex items-center justify-between">
                 <div>
@@ -238,7 +259,7 @@ if ($userRole === 'admin') {
     <?php endif; ?>
 
     <!-- ATASAN / ADMIN APPROVAL QUEUE CARD -->
-    <?php if (in_array($userRole, ['atasan', 'admin'])): ?>
+    <?php if ($isApprover): ?>
         <div class="bg-white rounded-3xl border border-amber-200 shadow-soft overflow-hidden">
             <div class="p-5 sm:px-6 bg-gradient-to-r from-amber-50/80 to-orange-50/80 border-b border-amber-200/80 flex items-center justify-between flex-wrap gap-2">
                 <div class="flex items-center gap-3">
@@ -247,9 +268,11 @@ if ($userRole === 'admin') {
                     </div>
                     <div>
                         <h3 class="text-sm sm:text-base font-extrabold text-slate-900">
-                            Pengajuan Cuti Menunggu Persetujuan Anda
+                            <?= $isHRD ? 'Pengajuan Cuti Menunggu Persetujuan & Monitoring' : ($isManager ? 'Pengajuan Cuti Menunggu Review Plant Manager' : 'Pengajuan Cuti Menunggu Persetujuan Anda') ?>
                         </h3>
-                        <p class="text-xs text-slate-500">Khusus anggota tim Departemen <?= htmlspecialchars($currentUser['nama_dept']) ?></p>
+                        <p class="text-xs text-slate-500">
+                            <?= $isHRD ? 'Antrean pengajuan cuti dari seluruh 15 departemen' : ($isManager ? 'Seluruh departemen pabrik' : 'Khusus anggota tim Departemen ' . htmlspecialchars($currentUser['nama_dept'] ?? '')) ?>
+                        </p>
                     </div>
                 </div>
                 <a href="<?= BASE_URL ?>/index.php?page=leave-approvals" class="px-3.5 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-sm transition">
@@ -261,7 +284,7 @@ if ($userRole === 'admin') {
                 <?php if (empty($deptPendingLeaves)): ?>
                     <div class="text-center py-8 text-slate-400">
                         <i class="fa-solid fa-circle-check text-emerald-500 text-3xl mb-2 block"></i>
-                        <p class="text-xs font-semibold text-slate-600">Semua permohonan cuti untuk departemen Anda sudah diproses!</p>
+                        <p class="text-xs font-semibold text-slate-600">Semua permohonan cuti sudah diproses!</p>
                     </div>
                 <?php else: ?>
                     <div class="overflow-x-auto">
@@ -272,12 +295,36 @@ if ($userRole === 'admin') {
                                     <th class="px-4 py-3.5">Departemen</th>
                                     <th class="px-4 py-3.5">Jenis Cuti</th>
                                     <th class="px-4 py-3.5">Tanggal</th>
-                                    <th class="px-4 py-3.5">Alasan</th>
+                                    <th class="px-4 py-3.5">Tahapan / Status</th>
                                     <th class="px-5 py-3.5 text-left">Aksi Persetujuan</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <?php foreach ($deptPendingLeaves as $req): ?>
+                                <?php foreach ($deptPendingLeaves as $req): 
+                                    $step = $req['approval_step'] ?? 'pending_spv';
+                                    $canApproveRow = false;
+                                    $stepBadge = '';
+
+                                    if ($req['status'] === 'pending') {
+                                        if ($isHRD && $step === 'pending_hrd') {
+                                            $canApproveRow = true;
+                                        } elseif ($isManager && $step === 'pending_manager') {
+                                            $canApproveRow = true;
+                                        } elseif ($isSpv && $step === 'pending_spv' && (int)$req['departemen_id'] === (int)$deptId && (int)$req['employee_id'] !== (int)$userId) {
+                                            $canApproveRow = true;
+                                        }
+
+                                        if ($step === 'pending_spv') {
+                                            $stepBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold"><i class="fa-solid fa-clock"></i> Review Leader</span>';
+                                        } elseif ($step === 'pending_manager') {
+                                            $stepBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold"><i class="fa-solid fa-clock"></i> Review Manager</span>';
+                                        } elseif ($step === 'pending_hrd') {
+                                            $stepBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold"><i class="fa-solid fa-clock"></i> Menunggu HRD</span>';
+                                        }
+                                    } else {
+                                        $stepBadge = getStatusBadge($req['status']);
+                                    }
+                                ?>
                                     <tr class="hover:bg-slate-50/80 transition">
                                         <td class="px-5 py-3.5">
                                             <div class="flex items-center gap-3">
@@ -300,17 +347,23 @@ if ($userRole === 'admin') {
                                             <div class="font-semibold text-slate-700"><?= formatTanggalIndo($req['tanggal_mulai']) ?></div>
                                             <div class="text-blue-600 font-bold"><?= $req['total_hari'] ?> Hari Kerja</div>
                                         </td>
-                                        <td class="px-4 py-3.5 max-w-xs truncate text-slate-600" title="<?= htmlspecialchars($req['alasan']) ?>">
-                                            <?= htmlspecialchars($req['alasan']) ?>
+                                        <td class="px-4 py-3.5 whitespace-nowrap">
+                                            <?= $stepBadge ?>
                                         </td>
                                         <td class="px-5 py-3.5 whitespace-nowrap">
                                             <div class="flex items-center gap-1.5">
-                                                <button type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1" onclick="confirmApprove(<?= $req['id'] ?>, '<?= addslashes(htmlspecialchars($req['nama_lengkap'])) ?>')">
-                                                    <i class="fa-solid fa-check"></i> Approve
-                                                </button>
-                                                <button type="button" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1" onclick="confirmReject(<?= $req['id'] ?>, '<?= addslashes(htmlspecialchars($req['nama_lengkap'])) ?>')">
-                                                    <i class="fa-solid fa-xmark"></i> Reject
-                                                </button>
+                                                <?php if ($canApproveRow): ?>
+                                                    <button type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1" onclick="confirmApprove(<?= $req['id'] ?>, '<?= addslashes(htmlspecialchars($req['nama_lengkap'])) ?>')">
+                                                        <i class="fa-solid fa-check"></i> Setuju
+                                                    </button>
+                                                    <button type="button" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1" onclick="confirmReject(<?= $req['id'] ?>, '<?= addslashes(htmlspecialchars($req['nama_lengkap'])) ?>')">
+                                                        <i class="fa-solid fa-xmark"></i> Tolak
+                                                    </button>
+                                                <?php elseif ($req['status'] === 'pending'): ?>
+                                                    <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-500 font-bold text-[11px] border border-slate-200 flex items-center gap-1" title="Menunggu giliran approval">
+                                                        <i class="fa-solid fa-hourglass-start text-slate-400"></i> Pantau
+                                                    </span>
+                                                <?php endif; ?>
                                                 <a href="<?= BASE_URL ?>/index.php?page=leave-detail&id=<?= $req['id'] ?>" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition flex items-center justify-center shadow-2xs" title="Lihat Detail">
                                                     <i class="fa-solid fa-eye text-xs"></i>
                                                 </a>
@@ -327,9 +380,9 @@ if ($userRole === 'admin') {
     <?php endif; ?>
 
     <!-- Two Columns: Chart & Personal Leave History -->
-    <div class="grid grid-cols-1 <?= $userRole === 'admin' ? 'lg:grid-cols-2' : '' ?> gap-6">
+    <div class="grid grid-cols-1 <?= $isHRD ? 'lg:grid-cols-2' : '' ?> gap-6">
         
-        <?php if ($userRole === 'admin'): ?>
+        <?php if ($isHRD): ?>
             <!-- Department Leaves Chart -->
             <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-soft flex flex-col">
                 <div class="flex items-center justify-between mb-4">

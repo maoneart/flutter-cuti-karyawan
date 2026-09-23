@@ -24,10 +24,11 @@ if ($currentUser) {
 
     $pdo = getDbConnection();
     if ($isHRD) {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending' AND approval_step = 'pending_hrd'");
+        // HRD as top monitoring level tracks all pending leaves company-wide
+        $stmt = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending'");
         $pendingApprovalCount = (int)$stmt->fetchColumn();
     } elseif ($isManager) {
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending' AND approval_step = 'pending_manager' AND employee_id != ?");
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending' AND (approval_step = 'pending_manager' OR employee_id != ?)");
         $stmt->execute([$currentUser['id']]);
         $pendingApprovalCount = (int)$stmt->fetchColumn();
     } elseif ($isSpv) {

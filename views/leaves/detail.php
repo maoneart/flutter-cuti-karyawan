@@ -222,6 +222,18 @@ if ($leave['status'] === 'pending' && $currentUser['id'] != $leave['employee_id'
                                 </button>
                             </div>
                         </div>
+                    <?php elseif ($leave['status'] === 'pending' && ($isHRD || $isManager || $isSpv) && $currentUser['id'] != $leave['employee_id']): ?>
+                        <div class="pt-4 border-t border-slate-200 space-y-2">
+                            <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-xs text-amber-900 space-y-1">
+                                <div class="font-extrabold flex items-center gap-1.5 text-amber-800">
+                                    <i class="fa-solid fa-circle-info"></i> Mode Monitoring Pengajuan
+                                </div>
+                                <p class="text-slate-600 text-[11px] leading-relaxed">
+                                    Saat ini pengajuan berada pada <strong><?= $step === 'pending_spv' ? 'Tahap 1 (Leader / Supervisor Departemen ' . htmlspecialchars($leave['nama_dept']) . ')' : ($step === 'pending_manager' ? 'Tahap 2 (Plant Manager)' : 'Tahap 3 (HRD / Super Admin)') ?></strong>.
+                                    Tombol <strong>Setujui</strong> dan <strong>Tolak</strong> akan aktif setelah tahapan persetujuan mencapai giliran Anda.
+                                </p>
+                            </div>
+                        </div>
                     <?php endif; ?>
 
                 </div>

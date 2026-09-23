@@ -4,7 +4,7 @@
  * PT. Nakakin Indonesia Leave Management System
  */
 
-$pageTitle = 'Persetujuan Cuti Tim';
+$pageTitle = 'Persetujuan & Monitoring Cuti';
 require_once __DIR__ . '/../layouts/header.php';
 
 $userRole = strtolower($currentUser['role'] ?? '');
@@ -26,7 +26,7 @@ $statusFilter = cleanInput($_GET['status'] ?? 'pending');
 
 $sql = "
     SELECT lr.*, 
-           e.nik, e.nama_lengkap, e.email, e.no_hp, e.sisa_cuti, e.kuota_cuti, e.tanggal_masuk,
+           e.nik, e.nama_lengkap, e.email, e.no_hp, e.sisa_cuti, e.kuota_cuti, e.tanggal_masuk, e.departemen_id,
            d.nama_dept, d.kode_dept,
            p.nama_jabatan, p.level_hierarki as employee_level,
            lt.nama_cuti, lt.potong_kuota,
@@ -43,9 +43,9 @@ $sql = "
 $params = [];
 
 if ($isHRD) {
-    // HRD can view across all departments, if pending show pending_hrd
+    // HRD can view and monitor all requests across all 15 departments
     if ($statusFilter === 'pending') {
-        $sql .= " AND lr.approval_step = 'pending_hrd' AND lr.status = 'pending' ";
+        $sql .= " AND lr.status = 'pending' ";
     } elseif ($statusFilter !== 'all') {
         $sql .= " AND lr.status = ? ";
         $params[] = $statusFilter;
@@ -55,7 +55,7 @@ if ($isHRD) {
     $sql .= " AND lr.employee_id != ? ";
     $params[] = $currentUser['id'];
     if ($statusFilter === 'pending') {
-        $sql .= " AND lr.approval_step = 'pending_manager' AND lr.status = 'pending' ";
+        $sql .= " AND lr.status = 'pending' ";
     } elseif ($statusFilter !== 'all') {
         $sql .= " AND lr.status = ? ";
         $params[] = $statusFilter;
@@ -66,14 +66,20 @@ if ($isHRD) {
     $params[] = $deptId;
     $params[] = $currentUser['id'];
     if ($statusFilter === 'pending') {
-        $sql .= " AND lr.approval_step = 'pending_spv' AND lr.status = 'pending' ";
+        $sql .= " AND lr.status = 'pending' ";
     } elseif ($statusFilter !== 'all') {
         $sql .= " AND lr.status = ? ";
         $params[] = $statusFilter;
     }
 }
 
-$sql .= " ORDER BY CASE WHEN lr.status = 'pending' THEN 1 ELSE 2 END, lr.created_at DESC";
+$sql .= " ORDER BY CASE 
+            WHEN lr.approval_step = 'pending_hrd' AND " . ($isHRD ? "1=1" : "1=0") . " THEN 1 
+            WHEN lr.approval_step = 'pending_manager' AND " . ($isManager ? "1=1" : "1=0") . " THEN 1 
+            WHEN lr.approval_step = 'pending_spv' AND " . ($isSpv ? "1=1" : "1=0") . " THEN 1 
+            WHEN lr.status = 'pending' THEN 2 
+            ELSE 3 
+          END, lr.created_at DESC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -90,8 +96,12 @@ $requests = $stmt->fetchAll();
                     <i class="fa-solid fa-clipboard-check"></i>
                 </div>
                 <div>
-                    <h3 class="text-sm font-extrabold text-slate-900">Permohonan Cuti Anggota Tim (<?= htmlspecialchars($currentUser['nama_dept']) ?>)</h3>
-                    <p class="text-[11px] text-slate-400 font-medium hidden sm:block">Verifikasi dan berikan persetujuan izin cuti untuk anggota tim Anda</p>
+                    <h3 class="text-sm font-extrabold text-slate-900">
+                        <?= $isHRD ? 'Persetujuan & Monitoring Cuti (Seluruh 15 Departemen)' : ($isManager ? 'Persetujuan Cuti Plant Manager' : 'Permohonan Cuti Anggota Tim (' . htmlspecialchars($currentUser['nama_dept'] ?? 'Departemen') . ')') ?>
+                    </h3>
+                    <p class="text-[11px] text-slate-400 font-medium hidden sm:block">
+                        <?= $isHRD ? 'Pantau seluruh tahapan cuti karyawan dan lakukan verifikasi final ketika giliran approval HRD tiba' : 'Verifikasi dan berikan persetujuan izin cuti untuk anggota tim Anda' ?>
+                    </p>
                 </div>
             </div>
             
@@ -130,15 +140,39 @@ $requests = $stmt->fetchAll();
                             <th class="text-center w-12">No</th>
                             <th class="min-w-[170px]">Karyawan Pemohon</th>
                             <th class="min-w-[150px]">Departemen / Jabatan</th>
-                            <th class="min-w-[200px]">Jenis Cuti</th>
+                            <th class="min-w-[180px]">Jenis Cuti</th>
                             <th class="min-w-[160px]">Tanggal & Hari</th>
                             <th class="min-w-[110px]">Sisa Kuota</th>
-                            <th class="min-w-[120px] text-center">Status</th>
-                            <th class="min-w-[130px] text-left">Aksi Persetujuan</th>
+                            <th class="min-w-[130px] text-center">Tahapan / Status</th>
+                            <th class="min-w-[150px] text-left">Aksi Persetujuan</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $no = 1; foreach ($requests as $req): ?>
+                        <?php $no = 1; foreach ($requests as $req): 
+                            $step = $req['approval_step'] ?? 'pending_spv';
+                            $canApproveRow = false;
+                            $stepBadge = '';
+
+                            if ($req['status'] === 'pending') {
+                                if ($isHRD && $step === 'pending_hrd') {
+                                    $canApproveRow = true;
+                                } elseif ($isManager && $step === 'pending_manager') {
+                                    $canApproveRow = true;
+                                } elseif ($isSpv && $step === 'pending_spv' && (int)$req['departemen_id'] === (int)$deptId && (int)$req['employee_id'] !== (int)$currentUser['id']) {
+                                    $canApproveRow = true;
+                                }
+
+                                if ($step === 'pending_spv') {
+                                    $stepBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold"><i class="fa-solid fa-clock"></i> Review Leader</span>';
+                                } elseif ($step === 'pending_manager') {
+                                    $stepBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold"><i class="fa-solid fa-clock"></i> Review Manager</span>';
+                                } elseif ($step === 'pending_hrd') {
+                                    $stepBadge = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold"><i class="fa-solid fa-clock"></i> Menunggu HRD</span>';
+                                }
+                            } else {
+                                $stepBadge = getStatusBadge($req['status']);
+                            }
+                        ?>
                             <tr>
                                 <td class="text-center">
                                     <span class="w-6 h-6 rounded-lg bg-slate-100 inline-flex items-center justify-center text-[11px] text-slate-600 font-black">
@@ -171,16 +205,22 @@ $requests = $stmt->fetchAll();
                                     <div class="font-black text-slate-900 text-xs"><?= $req['sisa_cuti'] ?> Hari</div>
                                     <div class="text-[10px] text-slate-400 font-medium">Masa: <?= hitungMasaKerja($req['tanggal_masuk']) ?></div>
                                 </td>
-                                <td class="text-center whitespace-nowrap"><?= getStatusBadge($req['status']) ?></td>
+                                <td class="text-center whitespace-nowrap">
+                                    <?= $stepBadge ?>
+                                </td>
                                 <td class="whitespace-nowrap">
                                     <div class="flex items-center gap-1.5">
-                                        <?php if ($req['status'] === 'pending'): ?>
+                                        <?php if ($canApproveRow): ?>
                                             <button type="button" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md shadow-emerald-600/20 transition transform active:scale-95 flex items-center gap-1" onclick="confirmApprove(<?= $req['id'] ?>, '<?= addslashes(htmlspecialchars($req['nama_lengkap'])) ?>')" title="Setujui Cuti">
-                                                <i class="fa-solid fa-check"></i> Approve
+                                                <i class="fa-solid fa-check"></i> Setuju
                                             </button>
                                             <button type="button" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md shadow-rose-600/20 transition transform active:scale-95 flex items-center gap-1" onclick="confirmReject(<?= $req['id'] ?>, '<?= addslashes(htmlspecialchars($req['nama_lengkap'])) ?>')" title="Tolak Cuti">
-                                                <i class="fa-solid fa-xmark"></i> Reject
+                                                <i class="fa-solid fa-xmark"></i> Tolak
                                             </button>
+                                        <?php elseif ($req['status'] === 'pending'): ?>
+                                            <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-500 font-bold text-[11px] border border-slate-200 flex items-center gap-1" title="Menunggu giliran approval">
+                                                <i class="fa-solid fa-hourglass-start text-slate-400"></i> Pantau
+                                            </span>
                                         <?php endif; ?>
                                         <a href="<?= BASE_URL ?>/index.php?page=leave-detail&id=<?= $req['id'] ?>" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition flex items-center justify-center shadow-2xs" title="Lihat Detail & Bukti">
                                             <i class="fa-solid fa-eye text-xs"></i>
