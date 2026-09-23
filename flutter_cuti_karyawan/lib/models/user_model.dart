@@ -15,8 +15,11 @@ class UserModel {
   final int cutiTerpakai;
   final int sisaCuti;
   final String? jenisKelamin;
+  final String? agama;
+  final String? statusPernikahan;
   final String? noHp;
   final String? alamat;
+  final String? statusAktif;
   final String? foto;
 
   UserModel({
@@ -36,11 +39,15 @@ class UserModel {
     required this.cutiTerpakai,
     required this.sisaCuti,
     this.jenisKelamin,
+    this.agama,
+    this.statusPernikahan,
     this.noHp,
     this.alamat,
+    this.statusAktif,
     this.foto,
   });
 
+  int get deptId => departemenId;
   bool get isAdmin => role == 'admin' || role == 'superadmin' || role == 'hrd' || levelHierarki >= 7;
   bool get isManager => role == 'manager' || (levelHierarki >= 5 && levelHierarki <= 6);
   bool get isSupervisor => role == 'supervisor' || role == 'leader' || (levelHierarki >= 3 && levelHierarki <= 4);
@@ -102,8 +109,11 @@ class UserModel {
       cutiTerpakai: int.tryParse(json['cuti_terpakai']?.toString() ?? '0') ?? 0,
       sisaCuti: int.tryParse(json['sisa_cuti']?.toString() ?? '0') ?? 0,
       jenisKelamin: json['jenis_kelamin']?.toString(),
+      agama: json['agama']?.toString(),
+      statusPernikahan: json['status_pernikahan']?.toString(),
       noHp: json['no_hp']?.toString(),
       alamat: json['alamat']?.toString(),
+      statusAktif: json['status_aktif']?.toString() ?? 'Aktif',
       foto: json['foto']?.toString(),
     );
   }
@@ -126,8 +136,11 @@ class UserModel {
       'cuti_terpakai': cutiTerpakai,
       'sisa_cuti': sisaCuti,
       'jenis_kelamin': jenisKelamin,
+      'agama': agama,
+      'status_pernikahan': statusPernikahan,
       'no_hp': noHp,
       'alamat': alamat,
+      'status_aktif': statusAktif,
       'foto': foto,
     };
   }
