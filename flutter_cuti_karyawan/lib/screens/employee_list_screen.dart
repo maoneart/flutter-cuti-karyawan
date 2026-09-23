@@ -102,7 +102,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
 
     showModalBottomSheet(
       context: context,
-      isScrollable: true,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(
