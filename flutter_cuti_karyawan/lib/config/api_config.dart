@@ -41,4 +41,5 @@ class ApiConfig {
 
   static String get employeeOptions => '$baseUrl/employees/options.php';
   static String get employeeCreate => '$baseUrl/employees/create.php';
+  static String get employeesList => '$baseUrl/employees/list.php';
 }

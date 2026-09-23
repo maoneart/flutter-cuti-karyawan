@@ -7,7 +7,7 @@
 require_once __DIR__ . '/../middleware/auth_middleware.php';
 
 $currentUser = authenticateApiUser();
-requireApiRole(['admin'], $currentUser);
+requireApiRole(['superadmin', 'admin', 'hrd'], $currentUser);
 
 $raw = file_get_contents('php://input');
 $input = json_decode($raw, true) ?? $_POST;

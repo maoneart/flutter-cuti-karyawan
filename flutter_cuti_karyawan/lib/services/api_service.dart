@@ -477,5 +477,34 @@ class ApiService {
       return ApiResponse(success: false, message: 'Gagal mengirim data karyawan');
     }
   }
+
+  /// 16. Get Employees List
+  static Future<ApiResponse<List<UserModel>>> getEmployeesList({
+    int? deptId,
+    String search = '',
+    String role = '',
+  }) async {
+    try {
+      final uri = Uri.parse(ApiConfig.employeesList).replace(queryParameters: {
+        if (deptId != null && deptId > 0) 'dept_id': deptId.toString(),
+        if (search.isNotEmpty) 'search': search,
+        if (role.isNotEmpty) 'role': role,
+      });
+
+      final response = await http.get(uri, headers: _getHeaders()).timeout(timeoutDuration);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        final list = (body['data'] as List<dynamic>)
+            .map((e) => UserModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+        return ApiResponse(success: true, message: 'Sukses', data: list);
+      } else {
+        return ApiResponse(success: false, message: body['message'] ?? 'Gagal memuat daftar karyawan');
+      }
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal menghubungi server');
+    }
+  }
 }
 

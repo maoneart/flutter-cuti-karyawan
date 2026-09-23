@@ -394,7 +394,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (_) => const AddEmployeeScreen()),
+                                      MaterialPageRoute(builder: (_) => const EmployeeListScreen()),
                                     ).then((_) => _loadStats());
                                   },
                                   borderRadius: BorderRadius.circular(14),
@@ -417,14 +417,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     ),
                                     child: const Row(
                                       children: [
-                                        Icon(CupertinoIcons.person_badge_plus, color: Colors.white, size: 24),
+                                        Icon(CupertinoIcons.person_3_fill, color: Colors.white, size: 24),
                                         SizedBox(width: 10),
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                '+ Karyawan',
+                                                'Data Karyawan',
                                                 style: TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
@@ -432,7 +432,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 ),
                                               ),
                                               Text(
-                                                'Daftar Pegawai',
+                                                'Daftar & Tambah',
                                                 style: TextStyle(color: Colors.white70, fontSize: 11),
                                               ),
                                             ],
