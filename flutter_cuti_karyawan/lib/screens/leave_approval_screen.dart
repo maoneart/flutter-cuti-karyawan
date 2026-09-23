@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../config/app_theme.dart';
 import '../models/leave_model.dart';
+import '../models/user_model.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import 'leave_detail_screen.dart';
 
 class LeaveApprovalScreen extends StatefulWidget {
@@ -22,6 +24,21 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
   void initState() {
     super.initState();
     _loadApprovals();
+  }
+
+  bool _canApproveItem(LeaveModel leave, UserModel? user) {
+    if (user == null || !leave.isPending) return false;
+    if (user.id == leave.employeeId) return false;
+
+    final step = leave.approvalStep.toLowerCase();
+    if (step == 'pending_spv') {
+      return user.isSupervisor && user.departemenId == leave.departemenId;
+    } else if (step == 'pending_manager') {
+      return user.isManager;
+    } else if (step == 'pending_hrd') {
+      return user.isAdmin;
+    }
+    return false;
   }
 
   Future<void> _loadApprovals() async {
@@ -358,35 +375,91 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                                   // Actions (if pending)
                                   if (leave.isPending) ...[
                                     const SizedBox(height: 14),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: OutlinedButton.icon(
-                                            style: OutlinedButton.styleFrom(
-                                              foregroundColor: AppTheme.statusRejected,
-                                              side: const BorderSide(color: AppTheme.statusRejected),
-                                              padding: const EdgeInsets.symmetric(vertical: 10),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    Builder(
+                                      builder: (context) {
+                                        final currentUser = AuthService.currentUser;
+                                        final canApproveThis = _canApproveItem(leave, currentUser);
+
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: OutlinedButton.icon(
+                                                    style: OutlinedButton.styleFrom(
+                                                      foregroundColor: canApproveThis ? AppTheme.statusRejected : const Color(0xFF94A3B8),
+                                                      side: BorderSide(
+                                                        color: canApproveThis ? AppTheme.statusRejected : const Color(0xFFCBD5E1),
+                                                      ),
+                                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                                    ),
+                                                    onPressed: canApproveThis ? () => _showApprovalDialog(leave, false) : null,
+                                                    icon: Icon(
+                                                      Icons.close_rounded,
+                                                      size: 16,
+                                                      color: canApproveThis ? AppTheme.statusRejected : const Color(0xFF94A3B8),
+                                                    ),
+                                                    label: Text(
+                                                      'Tolak',
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: canApproveThis ? AppTheme.statusRejected : const Color(0xFF94A3B8),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: ElevatedButton.icon(
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: canApproveThis
+                                                          ? AppTheme.statusApproved
+                                                          : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                                      elevation: canApproveThis ? 1 : 0,
+                                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                                    ),
+                                                    onPressed: canApproveThis ? () => _showApprovalDialog(leave, true) : null,
+                                                    icon: Icon(
+                                                      Icons.check_rounded,
+                                                      size: 16,
+                                                      color: canApproveThis ? Colors.white : const Color(0xFF94A3B8),
+                                                    ),
+                                                    label: Text(
+                                                      'Setujui',
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: canApproveThis ? Colors.white : const Color(0xFF94A3B8),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            onPressed: () => _showApprovalDialog(leave, false),
-                                            icon: const Icon(Icons.close_rounded, size: 16),
-                                            label: const Text('Tolak', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: ElevatedButton.icon(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: AppTheme.statusApproved,
-                                              padding: const EdgeInsets.symmetric(vertical: 10),
-                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                            ),
-                                            onPressed: () => _showApprovalDialog(leave, true),
-                                            icon: const Icon(Icons.check_rounded, size: 16),
-                                            label: const Text('Setujui', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
-                                          ),
-                                        ),
-                                      ],
+                                            if (!canApproveThis) ...[
+                                              const SizedBox(height: 6),
+                                              Center(
+                                                child: Text(
+                                                  leave.approvalStep == 'pending_spv'
+                                                      ? 'Menunggu persetujuan Leader/Spv lebih dulu'
+                                                      : (leave.approvalStep == 'pending_manager'
+                                                          ? 'Menunggu persetujuan Plant Manager lebih dulu'
+                                                          : 'Menunggu persetujuan akhir HRD'),
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    color: Color(0xFFEF4444),
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        );
+                                      },
                                     ),
                                   ],
                                 ],

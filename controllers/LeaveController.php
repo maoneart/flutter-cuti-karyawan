@@ -272,23 +272,34 @@ class LeaveController {
 
         $currentStep = $leave['approval_step'] ?? 'pending_spv';
 
-        // Authorization check: Plant Manager & HRD across all depts, Spv/Leader for own dept
         $isHRD = ($currentUser['role'] === 'superadmin' || $currentUser['role'] === 'admin' || $currentUser['role'] === 'hrd' || $hierarki >= 7);
         $isManager = ($currentUser['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6));
-        $isSpv = ($currentUser['role'] === 'supervisor' || $currentUser['role'] === 'leader' || $hierarki >= 3);
+        $isSpv = ($currentUser['role'] === 'supervisor' || $currentUser['role'] === 'leader' || ($hierarki >= 3 && $hierarki <= 4));
 
-        if (!$isHRD && !$isManager && ($currentUser['departemen_id'] != $leave['departemen_id'])) {
-            setFlash('error', 'Akses ditolak! Anda hanya dapat memproses cuti dari departemen Anda.');
-            header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
-            exit;
+        // Strict tier check
+        if ($currentStep === 'pending_spv') {
+            if (!$isSpv || ($currentUser['departemen_id'] != $leave['departemen_id'])) {
+                setFlash('error', 'Pengajuan ini masih berada pada tahap persetujuan Leader / Supervisor departemen pemohon.');
+                header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
+                exit;
+            }
+        } elseif ($currentStep === 'pending_manager') {
+            if (!$isManager) {
+                setFlash('error', 'Pengajuan ini sedang berada pada tahap persetujuan Plant Manager.');
+                header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
+                exit;
+            }
+        } elseif ($currentStep === 'pending_hrd') {
+            if (!$isHRD) {
+                setFlash('error', 'Pengajuan ini sedang berada pada tahap persetujuan akhir HRD.');
+                header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
+                exit;
+            }
         }
 
         $pdo->beginTransaction();
         try {
             if ($currentStep === 'pending_spv') {
-                if (!$isSpv && !$isManager && !$isHRD) {
-                    throw new Exception('Anda tidak memiliki wewenang untuk persetujuan Spv.');
-                }
                 $stmtUp = $pdo->prepare("
                     UPDATE pengajuan_cuti 
                     SET spv_id = ?, spv_at = NOW(), spv_notes = ?, approval_step = 'pending_manager' 
@@ -297,9 +308,6 @@ class LeaveController {
                 $stmtUp->execute([$currentUser['id'], $notes, $leaveId]);
 
             } elseif ($currentStep === 'pending_manager') {
-                if (!$isManager && !$isHRD) {
-                    throw new Exception('Persetujuan ini memerlukan wewenang Plant Manager.');
-                }
                 $stmtUp = $pdo->prepare("
                     UPDATE pengajuan_cuti 
                     SET manager_id = ?, manager_at = NOW(), manager_notes = ?, approval_step = 'pending_hrd' 
@@ -308,9 +316,6 @@ class LeaveController {
                 $stmtUp->execute([$currentUser['id'], $notes, $leaveId]);
 
             } elseif ($currentStep === 'pending_hrd') {
-                if (!$isHRD) {
-                    throw new Exception('Persetujuan final ini memerlukan wewenang HRD.');
-                }
                 $stmtUp = $pdo->prepare("
                     UPDATE pengajuan_cuti 
                     SET hrd_id = ?, hrd_at = NOW(), hrd_notes = ?, approval_step = 'approved',
@@ -347,7 +352,7 @@ class LeaveController {
             }
 
             $pdo->commit();
-            setFlash('success', "Persetujuan tahap {$currentStep} untuk {$leave['nama_lengkap']} berhasil diproses!");
+            setFlash('success', "Persetujuan berhasil diproses!");
         } catch (Exception $e) {
             $pdo->rollBack();
             setFlash('error', 'Gagal memproses persetujuan cuti: ' . $e->getMessage());
@@ -388,13 +393,29 @@ class LeaveController {
             exit;
         }
 
+        $currentStep = $leave['approval_step'] ?? 'pending_spv';
         $isHRD = ($currentUser['role'] === 'superadmin' || $currentUser['role'] === 'admin' || $currentUser['role'] === 'hrd' || $hierarki >= 7);
         $isManager = ($currentUser['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6));
+        $isSpv = ($currentUser['role'] === 'supervisor' || $currentUser['role'] === 'leader' || ($hierarki >= 3 && $hierarki <= 4));
 
-        if (!$isHRD && !$isManager && ($currentUser['departemen_id'] != $leave['departemen_id'])) {
-            setFlash('error', 'Akses ditolak!');
-            header('Location: ' . BASE_URL . '/index.php?page=dashboard');
-            exit;
+        if ($currentStep === 'pending_spv') {
+            if (!$isSpv || ($currentUser['departemen_id'] != $leave['departemen_id'])) {
+                setFlash('error', 'Akses ditolak! Anda tidak memiliki wewenang untuk menolak pengajuan ini.');
+                header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
+                exit;
+            }
+        } elseif ($currentStep === 'pending_manager') {
+            if (!$isManager) {
+                setFlash('error', 'Akses ditolak! Hanya Plant Manager yang dapat memproses tahap ini.');
+                header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
+                exit;
+            }
+        } elseif ($currentStep === 'pending_hrd') {
+            if (!$isHRD) {
+                setFlash('error', 'Akses ditolak! Hanya HRD yang dapat memproses tahap ini.');
+                header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
+                exit;
+            }
         }
 
         $stmtReject = $pdo->prepare("

@@ -770,32 +770,81 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Direct Approval Actions (if authorized approver for current step)
-                          if (canApproveNow) ...[
+                          // Tindakan Persetujuan Card (for Approvers: Leader, Manager, HRD)
+                          if (!isOwner && (user?.canApprove == true || _leave!.isPending)) ...[
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: cardBg,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: borderCol),
+                                border: Border.all(
+                                  color: canApproveNow
+                                      ? (isDark ? const Color(0xFF0284C7) : const Color(0xFFBAE6FD))
+                                      : borderCol,
+                                ),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Row(
                                     children: [
-                                      const Icon(CupertinoIcons.checkmark_shield_fill, color: Color(0xFF007AFF), size: 20),
+                                      Icon(
+                                        canApproveNow
+                                            ? CupertinoIcons.checkmark_shield_fill
+                                            : CupertinoIcons.lock_shield_fill,
+                                        color: canApproveNow
+                                            ? const Color(0xFF007AFF)
+                                            : const Color(0xFF94A3B8),
+                                        size: 20,
+                                      ),
                                       const SizedBox(width: 8),
-                                      Text(
-                                        'Tindakan Persetujuan',
-                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textHead),
+                                      Expanded(
+                                        child: Text(
+                                          'Tindakan Persetujuan',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            color: textHead,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: canApproveNow
+                                              ? const Color(0xFF34C759).withOpacity(0.12)
+                                              : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          canApproveNow ? 'Giliran Anda' : 'Tombol Dinonaktifkan',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.bold,
+                                            color: canApproveNow
+                                                ? const Color(0xFF16A34A)
+                                                : const Color(0xFF64748B),
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 6),
+                                  const SizedBox(height: 8),
                                   Text(
-                                    'Pengajuan ini sedang menunggu tindakan dari Anda.',
-                                    style: TextStyle(fontSize: 12.5, color: textSub),
+                                    canApproveNow
+                                        ? 'Pengajuan ini sedang menunggu tindakan dari Anda.'
+                                        : (_leave!.approvalStep == 'pending_spv'
+                                            ? 'Tombol dinonaktifkan: Menunggu persetujuan dari Leader / Supervisor Departemen ${_leave!.namaDept ?? ""} lebih dulu.'
+                                            : (_leave!.approvalStep == 'pending_manager'
+                                                ? 'Tombol dinonaktifkan: Menunggu persetujuan dari Plant Manager lebih dulu.'
+                                                : (_leave!.approvalStep == 'pending_hrd'
+                                                    ? 'Tombol dinonaktifkan: Pengajuan sedang menunggu persetujuan akhir HRD.'
+                                                    : 'Pengajuan ini sudah selesai diproses.'))),
+                                    style: TextStyle(
+                                      fontSize: 12.5,
+                                      color: canApproveNow ? textSub : const Color(0xFFEF4444),
+                                      height: 1.35,
+                                    ),
                                   ),
                                   const SizedBox(height: 16),
                                   if (_isProcessingAction)
@@ -806,70 +855,60 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                                         Expanded(
                                           child: OutlinedButton.icon(
                                             style: OutlinedButton.styleFrom(
-                                              foregroundColor: const Color(0xFFFF3B30),
-                                              side: const BorderSide(color: Color(0xFFFF3B30), width: 1.5),
+                                              foregroundColor: canApproveNow ? const Color(0xFFFF3B30) : const Color(0xFF94A3B8),
+                                              side: BorderSide(
+                                                color: canApproveNow ? const Color(0xFFFF3B30) : const Color(0xFFCBD5E1),
+                                                width: 1.5,
+                                              ),
                                               padding: const EdgeInsets.symmetric(vertical: 13),
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                             ),
-                                            icon: const Icon(CupertinoIcons.xmark_circle, size: 18),
-                                            label: const Text('Tolak', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                            onPressed: _handleRejectAction,
+                                            icon: Icon(
+                                              CupertinoIcons.xmark_circle,
+                                              size: 18,
+                                              color: canApproveNow ? const Color(0xFFFF3B30) : const Color(0xFF94A3B8),
+                                            ),
+                                            label: Text(
+                                              'Tolak',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                                color: canApproveNow ? const Color(0xFFFF3B30) : const Color(0xFF94A3B8),
+                                              ),
+                                            ),
+                                            onPressed: canApproveNow ? _handleRejectAction : null,
                                           ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: ElevatedButton.icon(
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFF34C759),
-                                              foregroundColor: Colors.white,
+                                              backgroundColor: canApproveNow
+                                                  ? const Color(0xFF34C759)
+                                                  : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                              foregroundColor: canApproveNow ? Colors.white : const Color(0xFF94A3B8),
+                                              elevation: canApproveNow ? 1 : 0,
                                               padding: const EdgeInsets.symmetric(vertical: 13),
                                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                             ),
-                                            icon: const Icon(CupertinoIcons.checkmark_alt_circle, size: 18),
-                                            label: const Text('Setujui', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                            onPressed: _handleApproveAction,
+                                            icon: Icon(
+                                              CupertinoIcons.checkmark_alt_circle,
+                                              size: 18,
+                                              color: canApproveNow ? Colors.white : const Color(0xFF94A3B8),
+                                            ),
+                                            label: Text(
+                                              'Setujui',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                                color: canApproveNow ? Colors.white : const Color(0xFF94A3B8),
+                                              ),
+                                            ),
+                                            onPressed: canApproveNow ? _handleApproveAction : null,
                                           ),
                                         ),
                                       ],
                                     ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                          ] else if (!isOwner && _leave!.isPending && (user?.canApprove == true)) ...[
-                            // Informational waiting banner for higher/other tiers
-                            Container(
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: borderCol),
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(CupertinoIcons.clock_fill, color: Color(0xFFFF9500), size: 18),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Menunggu Giliran Persetujuan',
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: textHead),
-                                        ),
-                                        const SizedBox(height: 3),
-                                        Text(
-                                          _leave!.approvalStep == 'pending_spv'
-                                              ? 'Pengajuan ini saat ini sedang dalam antrean persetujuan Leader / Supervisor Departemen ${_leave!.namaDept ?? ""}. Anda baru dapat memproses setelah disetujui Leader / Supervisor.'
-                                              : (_leave!.approvalStep == 'pending_manager'
-                                                  ? 'Pengajuan ini telah disetujui Leader/Spv dan saat ini sedang menunggu persetujuan Plant Manager.'
-                                                  : 'Pengajuan ini telah disetujui Plant Manager dan saat ini sedang menunggu persetujuan akhir HRD.'),
-                                          style: TextStyle(fontSize: 12, color: textSub, height: 1.3),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
                                 ],
                               ),
                             ),

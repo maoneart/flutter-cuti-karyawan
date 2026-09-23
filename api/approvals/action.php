@@ -54,17 +54,32 @@ if ($leave['status'] !== 'pending') {
 
 $currentStep = $leave['approval_step'] ?? 'pending_spv';
 
-// Security check: HRD/Admin and Plant Manager can process approvals across all departments
-// Leader / Spv (level 3-4) can only process approvals for their own department
-if ($user['role'] !== 'superadmin' && $user['role'] !== 'admin' && $user['role'] !== 'hrd' && $user['role'] !== 'manager' && $hierarki < 5 && $user['departemen_id'] != $leave['departemen_id']) {
-    jsonResponse(false, 'Akses ditolak. Anda hanya dapat memproses pengajuan cuti anggota departemen Anda.', null, 403);
+$isHrd = ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role'] === 'hrd' || $hierarki >= 7);
+$isManager = ($user['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6));
+$isSpv = ($user['role'] === 'supervisor' || $user['role'] === 'leader' || ($hierarki >= 3 && $hierarki <= 4));
+
+// Strict Sequential Tier Authorization Check:
+if ($currentStep === 'pending_spv') {
+    if (!$isSpv || ($user['departemen_id'] != $leave['departemen_id'])) {
+        jsonResponse(false, 'Pengajuan ini masih berada pada tahap persetujuan Leader / Supervisor departemen pemohon.', null, 403);
+    }
+} elseif ($currentStep === 'pending_manager') {
+    if (!$isManager) {
+        jsonResponse(false, 'Pengajuan ini sedang berada pada tahap persetujuan Plant Manager.', null, 403);
+    }
+} elseif ($currentStep === 'pending_hrd') {
+    if (!$isHrd) {
+        jsonResponse(false, 'Pengajuan ini sedang berada pada tahap persetujuan akhir HRD.', null, 403);
+    }
+} else {
+    jsonResponse(false, "Pengajuan tidak dalam status menunggu persetujuan (Status: {$currentStep}).", null, 400);
 }
 
 try {
     $pdo->beginTransaction();
 
     if ($action === 'reject') {
-        // Any level rejecting immediately terminates with status 'rejected'
+        // Current authorized tier rejects -> immediately terminates with status 'rejected'
         $stmtReject = $pdo->prepare("
             UPDATE pengajuan_cuti 
             SET status = 'rejected', 
@@ -87,22 +102,8 @@ try {
         ]);
 
     } elseif ($action === 'approve') {
-        // Determine transition:
-        // 1. If currently at pending_spv -> moves to pending_manager
-        // 2. If currently at pending_manager -> moves to pending_hrd
-        // 3. If currently at pending_hrd (or user is HRD/Admin) -> Final Approval!
-        
-        $isHrd = ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role'] === 'hrd' || $hierarki >= 7);
-        $isManager = ($user['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6));
-        $isSpv = ($user['role'] === 'supervisor' || $user['role'] === 'leader' || ($hierarki >= 3 && $hierarki <= 4));
-
         if ($currentStep === 'pending_spv') {
-            // Stage 1: MUST be approved by Leader / Supervisor of the applicant's department
-            if (!$isSpv || ($user['departemen_id'] != $leave['departemen_id'])) {
-                $pdo->rollBack();
-                jsonResponse(false, 'Pengajuan ini masih menunggu persetujuan dari Leader / Supervisor departemen pemohon.', null, 403);
-            }
-
+            // Stage 1 -> Advance to Stage 2 (Plant Manager)
             $stmtUpd = $pdo->prepare("
                 UPDATE pengajuan_cuti 
                 SET approval_step = 'pending_manager',
@@ -123,12 +124,7 @@ try {
             ]);
 
         } elseif ($currentStep === 'pending_manager') {
-            // Stage 2: MUST be approved by Plant Manager (or HRD override)
-            if (!$isManager && !$isHrd) {
-                $pdo->rollBack();
-                jsonResponse(false, 'Pengajuan ini sedang menunggu persetujuan dari Plant Manager.', null, 403);
-            }
-
+            // Stage 2 -> Advance to Stage 3 (HRD Final)
             $stmtUpd = $pdo->prepare("
                 UPDATE pengajuan_cuti 
                 SET approval_step = 'pending_hrd',
