@@ -65,7 +65,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
-                Navigator.pop(context); // Back to setting
+                Navigator.pop(context);
               },
               child: const Text('OK'),
             ),
@@ -84,17 +84,41 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textMuted;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(CupertinoIcons.back, color: AppTheme.primary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Ganti Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        elevation: 0,
+        backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0.5,
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () => Navigator.pop(context),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(CupertinoIcons.chevron_back, color: Color(0xFF007AFF), size: 28),
+              Text(
+                'Kembali',
+                style: TextStyle(
+                  color: Color(0xFF007AFF),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        leadingWidth: 95,
+        title: Text(
+          'Ganti Password',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: textHead),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -106,16 +130,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8, bottom: 8),
-                    child: Text('KEAMANAN AKUN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted)),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, bottom: 8),
+                    child: Text('KEAMANAN AKUN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textSub)),
                   ),
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      color: cardBg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: borderCol),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

@@ -79,17 +79,41 @@ class _ServerSettingScreenState extends State<ServerSettingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textMuted;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(CupertinoIcons.back, color: AppTheme.primary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text('Konfigurasi Server API', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        elevation: 0,
+        backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0.5,
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () => Navigator.pop(context),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(CupertinoIcons.chevron_back, color: Color(0xFF007AFF), size: 28),
+              Text(
+                'Kembali',
+                style: TextStyle(
+                  color: Color(0xFF007AFF),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        leadingWidth: 95,
+        title: Text(
+          'Konfigurasi Server API',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: textHead),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -99,70 +123,97 @@ class _ServerSettingScreenState extends State<ServerSettingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 8, bottom: 8),
-                  child: Text('KONEKSI API BACKEND', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted)),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, bottom: 8),
+                  child: Text('ALAMAT SERVER API', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textSub)),
                 ),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: borderCol),
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        'URL Backend API:',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textHead),
+                      ),
+                      const SizedBox(height: 8),
                       TextFormField(
                         controller: _urlController,
-                        decoration: const InputDecoration(
-                          labelText: 'API Base URL',
+                        style: TextStyle(fontSize: 14, color: isDark ? Colors.white : AppTheme.textPrimary),
+                        decoration: InputDecoration(
                           hintText: 'http://172.16.0.107/Cuti_Karyawan/api',
-                          prefixIcon: Icon(Icons.dns_rounded, size: 20),
+                          prefixIcon: const Icon(Icons.dns_rounded, size: 20),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () => _urlController.clear(),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 14),
 
-                      // Test Ping Button
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        onPressed: _isTesting ? null : _handleTestPing,
-                        icon: _isTesting
-                            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Icon(Icons.network_check_rounded, size: 18),
-                        label: const Text('Uji Ping & Koneksi Server', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                      // Ping Test Button
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: _isTesting ? null : _handleTestPing,
+                              icon: _isTesting
+                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                  : const Icon(Icons.wifi_tethering_rounded, size: 18),
+                              label: Text(_isTesting ? 'Menguji...' : 'Uji Koneksi (Ping)'),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: _handleSave,
+                              icon: const Icon(Icons.save_rounded, size: 18),
+                              label: const Text('Simpan Server'),
+                            ),
+                          ),
+                        ],
                       ),
 
+                      // Test Result Banner
                       if (_testResult != null) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 14),
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: (_testSuccess == true) ? AppTheme.statusApprovedBg : AppTheme.statusRejectedBg,
+                            color: _testSuccess == true ? AppTheme.statusApprovedBg : AppTheme.statusRejectedBg,
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: (_testSuccess == true) ? AppTheme.statusApproved : AppTheme.statusRejected,
+                              color: (_testSuccess == true ? AppTheme.statusApproved : AppTheme.statusRejected).withOpacity(0.3),
                             ),
                           ),
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Icon(
-                                (_testSuccess == true) ? Icons.check_circle : Icons.error_outline,
-                                size: 18,
-                                color: (_testSuccess == true) ? AppTheme.statusApproved : AppTheme.statusRejected,
+                                _testSuccess == true ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                                color: _testSuccess == true ? AppTheme.statusApproved : AppTheme.statusRejected,
+                                size: 20,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   _testResult!,
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    color: (_testSuccess == true) ? AppTheme.statusApproved : AppTheme.statusRejected,
+                                    fontSize: 12.5,
                                     fontWeight: FontWeight.w600,
+                                    color: _testSuccess == true ? AppTheme.statusApproved : AppTheme.statusRejected,
                                   ),
                                 ),
                               ),
@@ -170,43 +221,47 @@ class _ServerSettingScreenState extends State<ServerSettingScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 20),
-
-                      // Save Button
-                      ElevatedButton(
-                        onPressed: _handleSave,
-                        child: const Text('Simpan & Terapkan', style: TextStyle(fontSize: 15)),
-                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 // Presets
-                const Padding(
-                  padding: EdgeInsets.only(left: 8, bottom: 8),
-                  child: Text('PILIHAN CEPAT (PRESETS)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.textMuted)),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, bottom: 8),
+                  child: Text('PRESET SERVER CEPAT', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textSub)),
                 ),
                 Container(
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: borderCol),
                   ),
                   child: Column(
                     children: [
                       ListTile(
-                        leading: const CircleAvatar(backgroundColor: Color(0xFFE0E7FF), child: Icon(Icons.laptop, color: AppTheme.primary, size: 20)),
-                        title: const Text('IP Laptop Saat Ini (172.16.0.107)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Color(0xFF0284C7),
+                          child: Icon(Icons.wifi, size: 16, color: Colors.white),
+                        ),
+                        title: const Text('WiFi Lokal Kantor (172.16.0.107)', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
                         subtitle: const Text('http://172.16.0.107/Cuti_Karyawan/api', style: TextStyle(fontSize: 11)),
                         onTap: () => _setPreset('http://172.16.0.107/Cuti_Karyawan/api'),
                       ),
-                      const Divider(height: 1, indent: 56, color: Color(0xFFF1F5F9)),
+                      const Divider(height: 16),
                       ListTile(
-                        leading: const CircleAvatar(backgroundColor: Color(0xFFDCFCE7), child: Icon(Icons.cloud_done, color: Colors.green, size: 20)),
-                        title: const Text('Custom Domain / Hosting', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                        subtitle: const Text('https://domainanda.com/api', style: TextStyle(fontSize: 11)),
-                        onTap: () => _setPreset('https://domainanda.com/api'),
+                        contentPadding: EdgeInsets.zero,
+                        leading: const CircleAvatar(
+                          radius: 16,
+                          backgroundColor: Color(0xFF059669),
+                          child: Icon(Icons.computer, size: 16, color: Colors.white),
+                        ),
+                        title: const Text('Localhost (Emulator / Dev PC)', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                        subtitle: const Text('http://localhost/Cuti_Karyawan/api', style: TextStyle(fontSize: 11)),
+                        onTap: () => _setPreset('http://localhost/Cuti_Karyawan/api'),
                       ),
                     ],
                   ),

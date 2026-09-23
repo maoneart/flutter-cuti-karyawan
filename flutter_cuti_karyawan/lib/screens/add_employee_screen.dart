@@ -124,7 +124,7 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
                 child: const Text('OK'),
                 onPressed: () {
                   Navigator.pop(ctx);
-                  Navigator.pop(context, true); // return success
+                  Navigator.pop(context, true);
                 },
               ),
             ],
@@ -143,11 +143,16 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textHead = isDark ? Colors.white : const Color(0xFF0F172A);
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE5E5EA);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7), // iOS system grouped background
+      backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFFF2F2F7),
+        backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
         centerTitle: true,
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -168,10 +173,10 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           ),
         ),
         leadingWidth: 95,
-        title: const Text(
+        title: Text(
           'Tambah Karyawan',
           style: TextStyle(
-            color: Colors.black,
+            color: textHead,
             fontWeight: FontWeight.bold,
             fontSize: 17,
           ),
@@ -181,183 +186,190 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
           ? const Center(child: CupertinoActivityIndicator(radius: 14))
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSectionHeader('DATA PEKERJAAN & PENEMPATAN'),
-                    _buildGroupedCard([
-                      _buildTextField(
-                        controller: _nikController,
-                        label: 'NIK Karyawan',
-                        placeholder: 'Contoh: NAK-055',
-                        isRequired: true,
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildDropdownRow<int>(
-                        label: 'Departemen',
-                        value: _selectedDeptId,
-                        items: _departments.map((d) {
-                          return DropdownMenuItem<int>(
-                            value: d['id'] as int,
-                            child: Text('${d['nama_dept']} (${d['kode_dept']})'),
-                          );
-                        }).toList(),
-                        onChanged: (v) => setState(() => _selectedDeptId = v),
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildDropdownRow<int>(
-                        label: 'Jabatan',
-                        value: _selectedJabatanId,
-                        items: _positions.map((p) {
-                          return DropdownMenuItem<int>(
-                            value: p['id'] as int,
-                            child: Text(p['nama_jabatan'].toString()),
-                          );
-                        }).toList(),
-                        onChanged: (v) => setState(() => _selectedJabatanId = v),
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildDropdownRow<String>(
-                        label: 'Hak Akses (Role)',
-                        value: _selectedRole,
-                        items: const [
-                          DropdownMenuItem(value: 'operator', child: Text('Operator Produksi')),
-                          DropdownMenuItem(value: 'staff', child: Text('Staff Administrasi/Teknis')),
-                          DropdownMenuItem(value: 'atasan', child: Text('Atasan (Leader/Spv/Mgr)')),
-                          DropdownMenuItem(value: 'admin', child: Text('HRD / Super Admin')),
-                        ],
-                        onChanged: (v) => setState(() => _selectedRole = v ?? 'operator'),
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildDatePickerRow(
-                        label: 'Tanggal Masuk',
-                        date: _tanggalMasuk,
-                        onTap: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: _tanggalMasuk,
-                            firstDate: DateTime(1990),
-                            lastDate: DateTime(2035),
-                          );
-                          if (picked != null) {
-                            setState(() => _tanggalMasuk = picked);
-                          }
-                        },
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildTextField(
-                        controller: _kuotaController,
-                        label: 'Jatah Kuota Cuti',
-                        placeholder: '12',
-                        keyboardType: TextInputType.number,
-                        isRequired: true,
-                      ),
-                    ]),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 550),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader('DATA PEKERJAAN & PENEMPATAN', isDark),
+                        _buildGroupedCard([
+                          _buildTextField(
+                            controller: _nikController,
+                            label: 'NIK Karyawan',
+                            placeholder: 'Contoh: NAK-055',
+                            isRequired: true,
+                            isDark: isDark,
+                          ),
+                          _buildDropdownRow<int>(
+                            label: 'Departemen',
+                            value: _selectedDeptId,
+                            items: _departments.map((d) {
+                              return DropdownMenuItem<int>(
+                                value: d['id'] as int,
+                                child: Text('${d['nama_dept']} (${d['kode_dept']})'),
+                              );
+                            }).toList(),
+                            onChanged: (v) => setState(() => _selectedDeptId = v),
+                            isDark: isDark,
+                          ),
+                          _buildDropdownRow<int>(
+                            label: 'Jabatan Kerja',
+                            value: _selectedJabatanId,
+                            items: _positions.map((p) {
+                              return DropdownMenuItem<int>(
+                                value: p['id'] as int,
+                                child: Text(p['nama_jabatan'].toString()),
+                              );
+                            }).toList(),
+                            onChanged: (v) => setState(() => _selectedJabatanId = v),
+                            isDark: isDark,
+                          ),
+                          _buildDropdownRow<String>(
+                            label: 'Hak Akses (Role)',
+                            value: _selectedRole,
+                            items: const [
+                              DropdownMenuItem(value: 'operator', child: Text('Operator (Karyawan Produksi)')),
+                              DropdownMenuItem(value: 'staff', child: Text('Staff (Administrasi/Teknis)')),
+                              DropdownMenuItem(value: 'atasan', child: Text('Atasan (Leader/Spv/Manager)')),
+                              DropdownMenuItem(value: 'admin', child: Text('HRD / Super Admin')),
+                            ],
+                            onChanged: (v) => setState(() => _selectedRole = v ?? 'operator'),
+                            isDark: isDark,
+                          ),
+                          _buildDatePickerRow(
+                            label: 'Tanggal Masuk (Join Date)',
+                            date: _tanggalMasuk,
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: _tanggalMasuk,
+                                firstDate: DateTime(1990),
+                                lastDate: DateTime(2035),
+                              );
+                              if (picked != null) {
+                                setState(() => _tanggalMasuk = picked);
+                              }
+                            },
+                            isDark: isDark,
+                          ),
+                          _buildTextField(
+                            controller: _kuotaController,
+                            label: 'Jatah Kuota Cuti Awal (Hari)',
+                            placeholder: '12',
+                            keyboardType: TextInputType.number,
+                            isRequired: true,
+                            isDark: isDark,
+                          ),
+                        ], cardBg: cardBg, borderCol: borderCol),
 
-                    const SizedBox(height: 20),
-                    _buildSectionHeader('PROFIL PRIBADI & AKUN LOGIN'),
-                    _buildGroupedCard([
-                      _buildTextField(
-                        controller: _namaController,
-                        label: 'Nama Lengkap',
-                        placeholder: 'Sesuai KTP',
-                        isRequired: true,
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildTextField(
-                        controller: _emailController,
-                        label: 'Email Perusahaan',
-                        placeholder: 'budi@nakakin.co.id',
-                        keyboardType: TextInputType.emailAddress,
-                        isRequired: true,
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildTextField(
-                        controller: _passwordController,
-                        label: 'Password Akun',
-                        placeholder: 'Default: password123',
-                        isRequired: true,
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildDropdownRow<String>(
-                        label: 'Jenis Kelamin',
-                        value: _selectedGender,
-                        items: const [
-                          DropdownMenuItem(value: 'Laki-laki', child: Text('Laki-laki')),
-                          DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),
-                        ],
-                        onChanged: (v) => setState(() => _selectedGender = v ?? 'Laki-laki'),
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildDropdownRow<String>(
-                        label: 'Status Nikah',
-                        value: _selectedMarital,
-                        items: const [
-                          DropdownMenuItem(value: 'Belum Menikah', child: Text('Belum Menikah')),
-                          DropdownMenuItem(value: 'Menikah', child: Text('Menikah')),
-                          DropdownMenuItem(value: 'Duda', child: Text('Duda')),
-                          DropdownMenuItem(value: 'Janda', child: Text('Janda')),
-                        ],
-                        onChanged: (v) => setState(() => _selectedMarital = v ?? 'Belum Menikah'),
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildTextField(
-                        controller: _noHpController,
-                        label: 'No. WhatsApp / HP',
-                        placeholder: '081234567890',
-                        keyboardType: TextInputType.phone,
-                      ),
-                      const Divider(height: 1, indent: 16, color: Color(0xFFE5E5EA)),
-                      _buildTextField(
-                        controller: _alamatController,
-                        label: 'Alamat Domisili',
-                        placeholder: 'Karawang / sekitarnya...',
-                        maxLines: 2,
-                      ),
-                    ]),
+                        const SizedBox(height: 20),
+                        _buildSectionHeader('PROFIL PRIBADI & AKUN LOGIN', isDark),
+                        _buildGroupedCard([
+                          _buildTextField(
+                            controller: _namaController,
+                            label: 'Nama Lengkap Sesuai KTP',
+                            placeholder: 'Contoh: Budi Santoso',
+                            isRequired: true,
+                            isDark: isDark,
+                          ),
+                          _buildTextField(
+                            controller: _emailController,
+                            label: 'Email Perusahaan',
+                            placeholder: 'budi@nakakin.co.id',
+                            keyboardType: TextInputType.emailAddress,
+                            isRequired: true,
+                            isDark: isDark,
+                          ),
+                          _buildTextField(
+                            controller: _passwordController,
+                            label: 'Password Akun',
+                            placeholder: 'Default: password123',
+                            isRequired: true,
+                            isDark: isDark,
+                          ),
+                          _buildDropdownRow<String>(
+                            label: 'Jenis Kelamin',
+                            value: _selectedGender,
+                            items: const [
+                              DropdownMenuItem(value: 'Laki-laki', child: Text('Laki-laki')),
+                              DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),
+                            ],
+                            onChanged: (v) => setState(() => _selectedGender = v ?? 'Laki-laki'),
+                            isDark: isDark,
+                          ),
+                          _buildDropdownRow<String>(
+                            label: 'Status Pernikahan',
+                            value: _selectedMarital,
+                            items: const [
+                              DropdownMenuItem(value: 'Belum Menikah', child: Text('Belum Menikah')),
+                              DropdownMenuItem(value: 'Menikah', child: Text('Menikah')),
+                              DropdownMenuItem(value: 'Duda', child: Text('Duda')),
+                              DropdownMenuItem(value: 'Janda', child: Text('Janda')),
+                            ],
+                            onChanged: (v) => setState(() => _selectedMarital = v ?? 'Belum Menikah'),
+                            isDark: isDark,
+                          ),
+                          _buildTextField(
+                            controller: _noHpController,
+                            label: 'No. Handphone / WhatsApp',
+                            placeholder: 'Contoh: 081234567890',
+                            keyboardType: TextInputType.phone,
+                            isDark: isDark,
+                          ),
+                          _buildTextField(
+                            controller: _alamatController,
+                            label: 'Alamat Domisili',
+                            placeholder: 'Alamat tempat tinggal di Karawang/sekitarnya...',
+                            maxLines: 2,
+                            isDark: isDark,
+                          ),
+                        ], cardBg: cardBg, borderCol: borderCol),
 
-                    const SizedBox(height: 28),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _isSaving ? null : _submitForm,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF007AFF),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
+                        const SizedBox(height: 28),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _isSaving ? null : _submitForm,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF007AFF),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: _isSaving
+                                ? const CupertinoActivityIndicator(color: Colors.white)
+                                : const Text(
+                                    'Simpan Data Karyawan',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
-                        child: _isSaving
-                            ? const CupertinoActivityIndicator(color: Colors.white)
-                            : const Text(
-                                'Simpan Data Karyawan',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
+                        const SizedBox(height: 40),
+                      ],
                     ),
-                    const SizedBox(height: 40),
-                  ],
+                  ),
                 ),
               ),
             ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, bool isDark) {
     return Padding(
-      padding: const EdgeInsets.only(left: 14, bottom: 6, top: 8),
+      padding: const EdgeInsets.only(left: 14, bottom: 8, top: 8),
       child: Text(
         title,
-        style: const TextStyle(
-          color: Color(0xFF6C6C70),
+        style: TextStyle(
+          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF6C6C70),
           fontSize: 12.5,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.2,
@@ -366,12 +378,12 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     );
   }
 
-  Widget _buildGroupedCard(List<Widget> children) {
+  Widget _buildGroupedCard(List<Widget> children, {required Color cardBg, required Color borderCol}) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E5EA)),
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderCol),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -387,45 +399,61 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     bool isRequired = false,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
+    required bool isDark,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        crossAxisAlignment: maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF1C1C1E),
+          Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
               ),
-            ),
+              if (isRequired)
+                const Text(' *', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            ],
           ),
-          Expanded(
-            child: TextFormField(
-              controller: controller,
-              keyboardType: keyboardType,
-              maxLines: maxLines,
-              style: const TextStyle(fontSize: 15),
-              decoration: InputDecoration(
-                hintText: placeholder,
-                hintStyle: const TextStyle(color: Color(0xFFC7C7CC), fontSize: 14),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 4),
+          const SizedBox(height: 6),
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            maxLines: maxLines,
+            style: TextStyle(fontSize: 14.5, color: isDark ? Colors.white : const Color(0xFF1C1C1E)),
+            decoration: InputDecoration(
+              hintText: placeholder,
+              hintStyle: TextStyle(color: isDark ? const Color(0xFF64748B) : const Color(0xFFC7C7CC), fontSize: 13.5),
+              isDense: true,
+              filled: true,
+              fillColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
               ),
-              validator: isRequired
-                  ? (val) {
-                      if (val == null || val.trim().isEmpty) {
-                        return 'Wajib diisi';
-                      }
-                      return null;
-                    }
-                  : null,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFF007AFF), width: 1.5),
+              ),
             ),
+            validator: isRequired
+                ? (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return '$label wajib diisi';
+                    }
+                    return null;
+                  }
+                : null,
           ),
         ],
       ),
@@ -437,31 +465,38 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     required T? value,
     required List<DropdownMenuItem<T>> items,
     required ValueChanged<T?> onChanged,
+    required bool isDark,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF1C1C1E),
-              ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
             ),
           ),
-          Expanded(
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+            ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<T>(
                 value: value,
                 isExpanded: true,
                 items: items,
                 onChanged: onChanged,
-                icon: const Icon(CupertinoIcons.chevron_down, size: 16, color: Color(0xFFC7C7CC)),
-                style: const TextStyle(fontSize: 14, color: Color(0xFF1C1C1E)),
+                icon: const Icon(CupertinoIcons.chevron_down, size: 16, color: Color(0xFF8E8E93)),
+                style: TextStyle(fontSize: 14, color: isDark ? Colors.white : const Color(0xFF1C1C1E)),
+                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
               ),
             ),
           ),
@@ -474,38 +509,49 @@ class _AddEmployeeScreenState extends State<AddEmployeeScreen> {
     required String label,
     required DateTime date,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Color(0xFF1C1C1E),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 6),
+          InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(10),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      color: isDark ? Colors.white : const Color(0xFF1C1C1E),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Icon(CupertinoIcons.calendar, size: 18, color: Color(0xFF007AFF)),
+                ],
               ),
             ),
-            Row(
-              children: [
-                Text(
-                  '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: Color(0xFF007AFF),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(CupertinoIcons.calendar, size: 18, color: Color(0xFF007AFF)),
-              ],
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
