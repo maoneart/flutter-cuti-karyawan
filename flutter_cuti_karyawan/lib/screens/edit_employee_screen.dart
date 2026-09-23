@@ -330,7 +330,7 @@ class _EditEmployeeScreenState extends State<EditEmployeeScreen> {
                             value: p['id'] as int,
                             child: Text(p['nama_jabatan']?.toString() ?? ''),
                           );
-                        }).toList>,
+                        }).toList(),
                         onChanged: (val) => setState(() => _selectedJabatanId = val),
                       ),
                       const SizedBox(height: 12),
