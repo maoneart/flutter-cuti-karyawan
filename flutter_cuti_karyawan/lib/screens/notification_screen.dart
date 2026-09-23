@@ -83,20 +83,27 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
+    final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(CupertinoIcons.back, color: AppTheme.primary),
+          icon: Icon(CupertinoIcons.back, color: isDark ? Colors.white : AppTheme.primary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Notifikasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+        title: Text('Notifikasi', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: textHead)),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         elevation: 0.5,
         actions: [
           IconButton(
-            icon: const Icon(CupertinoIcons.arrow_clockwise, size: 20),
+            icon: Icon(CupertinoIcons.arrow_clockwise, size: 20, color: textHead),
             onPressed: _loadNotifications,
           ),
           const SizedBox(width: 8),
@@ -104,7 +111,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadNotifications,
-        color: AppTheme.primary,
+        color: primaryAccent,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _errorMessage != null
@@ -114,7 +121,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       children: [
                         const Icon(Icons.error_outline, size: 48, color: AppTheme.statusRejected),
                         const SizedBox(height: 12),
-                        Text(_errorMessage!, style: const TextStyle(color: AppTheme.textSecondary)),
+                        Text(_errorMessage!, style: TextStyle(color: textSub)),
                         const SizedBox(height: 12),
                         ElevatedButton(onPressed: _loadNotifications, child: const Text('Coba Lagi')),
                       ],
@@ -130,15 +137,15 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primary.withOpacity(0.08),
+                                  color: primaryAccent.withOpacity(0.12),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(CupertinoIcons.bell_slash, size: 48, color: AppTheme.primary),
+                                child: Icon(CupertinoIcons.bell_slash, size: 48, color: primaryAccent),
                               ),
                               const SizedBox(height: 16),
-                              const Text('Tidak Ada Notifikasi Baru', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text('Tidak Ada Notifikasi Baru', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textHead)),
                               const SizedBox(height: 4),
-                              const Text('Semua status pengajuan cuti Anda sudah terbaru.', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                              Text('Semua status pengajuan cuti Anda sudah terbaru.', style: TextStyle(fontSize: 13, color: textSub)),
                             ],
                           ),
                         ),
@@ -151,6 +158,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
                           final item = _notifications[idx];
                           final leaveId = int.tryParse(item['leave_id']?.toString() ?? '0') ?? 0;
                           final isRead = item['read'] == true;
+
+                          Color tileBg;
+                          if (isDark) {
+                            tileBg = isRead ? const Color(0xFF1E293B) : const Color(0xFF1E3A5F);
+                          } else {
+                            tileBg = isRead ? Colors.white : const Color(0xFFF0F7FF);
+                          }
 
                           return InkWell(
                             onTap: () {
@@ -167,10 +181,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: isRead ? Colors.white : const Color(0xFFF0F7FF),
+                                color: tileBg,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isRead ? const Color(0xFFE2E8F0) : AppTheme.primaryLight.withOpacity(0.3),
+                                  color: isRead ? borderCol : primaryAccent.withOpacity(0.4),
                                   width: isRead ? 1 : 1.5,
                                 ),
                               ),
@@ -192,7 +206,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                                 style: TextStyle(
                                                   fontWeight: isRead ? FontWeight.bold : FontWeight.w800,
                                                   fontSize: 14,
-                                                  color: AppTheme.textPrimary,
+                                                  color: textHead,
                                                 ),
                                               ),
                                             ),
@@ -210,12 +224,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
                                         const SizedBox(height: 4),
                                         Text(
                                           item['message']?.toString() ?? '',
-                                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                          style: TextStyle(fontSize: 12, color: textSub),
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
                                           item['time']?.toString() ?? '',
-                                          style: const TextStyle(fontSize: 10, color: AppTheme.textMuted),
+                                          style: TextStyle(fontSize: 10, color: isDark ? const Color(0xFF64748B) : AppTheme.textMuted),
                                         ),
                                       ],
                                     ),

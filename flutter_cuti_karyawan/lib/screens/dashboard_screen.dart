@@ -110,10 +110,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final bellCount = _stats?.bellNotificationCount ?? 0;
     final isAdmin = user?.role == 'admin' || (user?.levelHierarki ?? 0) >= 7;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
+
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
         actions: [
           // 1. Smart Bell Notification with Red Badge
           Stack(
@@ -163,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadStats,
-        color: AppTheme.primary,
+        color: isDark ? const Color(0xFF38BDF8) : AppTheme.primary,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _errorMessage != null
@@ -178,7 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Text(
                             _errorMessage!,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                            style: TextStyle(fontSize: 14, color: textSub),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
@@ -200,15 +205,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [AppTheme.primaryDark, AppTheme.primary],
+                            gradient: LinearGradient(
+                              colors: isDark
+                                  ? [const Color(0xFF1E3A8A), const Color(0xFF0F172A)]
+                                  : [AppTheme.primaryDark, AppTheme.primary],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primary.withOpacity(0.25),
+                                color: (isDark ? Colors.black : AppTheme.primary).withOpacity(0.25),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               ),
@@ -280,7 +287,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withOpacity(0.25),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Column(
@@ -442,9 +449,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 20),
 
                         // 3. Quota Balances
-                        const Text(
+                        Text(
                           'Ringkasan Kuota Cuti',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textHead),
                         ),
                         const SizedBox(height: 12),
                         Row(
@@ -454,8 +461,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 title: 'Sisa Kuota Cuti',
                                 value: '${_stats?.sisaCuti ?? user?.sisaCuti ?? 0}',
                                 subtitle: 'Hari Tersedia',
-                                color: AppTheme.primary,
+                                color: isDark ? const Color(0xFF38BDF8) : AppTheme.primary,
                                 icon: Icons.beach_access_rounded,
+                                cardBg: cardBg,
+                                borderCol: borderCol,
+                                textSub: textSub,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -464,8 +474,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 title: 'Cuti Terpakai',
                                 value: '${_stats?.cutiTerpakai ?? user?.cutiTerpakai ?? 0}',
                                 subtitle: 'Hari Diambil',
-                                color: AppTheme.secondary,
+                                color: isDark ? const Color(0xFF2DD4BF) : AppTheme.secondary,
                                 icon: Icons.event_busy_rounded,
+                                cardBg: cardBg,
+                                borderCol: borderCol,
+                                textSub: textSub,
                               ),
                             ),
                           ],
@@ -479,8 +492,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: _buildMiniCounter(
                                 title: 'Menunggu',
                                 count: _stats?.pendingCount ?? 0,
-                                color: AppTheme.statusPending,
+                                color: isDark ? const Color(0xFFFBBF24) : AppTheme.statusPending,
                                 icon: Icons.hourglass_top_rounded,
+                                cardBg: cardBg,
+                                borderCol: borderCol,
+                                textSub: textSub,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -488,8 +504,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: _buildMiniCounter(
                                 title: 'Disetujui',
                                 count: _stats?.approvedCount ?? 0,
-                                color: AppTheme.statusApproved,
+                                color: isDark ? const Color(0xFF34D399) : AppTheme.statusApproved,
                                 icon: Icons.check_circle_outline_rounded,
+                                cardBg: cardBg,
+                                borderCol: borderCol,
+                                textSub: textSub,
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -497,8 +516,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: _buildMiniCounter(
                                 title: 'Ditolak',
                                 count: _stats?.rejectedCount ?? 0,
-                                color: AppTheme.statusRejected,
+                                color: isDark ? const Color(0xFFF87171) : AppTheme.statusRejected,
                                 icon: Icons.cancel_outlined,
+                                cardBg: cardBg,
+                                borderCol: borderCol,
+                                textSub: textSub,
                               ),
                             ),
                           ],
@@ -510,13 +532,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: AppTheme.statusPendingBg,
+                              color: isDark ? const Color(0xFF451A03) : AppTheme.statusPendingBg,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppTheme.statusPending.withOpacity(0.3)),
+                              border: Border.all(color: AppTheme.statusPending.withOpacity(0.4)),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.notifications_active_rounded, color: AppTheme.statusPending, size: 28),
+                                Icon(Icons.notifications_active_rounded, color: isDark ? const Color(0xFFFBBF24) : AppTheme.statusPending, size: 28),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
@@ -524,16 +546,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     children: [
                                       Text(
                                         'Ada ${_stats?.pendingApprovalsCount} Pengajuan Menunggu!',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 14,
-                                          color: AppTheme.textPrimary,
+                                          color: textHead,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
-                                      const Text(
+                                      Text(
                                         'Perlu tindakan persetujuan hierarki dari Anda.',
-                                        style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                        style: TextStyle(fontSize: 12, color: textSub),
                                       ),
                                     ],
                                   ),
@@ -548,7 +570,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       widget.onNavigateToTab!(3); // Navigate to approval tab
                                     }
                                   },
-                                  child: const Text('Periksa', style: TextStyle(fontSize: 12)),
+                                  child: const Text('Periksa', style: TextStyle(fontSize: 12, color: Colors.white)),
                                 ),
                               ],
                             ),
@@ -560,9 +582,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Pengajuan Terakhir Saya',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textHead),
                             ),
                             TextButton(
                               onPressed: () {
@@ -570,7 +592,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   widget.onNavigateToTab!(2); // Navigate to history tab
                                 }
                               },
-                              child: const Text('Lihat Semua', style: TextStyle(fontSize: 13)),
+                              child: Text(
+                                'Lihat Semua',
+                                style: TextStyle(fontSize: 13, color: isDark ? const Color(0xFF38BDF8) : AppTheme.primary),
+                              ),
                             ),
                           ],
                         ),
@@ -581,17 +606,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             padding: const EdgeInsets.all(24),
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: cardBg,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(color: borderCol),
                             ),
-                            child: const Column(
+                            child: Column(
                               children: [
-                                Icon(Icons.inbox_outlined, size: 40, color: AppTheme.textMuted),
-                                SizedBox(height: 8),
+                                Icon(Icons.inbox_outlined, size: 40, color: textSub),
+                                const SizedBox(height: 8),
                                 Text(
                                   'Belum ada riwayat pengajuan cuti.',
-                                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                                  style: TextStyle(color: textSub, fontSize: 13),
                                 ),
                               ],
                             ),
@@ -604,7 +629,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             separatorBuilder: (_, __) => const SizedBox(height: 10),
                             itemBuilder: (ctx, idx) {
                               final leave = _stats!.recentLeaves[idx];
-                              return _buildLeaveCard(leave);
+                              return _buildLeaveCard(leave, cardBg, borderCol, textHead, textSub, isDark);
                             },
                           ),
                       ],
@@ -620,27 +645,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String subtitle,
     required Color color,
     required IconData icon,
+    required Color cardBg,
+    required Color borderCol,
+    required Color textSub,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: borderCol),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withOpacity(0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -652,7 +673,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 12, color: textSub),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -665,7 +686,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 11, color: AppTheme.textMuted),
+                  style: TextStyle(fontSize: 11, color: textSub.withOpacity(0.8)),
                 ),
               ],
             ),
@@ -680,13 +701,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required int count,
     required Color color,
     required IconData icon,
+    required Color cardBg,
+    required Color borderCol,
+    required Color textSub,
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderCol),
       ),
       child: Column(
         children: [
@@ -702,14 +726,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           Text(
             title,
-            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 11, color: textSub),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLeaveCard(LeaveModel leave) {
+  Widget _buildLeaveCard(
+    LeaveModel leave,
+    Color cardBg,
+    Color borderCol,
+    Color textHead,
+    Color textSub,
+    bool isDark,
+  ) {
+    final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
+
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -723,9 +756,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: borderCol),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,10 +766,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.08),
+                color: primaryAccent.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.event_note_rounded, color: AppTheme.primary, size: 20),
+              child: Icon(Icons.event_note_rounded, color: primaryAccent, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -749,10 +782,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Expanded(
                         child: Text(
                           leave.namaCuti ?? 'Cuti',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                            color: textHead,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -764,12 +797,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(height: 4),
                   Text(
                     '${leave.tanggalMulai} s/d ${leave.tanggalSelesai} (${leave.totalHari} hari)',
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 12, color: textSub),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     leave.alasan,
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                    style: TextStyle(fontSize: 12, color: textSub.withOpacity(0.8)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

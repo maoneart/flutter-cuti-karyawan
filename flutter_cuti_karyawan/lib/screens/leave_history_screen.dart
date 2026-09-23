@@ -114,16 +114,22 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
+    final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
+
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Riwayat Cuti Saya'),
+        title: Text('Riwayat Cuti Saya', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          labelColor: AppTheme.primary,
-          unselectedLabelColor: AppTheme.textSecondary,
-          indicatorColor: AppTheme.primary,
+          labelColor: primaryAccent,
+          unselectedLabelColor: textSub,
+          indicatorColor: primaryAccent,
           indicatorWeight: 3,
           tabs: _tabTitles.map((t) => Tab(text: t)).toList(),
         ),
@@ -157,7 +163,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
           Expanded(
             child: RefreshIndicator(
               onRefresh: _loadLeaves,
-              color: AppTheme.primary,
+              color: primaryAccent,
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _errorMessage != null
@@ -167,7 +173,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                             children: [
                               const Icon(Icons.error_outline, size: 48, color: AppTheme.statusRejected),
                               const SizedBox(height: 12),
-                              Text(_errorMessage!, style: const TextStyle(color: AppTheme.textSecondary)),
+                              Text(_errorMessage!, style: TextStyle(color: textSub)),
                               const SizedBox(height: 12),
                               ElevatedButton(onPressed: _loadLeaves, child: const Text('Coba Lagi')),
                             ],
@@ -183,20 +189,20 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                     Container(
                                       padding: const EdgeInsets.all(20),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.primary.withOpacity(0.06),
+                                        color: primaryAccent.withOpacity(0.1),
                                         shape: BoxShape.circle,
                                       ),
-                                      child: const Icon(Icons.description_outlined, size: 48, color: AppTheme.primary),
+                                      child: Icon(Icons.description_outlined, size: 48, color: primaryAccent),
                                     ),
                                     const SizedBox(height: 16),
-                                    const Text(
+                                    Text(
                                       'Tidak Ada Data Pengajuan Cuti',
-                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textHead),
                                     ),
                                     const SizedBox(height: 6),
-                                    const Text(
+                                    Text(
                                       'Belum ada pengajuan pada kategori ini.',
-                                      style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                                      style: TextStyle(fontSize: 13, color: textSub),
                                     ),
                                   ],
                                 ),
@@ -221,16 +227,9 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                   child: Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: cardBg,
                                       borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.02),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
+                                      border: Border.all(color: borderCol),
                                     ),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,10 +239,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                           children: [
                                             Text(
                                               leave.nomorSurat,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold,
-                                                color: AppTheme.primary,
+                                                color: primaryAccent,
                                               ),
                                             ),
                                             _buildStatusBadge(leave.status),
@@ -252,10 +251,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                         const SizedBox(height: 8),
                                         Text(
                                           leave.namaCuti ?? 'Cuti',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.bold,
-                                            color: AppTheme.textPrimary,
+                                            color: textHead,
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -265,18 +264,18 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                             const SizedBox(width: 4),
                                             Text(
                                               '${leave.tanggalMulai} s/d ${leave.tanggalSelesai}',
-                                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                              style: TextStyle(fontSize: 12, color: textSub),
                                             ),
                                             const SizedBox(width: 8),
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                               decoration: BoxDecoration(
-                                                color: AppTheme.surfaceVariant,
+                                                color: isDark ? const Color(0xFF334155) : AppTheme.surfaceVariant,
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                               child: Text(
                                                 '${leave.totalHari} Hari',
-                                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: textHead),
                                               ),
                                             ),
                                           ],
@@ -284,7 +283,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                         const SizedBox(height: 8),
                                         Text(
                                           leave.alasan,
-                                          style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                                          style: TextStyle(fontSize: 13, color: textSub),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),

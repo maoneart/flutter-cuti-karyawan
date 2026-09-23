@@ -152,10 +152,16 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
+    final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
+
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Persetujuan Cuti Anggota', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('Persetujuan Cuti Anggota', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list_rounded),
@@ -181,7 +187,7 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _loadApprovals,
-        color: AppTheme.primary,
+        color: primaryAccent,
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _errorMessage != null
@@ -191,7 +197,7 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                       children: [
                         const Icon(Icons.error_outline, size: 48, color: AppTheme.statusRejected),
                         const SizedBox(height: 12),
-                        Text(_errorMessage!, style: const TextStyle(color: AppTheme.textSecondary)),
+                        Text(_errorMessage!, style: TextStyle(color: textSub)),
                         const SizedBox(height: 12),
                         ElevatedButton(onPressed: _loadApprovals, child: const Text('Coba Lagi')),
                       ],
@@ -207,20 +213,20 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                               Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.statusApproved.withOpacity(0.08),
+                                  color: AppTheme.statusApproved.withOpacity(0.12),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.done_all_rounded, size: 48, color: AppTheme.statusApproved),
                               ),
                               const SizedBox(height: 16),
-                              const Text(
+                              Text(
                                 'Semua Bersih!',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead),
                               ),
                               const SizedBox(height: 6),
-                              const Text(
+                              Text(
                                 'Tidak ada pengajuan cuti yang memerlukan persetujuan.',
-                                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                                style: TextStyle(fontSize: 13, color: textSub),
                               ),
                             ],
                           ),
@@ -245,16 +251,9 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: cardBg,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
+                                border: Border.all(color: borderCol),
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,12 +263,12 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                                     children: [
                                       CircleAvatar(
                                         radius: 20,
-                                        backgroundColor: AppTheme.primary.withOpacity(0.1),
+                                        backgroundColor: primaryAccent.withOpacity(0.12),
                                         child: Text(
                                           (leave.namaLengkap?.isNotEmpty == true)
                                               ? leave.namaLengkap!.substring(0, 1).toUpperCase()
                                               : 'K',
-                                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary),
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: primaryAccent),
                                         ),
                                       ),
                                       const SizedBox(width: 12),
@@ -279,11 +278,11 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                                           children: [
                                             Text(
                                               leave.namaLengkap ?? '-',
-                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textHead),
                                             ),
                                             Text(
                                               '${leave.nik ?? ''} • ${leave.namaDept ?? ''}',
-                                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                              style: TextStyle(fontSize: 12, color: textSub),
                                             ),
                                           ],
                                         ),
@@ -291,12 +290,12 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.primary.withOpacity(0.08),
+                                          color: primaryAccent.withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Text(
                                           leave.kodeCuti ?? 'CUTI',
-                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryAccent),
                                         ),
                                       ),
                                     ],
@@ -323,7 +322,7 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                                     ),
                                   ),
 
-                                  const Divider(height: 20, color: Color(0xFFF1F5F9)),
+                                  Divider(height: 20, color: borderCol),
 
                                   // Details
                                   Row(
@@ -333,12 +332,12 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                                       Expanded(
                                         child: Text(
                                           '${leave.tanggalMulai} s/d ${leave.tanggalSelesai}',
-                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textHead),
                                         ),
                                       ),
                                       Text(
                                         '${leave.totalHari} Hari',
-                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryAccent),
                                       ),
                                     ],
                                   ),
@@ -347,12 +346,12 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                                     width: double.infinity,
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.surfaceVariant,
+                                      color: isDark ? const Color(0xFF0F172A) : AppTheme.surfaceVariant,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
                                       'Alasan: ${leave.alasan}',
-                                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                      style: TextStyle(fontSize: 12, color: textSub),
                                     ),
                                   ),
 
@@ -384,7 +383,7 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                                             ),
                                             onPressed: () => _showApprovalDialog(leave, true),
                                             icon: const Icon(Icons.check_rounded, size: 16),
-                                            label: const Text('Setujui', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                            label: const Text('Setujui', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                                           ),
                                         ),
                                       ],

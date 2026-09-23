@@ -28,6 +28,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
     final canApprove = user?.canApprove ?? false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
 
     final List<Widget> pages = [
       DashboardScreen(onNavigateToTab: _onTabSelected),
@@ -38,30 +40,30 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     ];
 
     final List<NavigationDestination> destinations = [
-      const NavigationDestination(
-        icon: Icon(Icons.dashboard_outlined),
-        selectedIcon: Icon(Icons.dashboard_rounded, color: AppTheme.primary),
+      NavigationDestination(
+        icon: const Icon(Icons.dashboard_outlined),
+        selectedIcon: Icon(Icons.dashboard_rounded, color: activeColor),
         label: 'Beranda',
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.add_circle_outline_rounded),
-        selectedIcon: Icon(Icons.add_circle_rounded, color: AppTheme.primary),
+      NavigationDestination(
+        icon: const Icon(Icons.add_circle_outline_rounded),
+        selectedIcon: Icon(Icons.add_circle_rounded, color: activeColor),
         label: 'Ajukan',
       ),
-      const NavigationDestination(
-        icon: Icon(Icons.history_outlined),
-        selectedIcon: Icon(Icons.history_rounded, color: AppTheme.primary),
+      NavigationDestination(
+        icon: const Icon(Icons.history_outlined),
+        selectedIcon: Icon(Icons.history_rounded, color: activeColor),
         label: 'Riwayat',
       ),
       if (canApprove)
-        const NavigationDestination(
-          icon: Icon(Icons.verified_outlined),
-          selectedIcon: Icon(Icons.verified_rounded, color: AppTheme.primary),
+        NavigationDestination(
+          icon: const Icon(Icons.verified_outlined),
+          selectedIcon: Icon(Icons.verified_rounded, color: activeColor),
           label: 'Approval',
         ),
-      const NavigationDestination(
-        icon: Icon(CupertinoIcons.gear),
-        selectedIcon: Icon(CupertinoIcons.gear_solid, color: AppTheme.primary),
+      NavigationDestination(
+        icon: const Icon(CupertinoIcons.gear),
+        selectedIcon: Icon(CupertinoIcons.gear_solid, color: activeColor),
         label: 'Setting',
       ),
     ];
@@ -74,6 +76,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         body: Row(
           children: [
             NavigationRail(
+              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
               selectedIndex: _currentIndex.clamp(0, pages.length - 1),
               onDestinationSelected: (index) {
                 setState(() {
@@ -87,16 +90,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                        color: AppTheme.primary,
+                      decoration: BoxDecoration(
+                        color: activeColor,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.business_rounded, color: Colors.white, size: 24),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'NAKAKIN',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppTheme.primaryDark),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: isDark ? Colors.white : AppTheme.primaryDark,
+                      ),
                     ),
                   ],
                 ),
@@ -109,7 +116,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       ))
                   .toList(),
             ),
-            const VerticalDivider(thickness: 1, width: 1, color: Color(0xFFE2E8F0)),
+            VerticalDivider(thickness: 1, width: 1, color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
             Expanded(
               child: IndexedStack(
                 index: _currentIndex.clamp(0, pages.length - 1),
@@ -133,9 +140,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             _currentIndex = index;
           });
         },
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         elevation: 8,
-        indicatorColor: AppTheme.primary.withOpacity(0.12),
+        indicatorColor: activeColor.withOpacity(isDark ? 0.25 : 0.12),
         destinations: destinations,
       ),
     );

@@ -14,6 +14,12 @@ class AppTheme {
   static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceVariant = Color(0xFFF1F5F9);
 
+  // Dark Palette
+  static const Color darkBg = Color(0xFF0F172A); // Deep Slate Black
+  static const Color darkSurface = Color(0xFF1E293B); // Slate Dark Card
+  static const Color darkBorder = Color(0xFF334155); // Slate Dark Border
+  static const Color darkPrimary = Color(0xFF38BDF8); // Sky Blue Accent
+
   // Status Colors
   static const Color statusPending = Color(0xFFD97706); // Amber
   static const Color statusPendingBg = Color(0xFFFEF3C7);
@@ -84,6 +90,23 @@ class AppTheme {
           fontWeight: FontWeight.w700,
         ),
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        elevation: 8,
+        indicatorColor: primary.withOpacity(0.12),
+        iconTheme: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return const IconThemeData(color: primary);
+          }
+          return const IconThemeData(color: Color(0xFF64748B));
+        }),
+        labelTextStyle: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return const TextStyle(color: primary, fontWeight: FontWeight.bold, fontSize: 12);
+          }
+          return const TextStyle(color: Color(0xFF64748B), fontSize: 12);
+        }),
+      ),
       cardTheme: CardTheme(
         color: surface,
         elevation: 0,
@@ -135,15 +158,11 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    const darkBg = Color(0xFF121824);
-    const darkSurface = Color(0xFF1E293B);
-    const darkBorder = Color(0xFF334155);
-
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF38BDF8),
+        primary: darkPrimary,
         secondary: Color(0xFF2DD4BF),
         background: darkBg,
         surface: darkSurface,
@@ -169,12 +188,12 @@ class AppTheme {
         bodyLarge: GoogleFonts.plusJakartaSans(
           fontSize: 15,
           fontWeight: FontWeight.normal,
-          color: Colors.white70,
+          color: Colors.white,
         ),
         bodyMedium: GoogleFonts.plusJakartaSans(
           fontSize: 13,
           fontWeight: FontWeight.normal,
-          color: const Color(0xFF94A3B8),
+          color: Color(0xFF94A3B8),
         ),
       ),
       appBarTheme: const AppBarTheme(
@@ -187,6 +206,23 @@ class AppTheme {
           fontSize: 18,
           fontWeight: FontWeight.w700,
         ),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: darkSurface,
+        elevation: 8,
+        indicatorColor: darkPrimary.withOpacity(0.2),
+        iconTheme: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return const IconThemeData(color: darkPrimary);
+          }
+          return const IconThemeData(color: Color(0xFF94A3B8));
+        }),
+        labelTextStyle: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return const TextStyle(color: darkPrimary, fontWeight: FontWeight.bold, fontSize: 12);
+          }
+          return const TextStyle(color: Color(0xFF94A3B8), fontSize: 12);
+        }),
       ),
       cardTheme: CardTheme(
         color: darkSurface,
@@ -226,7 +262,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF38BDF8), width: 2),
+          borderSide: const BorderSide(color: darkPrimary, width: 2),
         ),
         labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
         hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 14),

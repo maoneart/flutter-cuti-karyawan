@@ -169,6 +169,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     required bool isDone,
     required bool isCurrent,
     required bool isRejected,
+    required bool isDark,
+    required Color textHead,
+    required Color textSub,
     String? note,
     String? date,
     bool isLast = false,
@@ -186,7 +189,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
       nodeColor = const Color(0xFFFF9500);
       nodeIcon = CupertinoIcons.time;
     } else {
-      nodeColor = const Color(0xFFD1D1D6);
+      nodeColor = isDark ? const Color(0xFF64748B) : const Color(0xFFD1D1D6);
       nodeIcon = CupertinoIcons.circle;
     }
 
@@ -210,7 +213,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: isDone ? const Color(0xFF34C759) : const Color(0xFFE5E5EA),
+                    color: isDone ? const Color(0xFF34C759) : (isDark ? const Color(0xFF334155) : const Color(0xFFE5E5EA)),
                   ),
                 ),
             ],
@@ -230,29 +233,29 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: isCurrent ? const Color(0xFFFF9500) : (isRejected ? const Color(0xFFFF3B30) : const Color(0xFF1C1C1E)),
+                          color: isCurrent ? const Color(0xFFFF9500) : (isRejected ? const Color(0xFFFF3B30) : textHead),
                         ),
                       ),
                       if (date != null && date.isNotEmpty)
-                        Text(date, style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                        Text(date, style: TextStyle(fontSize: 11, color: isDark ? const Color(0xFF64748B) : const Color(0xFF8E8E93))),
                     ],
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF6C6C70)),
+                    style: TextStyle(fontSize: 12, color: textSub),
                   ),
                   if (note != null && note.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF2F2F7),
+                        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF2F2F7),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'Catatan: "$note"',
-                        style: const TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: Color(0xFF3A3A3C)),
+                        style: TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF3A3A3C)),
                       ),
                     ),
                   ],
@@ -265,7 +268,14 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     );
   }
 
-  Widget _buildTimelineSection(LeaveModel leave) {
+  Widget _buildTimelineSection(
+    LeaveModel leave,
+    Color cardBg,
+    Color borderCol,
+    Color textHead,
+    Color textSub,
+    bool isDark,
+  ) {
     final isRejected = leave.isRejected;
     final isApproved = leave.isApproved;
 
@@ -287,16 +297,16 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: borderCol),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Hierarki Alur Persetujuan (3-Tier)',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textHead),
           ),
           const SizedBox(height: 16),
           _buildTimelineStep(
@@ -305,6 +315,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
             isDone: spvDone,
             isCurrent: spvCurrent,
             isRejected: spvRejected,
+            isDark: isDark,
+            textHead: textHead,
+            textSub: textSub,
             note: leave.spvNotes,
             date: leave.spvAt,
           ),
@@ -314,6 +327,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
             isDone: mgrDone,
             isCurrent: mgrCurrent,
             isRejected: mgrRejected,
+            isDark: isDark,
+            textHead: textHead,
+            textSub: textSub,
             note: leave.managerNotes,
             date: leave.managerAt,
           ),
@@ -323,6 +339,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
             isDone: hrdDone,
             isCurrent: hrdCurrent,
             isRejected: hrdRejected,
+            isDark: isDark,
+            textHead: textHead,
+            textSub: textSub,
             note: leave.hrdNotes ?? leave.catatanAtasan,
             date: leave.hrdAt ?? leave.approvedAt,
             isLast: true,
@@ -332,24 +351,24 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     );
   }
 
-  Widget _buildInfoRow(String label, String value, {IconData? icon}) {
+  Widget _buildInfoRow(String label, String value, Color textHead, Color textSub, {IconData? icon}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 18, color: AppTheme.textMuted),
+            Icon(icon, size: 18, color: textSub),
             const SizedBox(width: 10),
           ],
           SizedBox(
             width: 130,
-            child: Text(label, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+            child: Text(label, style: TextStyle(fontSize: 13, color: textSub)),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textHead),
             ),
           ),
         ],
@@ -362,11 +381,17 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     final user = AuthService.currentUser;
     final isOwner = _leave != null && user != null && _leave!.employeeId == user.id;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFFF2F2F7),
+        backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
         centerTitle: true,
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
@@ -387,10 +412,10 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
           ),
         ),
         leadingWidth: 95,
-        title: const Text(
+        title: Text(
           'Detail Pengajuan',
           style: TextStyle(
-            color: Colors.black,
+            color: textHead,
             fontWeight: FontWeight.bold,
             fontSize: 17,
           ),
@@ -405,7 +430,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                     children: [
                       const Icon(Icons.error_outline, size: 48, color: AppTheme.statusRejected),
                       const SizedBox(height: 12),
-                      Text(_errorMessage!, style: const TextStyle(color: AppTheme.textSecondary)),
+                      Text(_errorMessage!, style: TextStyle(color: textSub)),
                       const SizedBox(height: 12),
                       ElevatedButton(onPressed: _loadDetail, child: const Text('Coba Lagi')),
                     ],
@@ -424,54 +449,57 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                           const SizedBox(height: 16),
 
                           // 3-Tier Approval Flow Card
-                          _buildTimelineSection(_leave!),
+                          _buildTimelineSection(_leave!, cardBg, borderCol, textHead, textSub, isDark),
                           const SizedBox(height: 16),
 
                           // Main Info Card
                           Container(
                             padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: cardBg,
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              border: Border.all(color: borderCol),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Informasi Pengajuan',
-                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textHead),
                                 ),
-                                const Divider(height: 24, color: Color(0xFFE2E8F0)),
-                                _buildInfoRow('Nomor Surat', _leave!.nomorSurat, icon: Icons.tag),
-                                _buildInfoRow('Nama Pemohon', _leave!.namaLengkap ?? '-', icon: Icons.person_outline),
-                                _buildInfoRow('Departemen', _leave!.namaDept ?? '-', icon: Icons.apartment),
-                                _buildInfoRow('Jenis Cuti', _leave!.namaCuti ?? '-', icon: Icons.category_outlined),
+                                Divider(height: 24, color: borderCol),
+                                _buildInfoRow('Nomor Surat', _leave!.nomorSurat, textHead, textSub, icon: Icons.tag),
+                                _buildInfoRow('Nama Pemohon', _leave!.namaLengkap ?? '-', textHead, textSub, icon: Icons.person_outline),
+                                _buildInfoRow('Departemen', _leave!.namaDept ?? '-', textHead, textSub, icon: Icons.apartment),
+                                _buildInfoRow('Jenis Cuti', _leave!.namaCuti ?? '-', textHead, textSub, icon: Icons.category_outlined),
                                 _buildInfoRow(
                                   'Tgl Pelaksanaan',
                                   '${_leave!.tanggalMulai} s/d ${_leave!.tanggalSelesai}',
+                                  textHead,
+                                  textSub,
                                   icon: Icons.date_range,
                                 ),
-                                _buildInfoRow('Total Durasi', '${_leave!.totalHari} Hari Kerja', icon: Icons.timelapse),
-                                _buildInfoRow('Potong Kuota', _leave!.potongKuota ? 'Ya (Potong Kuota)' : 'Tidak (Hak Khusus/Izin)', icon: Icons.pie_chart_outline),
-                                const Divider(height: 24, color: Color(0xFFE2E8F0)),
-                                const Text('Alasan Cuti:', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                                _buildInfoRow('Total Durasi', '${_leave!.totalHari} Hari Kerja', textHead, textSub, icon: Icons.timelapse),
+                                _buildInfoRow('Potong Kuota', _leave!.potongKuota ? 'Ya (Potong Kuota)' : 'Tidak (Hak Khusus/Izin)', textHead, textSub, icon: Icons.pie_chart_outline),
+                                Divider(height: 24, color: borderCol),
+                                Text('Alasan Cuti:', style: TextStyle(fontSize: 13, color: textSub)),
                                 const SizedBox(height: 6),
                                 Container(
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFF8FAFC),
+                                    color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: Text(_leave!.alasan, style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
+                                  child: Text(_leave!.alasan, style: TextStyle(fontSize: 13, color: textHead)),
                                 ),
                                 if (_leave!.alamatSelamaCuti != null && _leave!.alamatSelamaCuti!.isNotEmpty) ...[
                                   const SizedBox(height: 12),
-                                  _buildInfoRow('Alamat Selama Cuti', _leave!.alamatSelamaCuti!, icon: Icons.location_on_outlined),
+                                  _buildInfoRow('Alamat Selama Cuti', _leave!.alamatSelamaCuti!, textHead, textSub, icon: Icons.location_on_outlined),
                                 ],
                                 if (_leave!.kontakDarurat != null && _leave!.kontakDarurat!.isNotEmpty) ...[
-                                  _buildInfoRow('Kontak Darurat', _leave!.kontakDarurat!, icon: Icons.phone_outlined),
+                                  const SizedBox(height: 12),
+                                  _buildInfoRow('Kontak Darurat', _leave!.kontakDarurat!, textHead, textSub, icon: Icons.phone_outlined),
                                 ],
                               ],
                             ),

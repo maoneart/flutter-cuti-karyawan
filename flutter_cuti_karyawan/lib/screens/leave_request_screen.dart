@@ -292,11 +292,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
     final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
+    final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Form Pengajuan Cuti', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text('Form Pengajuan Cuti', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
       ),
       body: _isLoadingTypes
           ? const Center(child: CircularProgressIndicator())
@@ -323,20 +325,20 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primary.withOpacity(0.1),
+                                  color: primaryAccent.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.account_balance_wallet_outlined, color: AppTheme.primary, size: 24),
+                                child: Icon(Icons.account_balance_wallet_outlined, color: primaryAccent, size: 24),
                               ),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('Sisa Kuota Cuti Anda', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                                    Text('Sisa Kuota Cuti Anda', style: TextStyle(fontSize: 12, color: textSub)),
                                     Text(
                                       '${user?.sisaCuti ?? 0} Hari',
-                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryAccent),
                                     ),
                                   ],
                                 ),
@@ -358,7 +360,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // 1. Jenis Cuti
-                              const Text('Jenis Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('Jenis Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textHead)),
                               const SizedBox(height: 8),
                               DropdownButtonFormField<LeaveTypeModel>(
                                 value: _selectedType,
@@ -387,10 +389,10 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                             margin: const EdgeInsets.only(left: 6),
                                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
-                                              color: AppTheme.statusPendingBg,
+                                              color: isDark ? const Color(0xFF451A03) : AppTheme.statusPendingBg,
                                               borderRadius: BorderRadius.circular(4),
                                             ),
-                                            child: const Text('Potong Kuota', style: TextStyle(fontSize: 10, color: AppTheme.statusPending, fontWeight: FontWeight.bold)),
+                                            child: Text('Potong Kuota', style: TextStyle(fontSize: 10, color: isDark ? const Color(0xFFFBBF24) : AppTheme.statusPending, fontWeight: FontWeight.bold)),
                                           ),
                                       ],
                                     ),
@@ -406,13 +408,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 const SizedBox(height: 6),
                                 Text(
                                   _selectedType!.deskripsi!,
-                                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontStyle: FontStyle.italic),
+                                  style: TextStyle(fontSize: 12, color: textSub, fontStyle: FontStyle.italic),
                                 ),
                               ],
                               const SizedBox(height: 18),
 
                               // 2. Tanggal Cuti
-                              const Text('Rentang Tanggal Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('Rentang Tanggal Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textHead)),
                               const SizedBox(height: 8),
                               InkWell(
                                 onTap: _pickDateRange,
@@ -420,12 +422,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF0F172A) : Colors.white,
                                     border: Border.all(color: borderCol),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.date_range_rounded, color: AppTheme.primary, size: 20),
+                                      Icon(Icons.date_range_rounded, color: primaryAccent, size: 20),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
@@ -434,7 +437,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                               : 'Pilih Tanggal Mulai dan Selesai',
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: (_startDate != null) ? (isDark ? Colors.white : AppTheme.textPrimary) : AppTheme.textMuted,
+                                            color: (_startDate != null) ? textHead : AppTheme.textMuted,
                                             fontWeight: (_startDate != null) ? FontWeight.w600 : FontWeight.normal,
                                           ),
                                         ),
@@ -443,12 +446,12 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: AppTheme.primary.withOpacity(0.1),
+                                            color: primaryAccent.withOpacity(0.12),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
                                             '$_calculatedDays Hari Kerja',
-                                            style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 12),
+                                            style: TextStyle(color: primaryAccent, fontWeight: FontWeight.bold, fontSize: 12),
                                           ),
                                         ),
                                     ],
@@ -458,7 +461,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               const SizedBox(height: 18),
 
                               // 3. Alasan Cuti
-                              const Text('Alasan Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('Alasan Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textHead)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _alasanController,
@@ -478,7 +481,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
-                                      color: isDark ? Colors.white : AppTheme.textPrimary,
+                                      color: textHead,
                                     ),
                                   ),
                                   if (_selectedType?.butuhLampiran == true)
@@ -486,9 +489,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              const Text(
+                              Text(
                                 'Mendukung format JPG, PNG, atau PDF (Maks. 5MB).',
-                                style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
+                                style: TextStyle(fontSize: 11.5, color: textSub),
                               ),
                               const SizedBox(height: 8),
                               if (_attachmentName == null)
@@ -502,15 +505,15 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                       border: Border.all(color: borderCol, style: BorderStyle.solid),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                        Icon(CupertinoIcons.cloud_upload, color: Color(0xFF0284C7), size: 22),
-                                        SizedBox(width: 10),
+                                        Icon(CupertinoIcons.cloud_upload, color: primaryAccent, size: 22),
+                                        const SizedBox(width: 10),
                                         Text(
                                           'Pilih Berkas Lampiran / Foto',
                                           style: TextStyle(
-                                            color: Color(0xFF0284C7),
+                                            color: primaryAccent,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 13.5,
                                           ),
@@ -523,13 +526,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF0284C7).withOpacity(0.08),
+                                    color: primaryAccent.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: const Color(0xFF0284C7).withOpacity(0.3)),
+                                    border: Border.all(color: primaryAccent.withOpacity(0.3)),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(CupertinoIcons.doc_fill, color: Color(0xFF0284C7), size: 24),
+                                      Icon(CupertinoIcons.doc_fill, color: primaryAccent, size: 24),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
@@ -537,13 +540,13 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                           children: [
                                             Text(
                                               _attachmentName!,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textHead),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             Text(
                                               '${((_attachmentSizeBytes ?? 0) / 1024).toStringAsFixed(1)} KB',
-                                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                                              style: TextStyle(fontSize: 11, color: textSub),
                                             ),
                                           ],
                                         ),
@@ -559,7 +562,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               const SizedBox(height: 18),
 
                               // 5. Alamat Selama Cuti
-                              const Text('Alamat Selama Cuti (Opsional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('Alamat Selama Cuti (Opsional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textHead)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _alamatController,
@@ -571,7 +574,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               const SizedBox(height: 18),
 
                               // 6. Kontak Darurat
-                              const Text('Kontak Darurat (Opsional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('Kontak Darurat (Opsional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textHead)),
                               const SizedBox(height: 8),
                               TextFormField(
                                 controller: _kontakDaruratController,

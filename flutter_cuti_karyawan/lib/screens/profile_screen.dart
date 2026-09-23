@@ -128,11 +128,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
+    final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Profil Pengguna'),
+        title: Text('Profil Pengguna', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -146,15 +151,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: borderCol),
                   ),
                   child: Column(
                     children: [
                       CircleAvatar(
                         radius: 36,
-                        backgroundColor: AppTheme.primary,
+                        backgroundColor: primaryAccent,
                         child: Text(
                           (user?.namaLengkap.isNotEmpty == true)
                               ? user!.namaLengkap.substring(0, 1).toUpperCase()
@@ -165,23 +170,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 14),
                       Text(
                         user?.namaLengkap ?? 'Karyawan',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textHead),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${user?.nik ?? ''} • ${user?.namaJabatan ?? ''}',
-                        style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                        style: TextStyle(fontSize: 13, color: textSub),
                       ),
                       const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppTheme.primary.withOpacity(0.1),
+                          color: primaryAccent.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Text(
                           (user?.role ?? 'operator').toUpperCase(),
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: primaryAccent),
                         ),
                       ),
                     ],
@@ -193,18 +198,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: borderCol),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Informasi Karyawan',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textHead),
                       ),
-                      const Divider(height: 20, color: Color(0xFFE2E8F0)),
+                      Divider(height: 20, color: borderCol),
                       _buildProfileItem(icon: Icons.email_outlined, label: 'Email Perusahaan', value: user?.email ?? '-'),
                       _buildProfileItem(icon: Icons.apartment_outlined, label: 'Departemen', value: user?.namaDept ?? '-'),
                       _buildProfileItem(icon: Icons.work_outline, label: 'Jabatan', value: user?.namaJabatan ?? '-'),
@@ -219,24 +224,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: borderCol),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Pengaturan Koneksi',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textHead),
                       ),
-                      const Divider(height: 20, color: Color(0xFFE2E8F0)),
+                      Divider(height: 20, color: borderCol),
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.dns_rounded, color: AppTheme.primary),
-                        title: const Text('API Endpoint Base URL', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                        subtitle: Text(ApiConfig.baseUrl, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-                        trailing: const Icon(Icons.edit, size: 18),
+                        leading: Icon(Icons.dns_rounded, color: primaryAccent),
+                        title: Text('API Endpoint Base URL', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textHead)),
+                        subtitle: Text(ApiConfig.baseUrl, style: TextStyle(fontSize: 12, color: textSub)),
+                        trailing: Icon(Icons.edit, size: 18, color: textSub),
                         onTap: _showServerSettingsDialog,
                       ),
                     ],
