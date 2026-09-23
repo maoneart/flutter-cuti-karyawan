@@ -57,7 +57,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     final step = leave.approvalStep.toLowerCase();
     if (step == 'pending_spv') {
       // HANYA Leader / Supervisor departemen yang sama dengan pemohon
-      return user.isSupervisor && user.departemenId == leave.departemenId;
+      final isDeptMatch = (user.departemenId == leave.departemenId) ||
+                          (user.namaDept != null && leave.namaDept != null && user.namaDept!.trim().toLowerCase() == leave.namaDept!.trim().toLowerCase());
+      return user.isSupervisor && isDeptMatch;
     } else if (step == 'pending_manager') {
       // HANYA Plant Manager (setelah disetujui Leader/Spv)
       return user.isManager;

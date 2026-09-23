@@ -32,7 +32,9 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
 
     final step = leave.approvalStep.toLowerCase();
     if (step == 'pending_spv') {
-      return user.isSupervisor && user.departemenId == leave.departemenId;
+      final isDeptMatch = (user.departemenId == leave.departemenId) ||
+                          (user.namaDept != null && leave.namaDept != null && user.namaDept!.trim().toLowerCase() == leave.namaDept!.trim().toLowerCase());
+      return user.isSupervisor && isDeptMatch;
     } else if (step == 'pending_manager') {
       return user.isManager;
     } else if (step == 'pending_hrd') {

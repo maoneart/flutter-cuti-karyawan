@@ -55,7 +55,7 @@ $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : 
 $stmt = $pdo->prepare("
     SELECT 
         p.*, 
-        k.nama_lengkap, k.nik, k.foto as employee_foto, k.sisa_cuti as sisa_cuti_karyawan,
+        k.nama_lengkap, k.nik, k.foto as employee_foto, k.sisa_cuti as sisa_cuti_karyawan, k.departemen_id, k.role as employee_role,
         d.nama_dept, d.kode_dept,
         j.nama_jabatan, j.level_hierarki as employee_level,
         l.nama_cuti, l.kode as kode_cuti, l.potong_kuota, l.butuh_lampiran,
