@@ -1,4 +1,4 @@
-name: Build Flutter APK & Release
+name: Build Flutter APK & iOS IPA
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-android:
     name: Build Android Release APK
     runs-on: ubuntu-latest
 
@@ -45,4 +45,52 @@ jobs:
         with:
           name: Cuti-Karyawan-Release-APK
           path: flutter_cuti_karyawan/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+  build-ios:
+    name: Build iOS IPA Package
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+
+      - name: Setup CocoaPods
+        run: |
+          sudo gem install cocoapods
+
+      - name: Generate Platform Files & Dependencies
+        run: |
+          cd flutter_cuti_karyawan
+          flutter create --platforms=android,web,ios .
+          flutter pub get
+          cd ios
+          pod install --repo-update || true
+          cd ..
+
+      - name: Build iOS No-Codesign
+        run: |
+          cd flutter_cuti_karyawan
+          flutter build ios --release --no-codesign
+
+      - name: Package Payload into IPA
+        run: |
+          cd flutter_cuti_karyawan/build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r -9 CutiKaryawan-iOS.ipa Payload
+          mv CutiKaryawan-iOS.ipa ../../../
+
+      - name: Upload iOS IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cuti-Karyawan-iOS-IPA
+          path: flutter_cuti_karyawan/CutiKaryawan-iOS.ipa
           retention-days: 30

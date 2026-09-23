@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../config/app_theme.dart';
 import '../models/dashboard_stats_model.dart';
 import '../models/leave_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'leave_detail_screen.dart';
+import 'notification_screen.dart';
+import 'public_board_screen.dart';
+import 'add_employee_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -48,12 +52,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(LeaveModel leave) {
     Color bg;
     Color text;
     String label;
 
-    switch (status.toLowerCase()) {
+    switch (leave.status.toLowerCase()) {
       case 'approved':
         bg = AppTheme.statusApprovedBg;
         text = AppTheme.statusApproved;
@@ -72,11 +76,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       default:
         bg = AppTheme.statusPendingBg;
         text = AppTheme.statusPending;
-        label = 'Menunggu';
+        if (leave.approvalStep == 'pending_spv') {
+          label = 'Review Spv';
+        } else if (leave.approvalStep == 'pending_manager') {
+          label = 'Review Manager';
+        } else if (leave.approvalStep == 'pending_hrd') {
+          label = 'Review HRD';
+        } else {
+          label = 'Menunggu';
+        }
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
@@ -85,7 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         label,
         style: TextStyle(
           color: text,
-          fontSize: 11,
+          fontSize: 10.5,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -95,18 +107,58 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
+    final bellCount = _stats?.bellNotificationCount ?? 0;
+    final isAdmin = user?.role == 'admin' || (user?.levelHierarki ?? 0) >= 7;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         actions: [
+          // 1. Smart Bell Notification with Red Badge
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(CupertinoIcons.bell_fill, size: 22),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                  ).then((_) => _loadStats());
+                },
+                tooltip: 'Notifikasi',
+              ),
+              if (bellCount > 0)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFF3B30), // iOS Red
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      bellCount > 99 ? '99+' : '$bellCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _loadStats,
             tooltip: 'Segarkan Data',
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
         ],
       ),
       body: RefreshIndicator(
@@ -190,18 +242,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           user?.namaLengkap ?? 'Karyawan',
                                           style: const TextStyle(
                                             color: Colors.white,
-                                            fontSize: 18,
+                                            fontSize: 17,
                                             fontWeight: FontWeight.bold,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 3),
                                         Text(
                                           '${user?.nik ?? ''} • ${user?.namaJabatan ?? ''}',
                                           style: TextStyle(
                                             color: Colors.white.withOpacity(0.85),
-                                            fontSize: 13,
+                                            fontSize: 12.5,
                                           ),
                                         ),
                                       ],
@@ -224,7 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 18),
+                              const SizedBox(height: 16),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                 decoration: BoxDecoration(
@@ -232,12 +284,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Icon(Icons.apartment_rounded, color: Colors.white70, size: 16),
-                                    const SizedBox(width: 8),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.apartment_rounded, color: Colors.white70, size: 16),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Dept: ${user?.namaDept ?? '-'}',
+                                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
                                     Text(
-                                      'Departemen: ${user?.namaDept ?? '-'}',
-                                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                                      'Masa Kerja: ${user?.lamaBekerja ?? '-'}',
+                                      style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
                                     ),
                                   ],
                                 ),
@@ -245,9 +306,127 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
 
-                        // 2. Quota Balances
+                        // 2. Feature Action Cards (Papan Kehadiran Live & Tambah Karyawan HRD)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const PublicBoardScreen()),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFF0284C7), Color(0xFF0EA5E9)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(14),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFF0284C7).withOpacity(0.2),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(CupertinoIcons.tv, color: Colors.white, size: 24),
+                                      SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Papan Live',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13.5,
+                                              ),
+                                            ),
+                                            Text(
+                                              'Status Cuti Tim',
+                                              style: TextStyle(color: Colors.white70, fontSize: 11),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (isAdmin) ...[
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const AddEmployeeScreen()),
+                                    ).then((_) => _loadStats());
+                                  },
+                                  borderRadius: BorderRadius.circular(14),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFFE11D48), Color(0xFFF43F5E)],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      borderRadius: BorderRadius.circular(14),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFFE11D48).withOpacity(0.2),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Icon(CupertinoIcons.person_badge_plus, color: Colors.white, size: 24),
+                                        SizedBox(width: 10),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                '+ Karyawan',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13.5,
+                                                ),
+                                              ),
+                                              Text(
+                                                'Daftar Pegawai',
+                                                style: TextStyle(color: Colors.white70, fontSize: 11),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // 3. Quota Balances
                         const Text(
                           'Ringkasan Kuota Cuti',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
@@ -278,7 +457,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // 3. Status Counters
+                        // 4. Status Counters
                         Row(
                           children: [
                             Expanded(
@@ -311,7 +490,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Quick Approval Banner for Atasan/Admin
+                        // Quick Approval Banner for Approvers
                         if ((user?.canApprove ?? false) && (_stats?.pendingApprovalsCount ?? 0) > 0) ...[
                           Container(
                             padding: const EdgeInsets.all(16),
@@ -338,7 +517,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       const Text(
-                                        'Perlu tindakan persetujuan dari Anda.',
+                                        'Perlu tindakan persetujuan hierarki dari Anda.',
                                         style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
                                       ),
                                     ],
@@ -362,7 +541,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const SizedBox(height: 24),
                         ],
 
-                        // 4. Recent Leaves
+                        // 5. Recent Leaves
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -564,7 +743,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      _buildStatusBadge(leave.status),
+                      _buildStatusBadge(leave),
                     ],
                   ),
                   const SizedBox(height: 4),

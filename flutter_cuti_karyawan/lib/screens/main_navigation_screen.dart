@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../config/app_theme.dart';
 import '../services/auth_service.dart';
@@ -5,8 +6,7 @@ import 'dashboard_screen.dart';
 import 'leave_request_screen.dart';
 import 'leave_history_screen.dart';
 import 'leave_approval_screen.dart';
-import 'public_board_screen.dart';
-import 'profile_screen.dart';
+import 'settings_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -34,8 +34,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       const LeaveRequestScreen(),
       const LeaveHistoryScreen(),
       if (canApprove) const LeaveApprovalScreen(),
-      const PublicBoardScreen(),
-      const ProfileScreen(),
+      const SettingsScreen(),
     ];
 
     final List<NavigationDestination> destinations = [
@@ -58,21 +57,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         const NavigationDestination(
           icon: Icon(Icons.verified_outlined),
           selectedIcon: Icon(Icons.verified_rounded, color: AppTheme.primary),
-          label: 'Persetujuan',
+          label: 'Approval',
         ),
       const NavigationDestination(
-        icon: Icon(Icons.tv_rounded),
-        selectedIcon: Icon(Icons.tv_rounded, color: AppTheme.primary),
-        label: 'Papan Live',
-      ),
-      const NavigationDestination(
-        icon: Icon(Icons.person_outline_rounded),
-        selectedIcon: Icon(Icons.person_rounded, color: AppTheme.primary),
-        label: 'Profil',
+        icon: Icon(CupertinoIcons.gear),
+        selectedIcon: Icon(CupertinoIcons.gear_solid, color: AppTheme.primary),
+        label: 'Setting',
       ),
     ];
 
-    // Responsive: If Screen width > 800 (Web / Tablet), show Side Navigation Rail
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth >= 800;
 
@@ -128,7 +121,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       );
     }
 
-    // Mobile Bottom Navigation Bar
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex.clamp(0, pages.length - 1),

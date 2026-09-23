@@ -41,9 +41,48 @@ class UserModel {
     this.foto,
   });
 
-  bool get isAdmin => role == 'admin';
-  bool get isSupervisor => role == 'atasan';
-  bool get canApprove => isAdmin || isSupervisor;
+  bool get isAdmin => role == 'admin' || levelHierarki >= 7;
+  bool get isManager => levelHierarki >= 5 && levelHierarki <= 6;
+  bool get isSupervisor => levelHierarki >= 3 && levelHierarki <= 4;
+  bool get canApprove => isAdmin || isManager || isSupervisor || role == 'atasan';
+
+  /// Kalkulasi masa/lama bekerja dari tanggal masuk
+  String get lamaBekerja {
+    if (tanggalMasuk == null || tanggalMasuk!.isEmpty) {
+      return '-';
+    }
+    try {
+      final masuk = DateTime.parse(tanggalMasuk!);
+      final now = DateTime.now();
+      
+      int years = now.year - masuk.year;
+      int months = now.month - masuk.month;
+      
+      if (now.day < masuk.day) {
+        months--;
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+      
+      if (years < 0) {
+        return 'Baru Bergabung';
+      }
+      
+      if (years > 0 && months > 0) {
+        return '$years Tahun $months Bulan';
+      } else if (years > 0) {
+        return '$years Tahun';
+      } else if (months > 0) {
+        return '$months Bulan';
+      } else {
+        return '< 1 Bulan';
+      }
+    } catch (e) {
+      return '-';
+    }
+  }
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(

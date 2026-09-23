@@ -1,6 +1,6 @@
 <?php
 /**
- * API Dashboard Stats Endpoint
+ * API Dashboard Stats Endpoint (with 3-Tier Multi-Level Approval Counter & Smart Bell Badge)
  * GET /api/dashboard/stats.php
  */
 
@@ -9,8 +9,9 @@ require_once __DIR__ . '/../middleware/auth_middleware.php';
 $user = authenticateApiUser();
 $pdo = getDbConnection();
 $today = date('Y-m-d');
+$hierarki = (int)($user['level_hierarki'] ?? 1);
 
-// 1. Employee Leave Summary
+// 1. Employee Leave Counters
 $stmtSummary = $pdo->prepare("
     SELECT 
         COUNT(*) as total_pengajuan,
@@ -24,17 +25,33 @@ $stmtSummary = $pdo->prepare("
 $stmtSummary->execute([$user['id']]);
 $stats = $stmtSummary->fetch();
 
-// 2. Pending Approvals Count (for Atasan / HRD Admin)
+// 2. Pending Approvals Count (Filtered by 3-Tier Stage for this specific user role)
 $pendingApprovalsCount = 0;
-if ($user['role'] === 'admin') {
-    $stmtPending = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending'");
+if ($user['role'] === 'admin' || $hierarki >= 7) {
+    // HRD Admin -> pending_hrd
+    $stmtPending = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE approval_step = 'pending_hrd' AND status = 'pending'");
     $pendingApprovalsCount = (int)$stmtPending->fetchColumn();
-} elseif ($user['role'] === 'atasan') {
+} elseif ($hierarki >= 5) {
+    // Manager -> pending_manager in their dept
     $stmtPending = $pdo->prepare("
         SELECT COUNT(p.id) 
         FROM pengajuan_cuti p
         JOIN karyawan k ON p.employee_id = k.id
-        WHERE p.status = 'pending' 
+        WHERE p.approval_step = 'pending_manager' 
+          AND p.status = 'pending'
+          AND k.departemen_id = ? 
+          AND k.id != ?
+    ");
+    $stmtPending->execute([$user['departemen_id'], $user['id']]);
+    $pendingApprovalsCount = (int)$stmtPending->fetchColumn();
+} elseif ($hierarki >= 3) {
+    // Leader / Supervisor -> pending_spv in their dept
+    $stmtPending = $pdo->prepare("
+        SELECT COUNT(p.id) 
+        FROM pengajuan_cuti p
+        JOIN karyawan k ON p.employee_id = k.id
+        WHERE p.approval_step = 'pending_spv' 
+          AND p.status = 'pending'
           AND k.departemen_id = ? 
           AND k.id != ?
     ");
@@ -42,7 +59,21 @@ if ($user['role'] === 'admin') {
     $pendingApprovalsCount = (int)$stmtPending->fetchColumn();
 }
 
-// 3. Today's Employees on Leave (Company wide / Department)
+// 3. Employee unread status updates (e.g. newly approved/rejected leaves)
+$stmtUnreadMy = $pdo->prepare("
+    SELECT COUNT(*) 
+    FROM pengajuan_cuti 
+    WHERE employee_id = ? AND notif_read = 0 AND status IN ('approved', 'rejected')
+");
+$stmtUnreadMy->execute([$user['id']]);
+$unreadMyLeavesCount = (int)$stmtUnreadMy->fetchColumn();
+
+// Total Bell Notification Badge:
+// If approver -> their pending approvals + their own leave alerts
+// If operator -> their own leave alerts
+$bellNotificationCount = $pendingApprovalsCount + $unreadMyLeavesCount;
+
+// 4. Today's Employees on Leave
 $stmtToday = $pdo->prepare("
     SELECT p.id, p.tanggal_mulai, p.tanggal_selesai, p.total_hari, p.alasan,
            k.nama_lengkap, k.nik, d.nama_dept, j.nama_cuti, j.kode as kode_cuti
@@ -57,7 +88,7 @@ $stmtToday = $pdo->prepare("
 $stmtToday->execute([$today]);
 $todayOnLeave = $stmtToday->fetchAll();
 
-// 4. Recent Leave Requests for current user
+// 5. Recent Leaves for current user
 $stmtRecent = $pdo->prepare("
     SELECT p.*, j.nama_cuti, j.kode as kode_cuti, j.potong_kuota
     FROM pengajuan_cuti p
@@ -69,6 +100,24 @@ $stmtRecent = $pdo->prepare("
 $stmtRecent->execute([$user['id']]);
 $recentLeaves = $stmtRecent->fetchAll();
 
+foreach ($recentLeaves as &$item) {
+    $step = $item['approval_step'] ?? 'pending_spv';
+    if ($step === 'pending_spv') {
+        $item['step_label'] = 'Menunggu Leader / Spv';
+    } elseif ($step === 'pending_manager') {
+        $item['step_label'] = 'Menunggu Manager';
+    } elseif ($step === 'pending_hrd') {
+        $item['step_label'] = 'Menunggu HRD (Final)';
+    } elseif ($item['status'] === 'approved') {
+        $item['step_label'] = 'Disetujui Lengkap';
+    } elseif ($item['status'] === 'rejected') {
+        $item['step_label'] = 'Ditolak';
+    } else {
+        $item['step_label'] = 'Dibatalkan';
+    }
+}
+unset($item);
+
 jsonResponse(true, 'Data dashboard berhasil dimuat', [
     'user' => [
         'id' => (int)$user['id'],
@@ -77,6 +126,7 @@ jsonResponse(true, 'Data dashboard berhasil dimuat', [
         'role' => $user['role'],
         'nama_dept' => $user['nama_dept'],
         'nama_jabatan' => $user['nama_jabatan'],
+        'level_hierarki' => (int)$user['level_hierarki'],
         'kuota_cuti' => (int)$user['kuota_cuti'],
         'cuti_terpakai' => (int)$user['cuti_terpakai'],
         'sisa_cuti' => (int)$user['sisa_cuti'],
@@ -91,6 +141,7 @@ jsonResponse(true, 'Data dashboard berhasil dimuat', [
         'rejected_count' => (int)($stats['rejected_count'] ?? 0),
         'cancelled_count' => (int)($stats['cancelled_count'] ?? 0),
         'pending_approvals_count' => $pendingApprovalsCount,
+        'bell_notification_count' => $bellNotificationCount,
         'today_on_leave_count' => count($todayOnLeave),
     ],
     'recent_leaves' => $recentLeaves,

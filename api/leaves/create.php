@@ -1,6 +1,6 @@
 <?php
 /**
- * API Submit Leave Request
+ * API Submit Leave Request (with 3-Tier Multi-Level Approval Step initialization)
  * POST /api/leaves/create.php
  */
 
@@ -13,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $user = authenticateApiUser();
 $pdo = getDbConnection();
 
-// Handle input from either JSON or multipart/form-data
 $input = getApiRequestData();
 
 $leaveTypeId = (int)($input['leave_type_id'] ?? 0);
@@ -66,25 +65,23 @@ $totalHari = 0;
 $period = new DatePeriod($dMulai, new DateInterval('P1D'), (clone $dSelesai)->modify('+1 day'));
 
 foreach ($period as $dt) {
-    // Exclude Sunday (0) and optionally Saturday (6) if standard office schedule
     $w = (int)$dt->format('w');
     if ($w !== 0 && $w !== 6) {
         $totalHari++;
     }
 }
-// Minimum 1 day
 if ($totalHari === 0) {
     $totalHari = 1;
 }
 
-// Check Quota if potong_kuota is active
+// Check Quota
 if ((int)$leaveType['potong_kuota'] === 1) {
     if ($user['sisa_cuti'] < $totalHari) {
         jsonResponse(false, "Sisa kuota cuti Anda tidak mencukupi! Sisa: {$user['sisa_cuti']} hari, Dibutuhkan: {$totalHari} hari.", null, 400);
     }
 }
 
-// Check overlapping pending or approved leaves
+// Check Overlap
 $stmtOverlap = $pdo->prepare("
     SELECT id, nomor_surat, tanggal_mulai, tanggal_selesai 
     FROM pengajuan_cuti 
@@ -116,13 +113,11 @@ if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
-// Case 1: Standard File Upload via $_FILES
 if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ERR_OK) {
     $fileTmp = $_FILES['attachment']['tmp_name'];
     $fileSize = $_FILES['attachment']['size'];
     $fileName = $_FILES['attachment']['name'];
     
-    // Check Size (Max 5MB)
     if ($fileSize > 5 * 1024 * 1024) {
         jsonResponse(false, 'Ukuran berkas lampiran maksimal 5MB.', null, 422);
     }
@@ -133,7 +128,6 @@ if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ER
         jsonResponse(false, 'Format berkas tidak diizinkan. Hanya menerima JPG, PNG, atau PDF.', null, 422);
     }
     
-    // Verify MIME Type
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mime = finfo_file($finfo, $fileTmp);
     finfo_close($finfo);
@@ -143,38 +137,23 @@ if (isset($_FILES['attachment']) && $_FILES['attachment']['error'] === UPLOAD_ER
     }
     
     $attachmentFilename = 'leave_' . $user['id'] . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-    if (!move_uploaded_file($fileTmp, $uploadDir . $attachmentFilename)) {
-        jsonResponse(false, 'Gagal menyimpan berkas lampiran.', null, 500);
-    }
-}
-// Case 2: Base64 Encoded file payload
-elseif (!empty($input['attachment_base64']) && !empty($input['attachment_name'])) {
+    move_uploaded_file($fileTmp, $uploadDir . $attachmentFilename);
+} elseif (!empty($input['attachment_base64']) && !empty($input['attachment_name'])) {
     $rawBase64 = $input['attachment_base64'];
     $originalName = $input['attachment_name'];
-    
-    // Strip data URI scheme if present
     if (preg_match('/^data:([^;]+);base64,(.+)$/', $rawBase64, $matches)) {
         $rawBase64 = $matches[2];
     }
-    
     $fileData = base64_decode($rawBase64);
-    if ($fileData !== false) {
-        if (strlen($fileData) > 5 * 1024 * 1024) {
-            jsonResponse(false, 'Ukuran berkas lampiran maksimal 5MB.', null, 422);
-        }
-        
+    if ($fileData !== false && strlen($fileData) <= 5 * 1024 * 1024) {
         $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-        $allowedExts = ['jpg', 'jpeg', 'png', 'pdf'];
-        if (!in_array($ext, $allowedExts, true)) {
-            jsonResponse(false, 'Format berkas tidak diizinkan. Hanya menerima JPG, PNG, atau PDF.', null, 422);
+        if (in_array($ext, ['jpg', 'jpeg', 'png', 'pdf'], true)) {
+            $attachmentFilename = 'leave_' . $user['id'] . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            file_put_contents($uploadDir . $attachmentFilename, $fileData);
         }
-        
-        $attachmentFilename = 'leave_' . $user['id'] . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
-        file_put_contents($uploadDir . $attachmentFilename, $fileData);
     }
 }
 
-// Require attachment if leave type mandates it
 if ((int)$leaveType['butuh_lampiran'] === 1 && empty($attachmentFilename)) {
     jsonResponse(false, "Jenis cuti '{$leaveType['nama_cuti']}' mewajibkan lampiran bukti/surat dokter.", null, 422);
 }
@@ -186,15 +165,37 @@ $stmtCount = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE YEAR(created
 $seq = (int)$stmtCount->fetchColumn() + 1;
 $nomorSurat = sprintf("CUTI/NAK/%s/%s/%03d", $year, $month, $seq);
 
-// Insert Leave Request
+// Determine initial Approval Step based on Applicant's Role & Level Hierarki:
+// Level 1-2: Operator & Staff -> pending_spv
+// Level 3-4: Leader & Spv -> pending_manager
+// Level 5-6: Manager & Asmen -> pending_hrd
+// Level 7 / Admin: HRD -> instant approved
+$hierarki = (int)($user['level_hierarki'] ?? 1);
+$initialStep = 'pending_spv';
+$initialStatus = 'pending';
+
+if ($user['role'] === 'admin' || $hierarki >= 7) {
+    $initialStep = 'approved';
+    $initialStatus = 'approved';
+} elseif ($hierarki >= 5) {
+    // Manager -> langsung ke HRD
+    $initialStep = 'pending_hrd';
+} elseif ($hierarki >= 3) {
+    // Leader / Spv -> langsung ke Manager
+    $initialStep = 'pending_manager';
+} else {
+    // Operator / Staff -> ke Leader/Spv
+    $initialStep = 'pending_spv';
+}
+
 try {
     $stmtInsert = $pdo->prepare("
         INSERT INTO pengajuan_cuti (
             nomor_surat, employee_id, leave_type_id,
             tanggal_mulai, tanggal_selesai, total_hari,
             alasan, alamat_selama_cuti, kontak_darurat,
-            attachment, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW())
+            attachment, status, approval_step, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     $stmtInsert->execute([
         $nomorSurat,
@@ -206,16 +207,29 @@ try {
         $alasan,
         $alamatSelamaCuti,
         $kontakDarurat,
-        $attachmentFilename
+        $attachmentFilename,
+        $initialStatus,
+        $initialStep
     ]);
     
     $leaveId = (int)$pdo->lastInsertId();
     
-    jsonResponse(true, 'Pengajuan cuti berhasil dikirim! Menunggu persetujuan atasan.', [
+    // Message context
+    $stepMessage = 'Menunggu persetujuan Leader/Supervisor.';
+    if ($initialStep === 'pending_manager') {
+        $stepMessage = 'Menunggu persetujuan Department Manager.';
+    } elseif ($initialStep === 'pending_hrd') {
+        $stepMessage = 'Menunggu persetujuan HRD.';
+    } elseif ($initialStatus === 'approved') {
+        $stepMessage = 'Pengajuan cuti langsung disetujui (HRD).';
+    }
+
+    jsonResponse(true, "Pengajuan cuti berhasil dikirim! $stepMessage", [
         'id' => $leaveId,
         'nomor_surat' => $nomorSurat,
         'total_hari' => $totalHari,
-        'status' => 'pending'
+        'status' => $initialStatus,
+        'approval_step' => $initialStep
     ], 201);
 } catch (PDOException $e) {
     jsonResponse(false, 'Gagal menyimpan pengajuan cuti ke database.', null, 500);

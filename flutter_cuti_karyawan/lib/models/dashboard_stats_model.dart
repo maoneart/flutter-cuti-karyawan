@@ -10,6 +10,7 @@ class DashboardStatsModel {
   final int rejectedCount;
   final int cancelledCount;
   final int pendingApprovalsCount;
+  final int bellNotificationCount;
   final int todayOnLeaveCount;
   final List<LeaveModel> recentLeaves;
 
@@ -23,6 +24,7 @@ class DashboardStatsModel {
     required this.rejectedCount,
     required this.cancelledCount,
     required this.pendingApprovalsCount,
+    required this.bellNotificationCount,
     required this.todayOnLeaveCount,
     required this.recentLeaves,
   });
@@ -33,6 +35,9 @@ class DashboardStatsModel {
         .map((e) => LeaveModel.fromJson(e as Map<String, dynamic>))
         .toList();
 
+    final pendingApprovals = int.tryParse(counters['pending_approvals_count']?.toString() ?? '0') ?? 0;
+    final bellCount = int.tryParse(counters['bell_notification_count']?.toString() ?? '$pendingApprovals') ?? pendingApprovals;
+
     return DashboardStatsModel(
       sisaCuti: int.tryParse(counters['sisa_cuti']?.toString() ?? '0') ?? 0,
       kuotaCuti: int.tryParse(counters['kuota_cuti']?.toString() ?? '0') ?? 0,
@@ -42,7 +47,8 @@ class DashboardStatsModel {
       approvedCount: int.tryParse(counters['approved_count']?.toString() ?? '0') ?? 0,
       rejectedCount: int.tryParse(counters['rejected_count']?.toString() ?? '0') ?? 0,
       cancelledCount: int.tryParse(counters['cancelled_count']?.toString() ?? '0') ?? 0,
-      pendingApprovalsCount: int.tryParse(counters['pending_approvals_count']?.toString() ?? '0') ?? 0,
+      pendingApprovalsCount: pendingApprovals,
+      bellNotificationCount: bellCount,
       todayOnLeaveCount: int.tryParse(counters['today_on_leave_count']?.toString() ?? '0') ?? 0,
       recentLeaves: recentLeavesList,
     );

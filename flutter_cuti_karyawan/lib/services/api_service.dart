@@ -57,7 +57,7 @@ class ApiService {
       } else {
         return {
           'success': false,
-          'message': 'Server terhubung tapi mengembalikan kode HTTP ${response.statusCode}',
+          'message': 'Server terhubung tapi mengembalikan status HTTP ${response.statusCode}',
           'status': response.statusCode,
         };
       }
@@ -125,7 +125,68 @@ class ApiService {
     }
   }
 
-  /// 2. Get Dashboard Stats
+  /// 2. Change Password
+  static Future<ApiResponse<void>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.changePassword),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'current_password': currentPassword,
+              'new_password': newPassword,
+              'confirm_password': confirmPassword,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? 'Password diproses',
+        errors: body['errors'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal mengubah password');
+    }
+  }
+
+  /// 3. Get Notifications
+  static Future<ApiResponse<Map<String, dynamic>>> getNotifications() async {
+    try {
+      final response = await http
+          .get(Uri.parse(ApiConfig.notifications), headers: _getHeaders())
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: 'Sukses',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      } else {
+        return ApiResponse(success: false, message: body['message'] ?? 'Gagal memuat notifikasi');
+      }
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal menghubungi server notifikasi');
+    }
+  }
+
+  /// 4. Mark Notifications as Read
+  static Future<void> markNotificationsRead() async {
+    try {
+      await http.post(Uri.parse(ApiConfig.notifications), headers: _getHeaders()).timeout(timeoutDuration);
+    } catch (_) {}
+  }
+
+  /// 5. Get Dashboard Stats
   static Future<ApiResponse<DashboardStatsModel>> getDashboardStats() async {
     try {
       final response = await http
@@ -148,7 +209,7 @@ class ApiService {
     }
   }
 
-  /// 3. Get Leave Types
+  /// 6. Get Leave Types
   static Future<ApiResponse<List<LeaveTypeModel>>> getLeaveTypes() async {
     try {
       final response = await http
@@ -173,7 +234,7 @@ class ApiService {
     }
   }
 
-  /// 4. Get Leaves List (My Leaves or Team)
+  /// 7. Get Leaves List
   static Future<ApiResponse<List<LeaveModel>>> getLeavesList({
     String status = 'all',
     String scope = 'my',
@@ -205,7 +266,7 @@ class ApiService {
     }
   }
 
-  /// 5. Submit Leave Request
+  /// 8. Submit Leave Request
   static Future<ApiResponse<Map<String, dynamic>>> submitLeave({
     required int leaveTypeId,
     required String tanggalMulai,
@@ -256,7 +317,7 @@ class ApiService {
     }
   }
 
-  /// 6. Get Leave Detail
+  /// 9. Get Leave Detail
   static Future<ApiResponse<LeaveModel>> getLeaveDetail(int leaveId) async {
     try {
       final uri = Uri.parse('${ApiConfig.leaveDetail}?id=$leaveId');
@@ -274,7 +335,7 @@ class ApiService {
     }
   }
 
-  /// 7. Cancel Leave
+  /// 10. Cancel Leave
   static Future<ApiResponse<void>> cancelLeave(int leaveId) async {
     try {
       final response = await http
@@ -295,7 +356,7 @@ class ApiService {
     }
   }
 
-  /// 8. Get Approvals List
+  /// 11. Get Approvals List
   static Future<ApiResponse<List<LeaveModel>>> getApprovalsList({
     String status = 'pending',
     String search = '',
@@ -322,7 +383,7 @@ class ApiService {
     }
   }
 
-  /// 9. Process Approval Action (Approve / Reject)
+  /// 12. Process Approval Action (Approve / Reject)
   static Future<ApiResponse<void>> processApprovalAction({
     required int leaveId,
     required String action,
@@ -353,7 +414,7 @@ class ApiService {
     }
   }
 
-  /// 10. Get Public Board
+  /// 13. Get Public Board
   static Future<ApiResponse<Map<String, dynamic>>> getPublicBoard({int? deptId}) async {
     try {
       final uri = Uri.parse(ApiConfig.publicBoard).replace(queryParameters: {
@@ -372,4 +433,49 @@ class ApiService {
       return ApiResponse(success: false, message: 'Gagal menghubungi server');
     }
   }
+
+  /// 14. Get Employee Form Options (Departments & Positions)
+  static Future<ApiResponse<Map<String, dynamic>>> getEmployeeOptions() async {
+    try {
+      final response = await http
+          .get(Uri.parse(ApiConfig.employeeOptions), headers: _getHeaders())
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && body['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: 'Sukses',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      } else {
+        return ApiResponse(success: false, message: body['message'] ?? 'Gagal memuat opsi karyawan');
+      }
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal menghubungi server');
+    }
+  }
+
+  /// 15. Create Employee
+  static Future<ApiResponse<Map<String, dynamic>>> createEmployee(Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.employeeCreate),
+            headers: _getHeaders(),
+            body: jsonEncode(data),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? (response.statusCode == 200 ? 'Karyawan berhasil dibuat' : 'Gagal membuat karyawan'),
+        data: body['data'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal mengirim data karyawan');
+    }
+  }
 }
+

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../config/app_theme.dart';
 import '../models/leave_model.dart';
 import '../services/api_service.dart';
+import 'leave_detail_screen.dart';
 
 class LeaveApprovalScreen extends StatefulWidget {
   const LeaveApprovalScreen({super.key});
@@ -63,7 +65,7 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                isApprove ? 'Setujui Pengajuan Cuti' : 'Tolak Pengajuan Cuti',
+                isApprove ? 'Setujui Pengajuan' : 'Tolak Pengajuan',
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
             ],
@@ -88,7 +90,7 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: isApprove ? 'Catatan Tambahan (Opsional)' : 'Alasan Penolakan (Wajib) *',
-                    hintText: isApprove ? 'Misal: Tugas diserahterimakan ke rekan...' : 'Tuliskan alasan penolakan...',
+                    hintText: isApprove ? 'Misal: Disetujui, pekerjaan didelegasikan...' : 'Tuliskan alasan penolakan...',
                   ),
                   validator: (v) {
                     if (!isApprove && (v == null || v.trim().isEmpty)) {
@@ -153,7 +155,7 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Persetujuan Cuti Anggota'),
+        title: const Text('Persetujuan Cuti Anggota', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list_rounded),
@@ -166,10 +168,15 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
             },
             itemBuilder: (ctx) => const [
               PopupMenuItem(value: 'pending', child: Text('Hanya Menunggu (Pending)')),
-              PopupMenuItem(value: 'all', child: Text('Semua Pengajuan')),
+              PopupMenuItem(value: 'all', child: Text('Semua Riwayat Pengajuan')),
             ],
           ),
-          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _loadApprovals,
+            tooltip: 'Segarkan',
+          ),
+          const SizedBox(width: 6),
         ],
       ),
       body: RefreshIndicator(
@@ -225,133 +232,166 @@ class _LeaveApprovalScreenState extends State<LeaveApprovalScreen> {
                         separatorBuilder: (_, __) => const SizedBox(height: 14),
                         itemBuilder: (ctx, idx) {
                           final leave = _approvals[idx];
-                          return Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.02),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                          return InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => LeaveDetailScreen(leaveId: leave.id),
                                 ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Top Header
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 20,
-                                      backgroundColor: AppTheme.primary.withOpacity(0.1),
-                                      child: Text(
-                                        (leave.namaLengkap?.isNotEmpty == true)
-                                            ? leave.namaLengkap!.substring(0, 1).toUpperCase()
-                                            : 'K',
-                                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            leave.namaLengkap ?? '-',
-                                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                                          ),
-                                          Text(
-                                            '${leave.nik ?? ''} • ${leave.namaDept ?? ''}',
-                                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.primary.withOpacity(0.08),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        leave.kodeCuti ?? 'CUTI',
-                                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const Divider(height: 20, color: Color(0xFFF1F5F9)),
-
-                                // Details
-                                Row(
-                                  children: [
-                                    const Icon(Icons.date_range, size: 16, color: AppTheme.textMuted),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        '${leave.tanggalMulai} s/d ${leave.tanggalSelesai}',
-                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-                                      ),
-                                    ),
-                                    Text(
-                                      '${leave.totalHari} Hari',
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.primary),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.surfaceVariant,
-                                    borderRadius: BorderRadius.circular(8),
+                              ).then((_) => _loadApprovals());
+                            },
+                            borderRadius: BorderRadius.circular(16),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.02),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
                                   ),
-                                  child: Text(
-                                    'Alasan: ${leave.alasan}',
-                                    style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-                                  ),
-                                ),
-
-                                // Actions (if pending)
-                                if (leave.isPending) ...[
-                                  const SizedBox(height: 14),
+                                ],
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Top Header
                                   Row(
                                     children: [
-                                      Expanded(
-                                        child: OutlinedButton.icon(
-                                          style: OutlinedButton.styleFrom(
-                                            foregroundColor: AppTheme.statusRejected,
-                                            side: const BorderSide(color: AppTheme.statusRejected),
-                                            padding: const EdgeInsets.symmetric(vertical: 10),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                          ),
-                                          onPressed: () => _showApprovalDialog(leave, false),
-                                          icon: const Icon(Icons.close_rounded, size: 16),
-                                          label: const Text('Tolak', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                      CircleAvatar(
+                                        radius: 20,
+                                        backgroundColor: AppTheme.primary.withOpacity(0.1),
+                                        child: Text(
+                                          (leave.namaLengkap?.isNotEmpty == true)
+                                              ? leave.namaLengkap!.substring(0, 1).toUpperCase()
+                                              : 'K',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primary),
                                         ),
                                       ),
-                                      const SizedBox(width: 10),
+                                      const SizedBox(width: 12),
                                       Expanded(
-                                        child: ElevatedButton.icon(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppTheme.statusApproved,
-                                            padding: const EdgeInsets.symmetric(vertical: 10),
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                          ),
-                                          onPressed: () => _showApprovalDialog(leave, true),
-                                          icon: const Icon(Icons.check_rounded, size: 16),
-                                          label: const Text('Setujui', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              leave.namaLengkap ?? '-',
+                                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                                            ),
+                                            Text(
+                                              '${leave.nik ?? ''} • ${leave.namaDept ?? ''}',
+                                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.primary.withOpacity(0.08),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          leave.kodeCuti ?? 'CUTI',
+                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary),
                                         ),
                                       ),
                                     ],
                                   ),
+                                  const SizedBox(height: 10),
+
+                                  // Stage Chip
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFF9500).withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(CupertinoIcons.layers_alt_fill, size: 14, color: Color(0xFFFF9500)),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          leave.stepLabel,
+                                          style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold, color: Color(0xFFFF9500)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+
+                                  const Divider(height: 20, color: Color(0xFFF1F5F9)),
+
+                                  // Details
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.date_range, size: 16, color: AppTheme.textMuted),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          '${leave.tanggalMulai} s/d ${leave.tanggalSelesai}',
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                                        ),
+                                      ),
+                                      Text(
+                                        '${leave.totalHari} Hari',
+                                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.surfaceVariant,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      'Alasan: ${leave.alasan}',
+                                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                                    ),
+                                  ),
+
+                                  // Actions (if pending)
+                                  if (leave.isPending) ...[
+                                    const SizedBox(height: 14),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: OutlinedButton.icon(
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: AppTheme.statusRejected,
+                                              side: const BorderSide(color: AppTheme.statusRejected),
+                                              padding: const EdgeInsets.symmetric(vertical: 10),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            ),
+                                            onPressed: () => _showApprovalDialog(leave, false),
+                                            icon: const Icon(Icons.close_rounded, size: 16),
+                                            label: const Text('Tolak', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: AppTheme.statusApproved,
+                                              padding: const EdgeInsets.symmetric(vertical: 10),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            ),
+                                            onPressed: () => _showApprovalDialog(leave, true),
+                                            icon: const Icon(Icons.check_rounded, size: 16),
+                                            label: const Text('Setujui', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           );
                         },

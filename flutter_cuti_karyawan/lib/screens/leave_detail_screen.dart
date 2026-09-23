@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../config/app_theme.dart';
 import '../models/leave_model.dart';
 import '../services/api_service.dart';
@@ -91,41 +92,49 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     }
   }
 
-  Widget _buildStatusBanner(String status) {
+  Widget _buildStatusBanner(LeaveModel leave) {
     Color bg;
     Color color;
     IconData icon;
     String title;
     String desc;
 
-    switch (status.toLowerCase()) {
+    switch (leave.status.toLowerCase()) {
       case 'approved':
         bg = AppTheme.statusApprovedBg;
         color = AppTheme.statusApproved;
-        icon = Icons.check_circle_rounded;
-        title = 'Disetujui';
-        desc = 'Pengajuan cuti telah disetujui oleh atasan.';
+        icon = CupertinoIcons.checkmark_seal_fill;
+        title = 'Disetujui Sepenuhnya';
+        desc = 'Pengajuan cuti telah disetujui HRD & kuota telah dipotong.';
         break;
       case 'rejected':
         bg = AppTheme.statusRejectedBg;
         color = AppTheme.statusRejected;
-        icon = Icons.cancel_rounded;
-        title = 'Ditolak';
-        desc = 'Pengajuan cuti ditolak oleh atasan.';
+        icon = CupertinoIcons.xmark_circle_fill;
+        title = 'Pengajuan Ditolak';
+        desc = leave.rejectionReason?.isNotEmpty == true
+            ? 'Alasan: ${leave.rejectionReason}'
+            : 'Pengajuan cuti tidak disetujui.';
         break;
       case 'cancelled':
         bg = AppTheme.statusCancelledBg;
         color = AppTheme.statusCancelled;
-        icon = Icons.remove_circle_outline_rounded;
+        icon = CupertinoIcons.minus_circle_fill;
         title = 'Dibatalkan';
-        desc = 'Pengajuan cuti ini telah dibatalkan.';
+        desc = 'Pengajuan cuti ini telah dibatalkan oleh pemohon.';
         break;
       default:
         bg = AppTheme.statusPendingBg;
         color = AppTheme.statusPending;
-        icon = Icons.hourglass_top_rounded;
-        title = 'Menunggu Persetujuan';
-        desc = 'Pengajuan cuti sedang dalam antrean review atasan.';
+        icon = CupertinoIcons.clock_fill;
+        title = leave.stepLabel;
+        if (leave.approvalStep == 'pending_spv') {
+          desc = 'Menunggu persetujuan dari Supervisor / Leader departemen.';
+        } else if (leave.approvalStep == 'pending_manager') {
+          desc = 'Disetujui Leader, menunggu persetujuan Manager.';
+        } else {
+          desc = 'Disetujui Manager, menunggu persetujuan akhir HRD.';
+        }
     }
 
     return Container(
@@ -137,17 +146,186 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, color: color, size: 32),
+          Icon(icon, color: color, size: 30),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: color)),
+                Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: color)),
                 const SizedBox(height: 2),
                 Text(desc, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineStep({
+    required String title,
+    required String subtitle,
+    required bool isDone,
+    required bool isCurrent,
+    required bool isRejected,
+    String? note,
+    String? date,
+    bool isLast = false,
+  }) {
+    Color nodeColor;
+    IconData nodeIcon;
+
+    if (isRejected) {
+      nodeColor = const Color(0xFFFF3B30);
+      nodeIcon = CupertinoIcons.clear;
+    } else if (isDone) {
+      nodeColor = const Color(0xFF34C759);
+      nodeIcon = CupertinoIcons.checkmark;
+    } else if (isCurrent) {
+      nodeColor = const Color(0xFFFF9500);
+      nodeIcon = CupertinoIcons.time;
+    } else {
+      nodeColor = const Color(0xFFD1D1D6);
+      nodeIcon = CupertinoIcons.circle;
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: nodeColor.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: nodeColor, width: 2),
+                ),
+                child: Icon(nodeIcon, size: 14, color: nodeColor),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: isDone ? const Color(0xFF34C759) : const Color(0xFFE5E5EA),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: isCurrent ? const Color(0xFFFF9500) : (isRejected ? const Color(0xFFFF3B30) : const Color(0xFF1C1C1E)),
+                        ),
+                      ),
+                      if (date != null && date.isNotEmpty)
+                        Text(date, style: const TextStyle(fontSize: 11, color: Color(0xFF8E8E93))),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF6C6C70)),
+                  ),
+                  if (note != null && note.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF2F2F7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Catatan: "$note"',
+                        style: const TextStyle(fontSize: 11.5, fontStyle: FontStyle.italic, color: Color(0xFF3A3A3C)),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimelineSection(LeaveModel leave) {
+    final isRejected = leave.isRejected;
+    final isApproved = leave.isApproved;
+
+    // Spv logic
+    final spvDone = leave.spvId != null || (leave.approvalStep != 'pending_spv' && !isRejected) || isApproved;
+    final spvCurrent = leave.approvalStep == 'pending_spv' && !isRejected && !isApproved;
+    final spvRejected = isRejected && (leave.approvalStep == 'pending_spv' || (leave.spvId == null && leave.managerId == null && leave.hrdId == null));
+
+    // Manager logic
+    final mgrDone = leave.managerId != null || (leave.approvalStep == 'pending_hrd') || isApproved;
+    final mgrCurrent = leave.approvalStep == 'pending_manager' && !isRejected && !isApproved;
+    final mgrRejected = isRejected && leave.approvalStep == 'pending_manager';
+
+    // HRD logic
+    final hrdDone = isApproved;
+    final hrdCurrent = leave.approvalStep == 'pending_hrd' && !isRejected && !isApproved;
+    final hrdRejected = isRejected && leave.approvalStep == 'pending_hrd';
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Hierarki Alur Persetujuan (3-Tier)',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+          ),
+          const SizedBox(height: 16),
+          _buildTimelineStep(
+            title: '1. Supervisor / Leader',
+            subtitle: leave.spvName != null ? 'Oleh: ${leave.spvName}' : (spvDone ? 'Disetujui' : (spvCurrent ? 'Menunggu review' : 'Antrean')),
+            isDone: spvDone,
+            isCurrent: spvCurrent,
+            isRejected: spvRejected,
+            note: leave.spvNotes,
+            date: leave.spvAt,
+          ),
+          _buildTimelineStep(
+            title: '2. Manager Departemen',
+            subtitle: leave.managerName != null ? 'Oleh: ${leave.managerName}' : (mgrDone ? 'Disetujui' : (mgrCurrent ? 'Menunggu review' : 'Antrean')),
+            isDone: mgrDone,
+            isCurrent: mgrCurrent,
+            isRejected: mgrRejected,
+            note: leave.managerNotes,
+            date: leave.managerAt,
+          ),
+          _buildTimelineStep(
+            title: '3. HRD / Admin (Final)',
+            subtitle: leave.hrdName != null ? 'Oleh: ${leave.hrdName}' : (hrdDone ? 'Disetujui & Kuota Dipotong' : (hrdCurrent ? 'Menunggu review final' : 'Antrean')),
+            isDone: hrdDone,
+            isCurrent: hrdCurrent,
+            isRejected: hrdRejected,
+            note: leave.hrdNotes ?? leave.catatanAtasan,
+            date: leave.hrdAt ?? leave.approvedAt,
+            isLast: true,
           ),
         ],
       ),
@@ -185,12 +363,41 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     final isOwner = _leave != null && user != null && _leave!.employeeId == user.id;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: const Color(0xFFF2F2F7),
       appBar: AppBar(
-        title: const Text('Detail Pengajuan Cuti'),
+        elevation: 0,
+        backgroundColor: const Color(0xFFF2F2F7),
+        centerTitle: true,
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          onPressed: () => Navigator.pop(context),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(CupertinoIcons.chevron_back, color: Color(0xFF007AFF), size: 28),
+              Text(
+                'Kembali',
+                style: TextStyle(
+                  color: Color(0xFF007AFF),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        leadingWidth: 95,
+        title: const Text(
+          'Detail Pengajuan',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 17,
+          ),
+        ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CupertinoActivityIndicator(radius: 14))
           : _errorMessage != null
               ? Center(
                   child: Column(
@@ -205,7 +412,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                   ),
                 )
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(16),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 600),
@@ -213,12 +420,16 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // Status Banner
-                          _buildStatusBanner(_leave!.status),
-                          const SizedBox(height: 20),
+                          _buildStatusBanner(_leave!),
+                          const SizedBox(height: 16),
+
+                          // 3-Tier Approval Flow Card
+                          _buildTimelineSection(_leave!),
+                          const SizedBox(height: 16),
 
                           // Main Info Card
                           Container(
-                            padding: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.all(18),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
@@ -229,7 +440,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                               children: [
                                 const Text(
                                   'Informasi Pengajuan',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
                                 ),
                                 const Divider(height: 24, color: Color(0xFFE2E8F0)),
                                 _buildInfoRow('Nomor Surat', _leave!.nomorSurat, icon: Icons.tag),
@@ -250,7 +461,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                                   width: double.infinity,
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.surfaceVariant,
+                                    color: const Color(0xFFF8FAFC),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(_leave!.alasan, style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
@@ -267,77 +478,21 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Approval / Feedback Notes
-                          if (_leave!.approverName != null || _leave!.catatanAtasan != null || _leave!.rejectionReason != null) ...[
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Catatan Persetujuan / Review',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
-                                  ),
-                                  const Divider(height: 24, color: Color(0xFFE2E8F0)),
-                                  if (_leave!.approverName != null)
-                                    _buildInfoRow('Diverifikasi Oleh', _leave!.approverName!, icon: Icons.verified_user_outlined),
-                                  if (_leave!.approvedAt != null)
-                                    _buildInfoRow('Waktu Keputusan', _leave!.approvedAt!, icon: Icons.access_time),
-                                  if (_leave!.rejectionReason != null && _leave!.rejectionReason!.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    const Text('Alasan Penolakan:', style: TextStyle(fontSize: 13, color: AppTheme.statusRejected, fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.statusRejectedBg,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(_leave!.rejectionReason!, style: const TextStyle(fontSize: 13, color: AppTheme.statusRejected)),
-                                    ),
-                                  ],
-                                  if (_leave!.catatanAtasan != null && _leave!.catatanAtasan!.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    const Text('Catatan Atasan:', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      width: double.infinity,
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.surfaceVariant,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(_leave!.catatanAtasan!, style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                          ],
-
-                          // Cancel Button (if pending and user is owner)
-                          if (isOwner && _leave!.isPending) ...[
-                            OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppTheme.statusRejected,
-                                side: const BorderSide(color: AppTheme.statusRejected),
+                          // Cancel Button (if pending and is owner)
+                          if (isOwner && _leave!.isPending)
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF3B30),
+                                foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
                               onPressed: _isCancelling ? null : _handleCancel,
-                              icon: _isCancelling
-                                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Icon(Icons.cancel_outlined, size: 18),
-                              label: const Text('Batalkan Pengajuan Ini', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                              child: _isCancelling
+                                  ? const CupertinoActivityIndicator(color: Colors.white)
+                                  : const Text('Batalkan Pengajuan Cuti', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                             ),
-                          ],
+                          const SizedBox(height: 24),
                         ],
                       ),
                     ),
