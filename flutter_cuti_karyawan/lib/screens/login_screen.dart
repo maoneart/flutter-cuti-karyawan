@@ -60,61 +60,129 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showServerSettingsDialog() {
     final serverController = TextEditingController(text: ApiConfig.baseUrl);
+    bool isTesting = false;
+    String? testResult;
+    bool? testSuccess;
+
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
-          children: [
-            Icon(Icons.settings_ethernet, color: AppTheme.primary),
-            SizedBox(width: 8),
-            Text('Konfigurasi Server API', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Ganti URL jika menggunakan HP fisik via Wi-Fi lokal:',
-              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: serverController,
-              decoration: const InputDecoration(
-                labelText: 'API Base URL',
-                hintText: 'http://192.168.1.10/Cuti_Karyawan/api',
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Contoh:\n• Web/Local: http://localhost/Cuti_Karyawan/api\n• Emulator: http://10.0.2.2/Cuti_Karyawan/api\n• HP Fisik: http://[IP_PC]:80/Cuti_Karyawan/api',
-              style: TextStyle(fontSize: 12, color: AppTheme.textMuted),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Batal'),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.settings_ethernet, color: AppTheme.primary),
+              SizedBox(width: 8),
+              Text('Konfigurasi Server API', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () async {
-              final newUrl = serverController.text.trim();
-              if (newUrl.isNotEmpty) {
-                await AuthService.setCustomBaseUrl(newUrl);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Server diatur ke: $newUrl')),
-                  );
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Masukkan URL backend API laptop Anda:',
+                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: serverController,
+                  decoration: const InputDecoration(
+                    labelText: 'API Base URL',
+                    hintText: 'http://172.16.0.107/Cuti_Karyawan/api',
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Test Connection Button
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                  onPressed: isTesting
+                      ? null
+                      : () async {
+                          setDialogState(() {
+                            isTesting = true;
+                            testResult = null;
+                            testSuccess = null;
+                          });
+
+                          final res = await ApiService.testConnection(serverController.text);
+
+                          setDialogState(() {
+                            isTesting = false;
+                            testSuccess = res['success'] == true;
+                            testResult = res['message']?.toString();
+                          });
+                        },
+                  icon: isTesting
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.network_check_rounded, size: 16),
+                  label: const Text('Tes Koneksi / Ping Server', style: TextStyle(fontSize: 12)),
+                ),
+
+                if (testResult != null) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: (testSuccess == true) ? AppTheme.statusApprovedBg : AppTheme.statusRejectedBg,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: (testSuccess == true) ? AppTheme.statusApproved : AppTheme.statusRejected,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          (testSuccess == true) ? Icons.check_circle : Icons.error_outline,
+                          size: 16,
+                          color: (testSuccess == true) ? AppTheme.statusApproved : AppTheme.statusRejected,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            testResult!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: (testSuccess == true) ? AppTheme.statusApproved : AppTheme.statusRejected,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final newUrl = serverController.text.trim();
+                if (newUrl.isNotEmpty) {
+                  await AuthService.setCustomBaseUrl(newUrl);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Server diatur ke: $newUrl')),
+                    );
+                  }
                 }
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Simpan'),
-          ),
-        ],
+                Navigator.pop(ctx);
+              },
+              child: const Text('Simpan'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -229,6 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   border: Border.all(color: AppTheme.statusRejected.withOpacity(0.3)),
                                 ),
                                 child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Icon(Icons.error_outline, color: AppTheme.statusRejected, size: 20),
                                     const SizedBox(width: 8),
@@ -237,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         _errorMessage!,
                                         style: const TextStyle(
                                           color: AppTheme.statusRejected,
-                                          fontSize: 13,
+                                          fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),

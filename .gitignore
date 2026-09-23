@@ -4,17 +4,19 @@
 *.swp
 *.log
 
-# Assets Uploads (ignore uploaded test files except keep folder)
-assets/uploads/leaves/*
-!assets/uploads/leaves/.gitkeep
-
-# Flutter Build Artifacts
+# Build Artifacts & Large Files
+*.apk
+*.zip
 **/build/
 **/.dart_tool/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
 **/.pub-cache/
 **/.pub/
+
+# Assets Uploads
+assets/uploads/leaves/*
+!assets/uploads/leaves/.gitkeep
 
 # Secrets
 .env

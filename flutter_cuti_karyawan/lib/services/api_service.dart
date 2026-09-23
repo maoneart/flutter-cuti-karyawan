@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/user_model.dart';
@@ -22,7 +23,7 @@ class ApiResponse<T> {
 }
 
 class ApiService {
-  static const Duration timeoutDuration = Duration(seconds: 15);
+  static const Duration timeoutDuration = Duration(seconds: 12);
 
   static Map<String, String> _getHeaders({bool withAuth = true}) {
     final headers = <String, String>{
@@ -33,6 +34,52 @@ class ApiService {
       headers['Authorization'] = 'Bearer ${AuthService.token}';
     }
     return headers;
+  }
+
+  /// Test server connectivity
+  static Future<Map<String, dynamic>> testConnection(String customUrl) async {
+    final cleanUrl = customUrl.trim().replaceAll(RegExp(r'/+$'), '');
+    final testEndpoint = '$cleanUrl/public/board.php';
+    final stopwatch = Stopwatch()..start();
+
+    try {
+      final response = await http
+          .get(Uri.parse(testEndpoint))
+          .timeout(const Duration(seconds: 7));
+      stopwatch.stop();
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': 'Koneksi Berhasil! (Response ${stopwatch.elapsedMilliseconds}ms)',
+          'status': response.statusCode,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': 'Server terhubung tapi mengembalikan kode HTTP ${response.statusCode}',
+          'status': response.statusCode,
+        };
+      }
+    } on SocketException catch (e) {
+      stopwatch.stop();
+      return {
+        'success': false,
+        'message': 'Gagal terhubung ke host (${e.message}). Pastikan IP benar dan Firewall mengizinkan port 80.',
+      };
+    } on http.ClientException catch (e) {
+      stopwatch.stop();
+      return {
+        'success': false,
+        'message': 'Client HTTP error: ${e.message}',
+      };
+    } catch (e) {
+      stopwatch.stop();
+      return {
+        'success': false,
+        'message': 'Koneksi timeout / gagal: $e',
+      };
+    }
   }
 
   /// 1. Login User
@@ -65,10 +112,15 @@ class ApiService {
           errors: body['errors'] as Map<String, dynamic>?,
         );
       }
+    } on SocketException catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'Koneksi gagal (${e.message}). Periksa apakah IP Laptop (${ApiConfig.baseUrl}) dapat dijangkau dan Firewall aktif.',
+      );
     } catch (e) {
       return ApiResponse(
         success: false,
-        message: 'Koneksi ke server gagal. Pastikan Apache/Laragon aktif dan URL API benar (${ApiConfig.baseUrl}).',
+        message: 'Koneksi ke server gagal ($e). Pastikan Apache/Laragon aktif dan URL API benar (${ApiConfig.baseUrl}).',
       );
     }
   }
@@ -273,7 +325,7 @@ class ApiService {
   /// 9. Process Approval Action (Approve / Reject)
   static Future<ApiResponse<void>> processApprovalAction({
     required int leaveId,
-    required String action, // 'approve' or 'reject'
+    required String action,
     String notes = '',
     String rejectionReason = '',
   }) async {

@@ -1,25 +1,27 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
-  /// Ubah baseUrl sesuai environment Anda:
-  /// - Untuk Flutter Web di Laragon: http://localhost/Cuti_Karyawan/api
-  /// - Untuk Android Emulator: http://10.0.2.2/Cuti_Karyawan/api
-  /// - Untuk HP Fisik (WiFi sama): http://[IP_KOMPUTER_ANDA]/Cuti_Karyawan/api (misal: http://192.168.1.10/Cuti_Karyawan/api)
-  /// - Untuk Production Hosting: https://domainanda.com/api
-  
+  static const String serverIp = '172.16.0.107';
+
   static String get defaultBaseUrl {
     if (kIsWeb) {
       return 'http://localhost/Cuti_Karyawan/api';
     } else if (defaultTargetPlatform == TargetPlatform.android) {
-      // 10.0.2.2 adalah localhost untuk Android Emulator
-      return 'http://10.0.2.2/Cuti_Karyawan/api';
+      // Default langsung ke IP Laptop pengguna
+      return 'http://$serverIp/Cuti_Karyawan/api';
     } else {
       return 'http://localhost/Cuti_Karyawan/api';
     }
   }
 
-  // Active Base URL (bisa diganti dari setting/storage di runtime)
-  static String baseUrl = defaultBaseUrl;
+  // Active Base URL
+  static String _baseUrl = defaultBaseUrl;
+
+  static String get baseUrl => _baseUrl;
+  static set baseUrl(String url) {
+    // Bersihkan trailing slash
+    _baseUrl = url.trim().replaceAll(RegExp(r'/+$'), '');
+  }
 
   // Endpoints
   static String get login => '$baseUrl/auth/login.php';
