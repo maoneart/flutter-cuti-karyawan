@@ -1,194 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../config/app_theme.dart';
-import '../config/api_config.dart';
 import '../services/auth_service.dart';
 import 'user_guide_screen.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
-
-  static Future<void> openGuideDoc(BuildContext context, String role, {bool autoPrint = false}) async {
-    final printParam = autoPrint ? '&print=1' : '';
-    final guideUrl = '${ApiConfig.baseUrl}/docs/panduan.php?role=$role$printParam';
-    final uri = Uri.parse(guideUrl);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Membuka browser ke: $guideUrl')),
-          );
-        }
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal membuka tautan panduan: $e')),
-        );
-      }
-    }
-  }
-
-  static void showGuideSelectionModal(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
-    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
-    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: cardBg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border.all(color: borderCol),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: borderCol,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Pusat Buku Panduan & Tutorial (PDF)',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: textHead),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Pilih buku panduan operasional sesuai peran jabatan:',
-              style: TextStyle(fontSize: 12.5, color: textSub),
-            ),
-            const SizedBox(height: 18),
-
-            _buildGuideTile(
-              ctx,
-              icon: CupertinoIcons.person_fill,
-              color: const Color(0xFF0284C7),
-              title: '1. Panduan Operator & Staff',
-              desc: 'Alur pengajuan cuti, syarat lampiran surat dokter, dan lacak status.',
-              role: 'operator',
-              textHead: textHead,
-              textSub: textSub,
-              borderCol: borderCol,
-              isDark: isDark,
-            ),
-            const SizedBox(height: 10),
-
-            _buildGuideTile(
-              ctx,
-              icon: CupertinoIcons.person_2_fill,
-              color: const Color(0xFF16A34A),
-              title: '2. Panduan Leader & Supervisor',
-              desc: 'Review tahap 1 tim departemen, tolak/setujui, dan pengajuan pribadi.',
-              role: 'leader',
-              textHead: textHead,
-              textSub: textSub,
-              borderCol: borderCol,
-              isDark: isDark,
-            ),
-            const SizedBox(height: 10),
-
-            _buildGuideTile(
-              ctx,
-              icon: CupertinoIcons.briefcase_fill,
-              color: const Color(0xFFD97706),
-              title: '3. Panduan Plant Manager',
-              desc: 'Persetujuan tahap 2 lintas 15 departemen & monitoring produksi.',
-              role: 'manager',
-              textHead: textHead,
-              textSub: textSub,
-              borderCol: borderCol,
-              isDark: isDark,
-            ),
-            const SizedBox(height: 10),
-
-            _buildGuideTile(
-              ctx,
-              icon: CupertinoIcons.shield_lefthalf_fill,
-              color: const Color(0xFF7C3AED),
-              title: '4. Panduan HRD & Super Admin',
-              desc: 'Persetujuan final tahap 3, pemotongan kuota, dan kelola karyawan.',
-              role: 'hrd',
-              textHead: textHead,
-              textSub: textSub,
-              borderCol: borderCol,
-              isDark: isDark,
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  static Widget _buildGuideTile(
-    BuildContext context, {
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String desc,
-    required String role,
-    required Color textHead,
-    required Color textSub,
-    required Color borderCol,
-    required bool isDark,
-  }) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        openGuideDoc(context, role);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderCol),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: textHead)),
-                  const SizedBox(height: 2),
-                  Text(desc, style: TextStyle(fontSize: 11.5, color: textSub), maxLines: 2, overflow: TextOverflow.ellipsis),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(CupertinoIcons.arrow_down_doc_fill, size: 18, color: color),
-          ],
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -198,15 +15,6 @@ class AboutScreen extends StatelessWidget {
     final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
     final textHead = isDark ? Colors.white : const Color(0xFF0F172A);
     final textSub = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-
-    String defaultRole = 'operator';
-    if (user?.isAdmin == true) {
-      defaultRole = 'hrd';
-    } else if (user?.isManager == true) {
-      defaultRole = 'manager';
-    } else if (user?.isSupervisor == true) {
-      defaultRole = 'leader';
-    }
 
     return Scaffold(
       backgroundColor: isDark ? const Color(0xFF121824) : const Color(0xFFF2F2F7),
@@ -303,7 +111,7 @@ class AboutScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // 2. Download 4 User Manuals Banner
+                // 2. Open In-App Tutorial Banner
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -326,66 +134,53 @@ class AboutScreen extends StatelessWidget {
                     children: [
                       const Row(
                         children: [
-                          Icon(CupertinoIcons.doc_text_fill, color: Colors.white, size: 26),
+                          Icon(CupertinoIcons.book_fill, color: Colors.white, size: 26),
                           SizedBox(width: 10),
                           Text(
-                            'Buku Panduan & Tutorial (PDF)',
+                            'Halaman Panduan Aplikasi',
                             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        'Tersedia 4 buku panduan terpisah untuk Operator, Leader/Spv, Plant Manager, dan HRD/Admin.',
-                        style: TextStyle(color: Colors.white70, fontSize: 12.5),
+                      Text(
+                        'Tutorial interaktif langkah-langkah penggunaan aplikasi yang disesuaikan khusus untuk peran ${user?.namaJabatan ?? "Karyawan"}.',
+                        style: const TextStyle(color: Colors.white70, fontSize: 12.5, height: 1.35),
                       ),
                       const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: const Color(0xFF0284C7),
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => const UserGuideScreen()),
-                                );
-                              },
-                              icon: const Icon(CupertinoIcons.book_fill, size: 18),
-                              label: Text('Buka Panduan (${user?.role.toUpperCase() ?? "SAYA"})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                            ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF0284C7),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white.withOpacity(0.2),
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                            ),
-                            onPressed: () => openGuideDoc(context, defaultRole),
-                            icon: const Icon(CupertinoIcons.arrow_down_doc_fill, size: 16),
-                            label: const Text('Unduh PDF', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const UserGuideScreen()),
+                            );
+                          },
+                          icon: const Icon(CupertinoIcons.arrow_right_circle_fill, size: 18),
+                          label: Text(
+                            'Buka Tutorial Panduan (${user?.namaJabatan ?? "Saya"})',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 20),
 
-                // 3. Quick How-To Steps
+                // 3. Quick System Information
                 Padding(
                   padding: const EdgeInsets.only(left: 6, bottom: 8),
                   child: Text(
-                    'PANDUAN SINGKAT OPERASIONAL',
+                    'INFORMASI SISTEM & HIERARKI',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textSub),
                   ),
                 ),
@@ -400,29 +195,29 @@ class AboutScreen extends StatelessWidget {
                     children: [
                       _buildStepItem(
                         number: '1',
-                        title: 'Operator & Staff (3 Tahap)',
+                        title: 'Operator & Staff (Level 1-2)',
                         desc: 'Pengajuan disetujui Leader/Spv ➔ Plant Manager ➔ HRD Final. Sisa kuota terpotong setelah HRD menyetujui.',
                         isDark: isDark,
                       ),
                       const Divider(height: 20),
                       _buildStepItem(
                         number: '2',
-                        title: 'Leader & Supervisor (2 Tahap)',
-                        desc: 'Bypass Spv, langsung disetujui Plant Manager ➔ HRD Final. Leader memproses cuti operator timnya.',
+                        title: 'Leader & Supervisor (Level 3-4)',
+                        desc: 'Bypass Spv saat mengajukan cuti pribadi. Leader menyetujui cuti operator 1 departemennya.',
                         isDark: isDark,
                       ),
                       const Divider(height: 20),
                       _buildStepItem(
                         number: '3',
-                        title: 'Plant Manager (15 Departemen)',
+                        title: 'Plant Manager (Level 6)',
                         desc: 'Persetujuan tahap 2 mencakup seluruh 15 departemen pabrik sebelum diteruskan ke HRD.',
                         isDark: isDark,
                       ),
                       const Divider(height: 20),
                       _buildStepItem(
                         number: '4',
-                        title: 'HRD & Super Admin (Final & Kuota)',
-                        desc: 'Persetujuan akhir, monitoring seluruh pengajuan aktif, dan manajemen data pegawai.',
+                        title: 'HRD & Super Admin (Level 7-8)',
+                        desc: 'Persetujuan akhir, pemotongan kuota cuti resmi, dan manajemen data pegawai.',
                         isDark: isDark,
                         isLast: true,
                       ),
