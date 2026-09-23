@@ -19,26 +19,24 @@ $conditions = [];
 
 // Determine which approval_step belongs to this user:
 // If HRD Admin -> pending_hrd (across all departments)
-// If Manager (level 5-6) -> pending_manager (their department)
+// If Manager (level 5-6) -> pending_manager (across all departments)
 // If Leader/Spv (level 3-4) -> pending_spv (their department)
-if ($user['role'] === 'admin' || $hierarki >= 7) {
+if ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role'] === 'hrd' || $hierarki >= 7) {
     if ($status === 'pending') {
         $conditions[] = "p.approval_step = 'pending_hrd' AND p.status = 'pending'";
     }
-} elseif ($hierarki >= 5) {
-    // Manager
-    $conditions[] = "k.departemen_id = ?";
-    $params[] = $user['departemen_id'];
-    $conditions[] = "k.id != ?";
+} elseif ($user['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6)) {
+    // Manager: across all departments, excluding their own leave request
+    $conditions[] = "p.employee_id != ?";
     $params[] = $user['id'];
     if ($status === 'pending') {
         $conditions[] = "p.approval_step = 'pending_manager' AND p.status = 'pending'";
     }
 } else {
-    // Leader / Supervisor (level 3-4)
+    // Leader / Supervisor (level 3-4): restricted to their department
     $conditions[] = "k.departemen_id = ?";
     $params[] = $user['departemen_id'];
-    $conditions[] = "k.id != ?";
+    $conditions[] = "p.employee_id != ?";
     $params[] = $user['id'];
     if ($status === 'pending') {
         $conditions[] = "p.approval_step = 'pending_spv' AND p.status = 'pending'";

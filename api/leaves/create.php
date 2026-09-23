@@ -174,18 +174,21 @@ $hierarki = (int)($user['level_hierarki'] ?? 1);
 $initialStep = 'pending_spv';
 $initialStatus = 'pending';
 
-if ($user['role'] === 'admin' || $hierarki >= 7) {
+if ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role'] === 'hrd' || $hierarki >= 7) {
     $initialStep = 'approved';
     $initialStatus = 'approved';
-} elseif ($hierarki >= 5) {
+} elseif ($user['role'] === 'manager' || $hierarki >= 5) {
     // Manager -> langsung ke HRD
     $initialStep = 'pending_hrd';
-} elseif ($hierarki >= 3) {
-    // Leader / Spv -> langsung ke Manager
+    $initialStatus = 'pending';
+} elseif ($user['role'] === 'leader' || $user['role'] === 'supervisor' || $hierarki >= 3) {
+    // Leader & Supervisor -> langsung ke Manager (tidak perlu Spv sendiri)
     $initialStep = 'pending_manager';
+    $initialStatus = 'pending';
 } else {
-    // Operator / Staff -> ke Leader/Spv
+    // Operator & Staff -> ke Leader/Spv
     $initialStep = 'pending_spv';
+    $initialStatus = 'pending';
 }
 
 try {

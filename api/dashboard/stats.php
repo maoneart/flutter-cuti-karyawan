@@ -31,18 +31,16 @@ if ($user['role'] === 'admin' || $hierarki >= 7) {
     // HRD Admin -> pending_hrd
     $stmtPending = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE approval_step = 'pending_hrd' AND status = 'pending'");
     $pendingApprovalsCount = (int)$stmtPending->fetchColumn();
-} elseif ($hierarki >= 5) {
-    // Manager -> pending_manager in their dept
+} elseif ($user['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6)) {
+    // Manager -> pending_manager across all departments (except own leave)
     $stmtPending = $pdo->prepare("
         SELECT COUNT(p.id) 
         FROM pengajuan_cuti p
-        JOIN karyawan k ON p.employee_id = k.id
         WHERE p.approval_step = 'pending_manager' 
           AND p.status = 'pending'
-          AND k.departemen_id = ? 
-          AND k.id != ?
+          AND p.employee_id != ?
     ");
-    $stmtPending->execute([$user['departemen_id'], $user['id']]);
+    $stmtPending->execute([$user['id']]);
     $pendingApprovalsCount = (int)$stmtPending->fetchColumn();
 } elseif ($hierarki >= 3) {
     // Leader / Supervisor -> pending_spv in their dept

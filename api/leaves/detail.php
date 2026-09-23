@@ -44,10 +44,10 @@ if (!$leave) {
     jsonResponse(false, 'Pengajuan cuti tidak ditemukan.', null, 404);
 }
 
-// Access Control
+// Access Control: Employee themself, HRD/Admin, Plant Manager (level >= 5), or same department members
 $hierarki = (int)($user['level_hierarki'] ?? 1);
 $canAccess = ($leave['employee_id'] == $user['id']) || 
-             ($user['role'] === 'admin' || $hierarki >= 7) || 
+             ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role'] === 'hrd' || $hierarki >= 5) || 
              ($user['departemen_id'] == $leave['departemen_id']);
 
 if (!$canAccess) {

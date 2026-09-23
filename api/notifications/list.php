@@ -45,8 +45,8 @@ if ($user['role'] === 'admin' || $hierarki >= 7) {
             'read' => false,
         ];
     }
-} elseif ($hierarki >= 5) {
-    // Manager sees pending_manager
+} elseif ($user['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6)) {
+    // Manager sees all pending_manager across all departments (except their own submission)
     $stmt = $pdo->prepare("
         SELECT p.id, p.nomor_surat, p.total_hari, p.tanggal_mulai, p.tanggal_selesai, p.created_at,
                k.nama_lengkap, d.nama_dept, l.nama_cuti
@@ -54,18 +54,18 @@ if ($user['role'] === 'admin' || $hierarki >= 7) {
         JOIN karyawan k ON p.employee_id = k.id
         JOIN departemen d ON k.departemen_id = d.id
         JOIN jenis_cuti l ON p.leave_type_id = l.id
-        WHERE p.approval_step = 'pending_manager' AND p.status = 'pending' AND k.departemen_id = ? AND k.id != ?
+        WHERE p.approval_step = 'pending_manager' AND p.status = 'pending' AND p.employee_id != ?
         ORDER BY p.created_at DESC
-        LIMIT 10
+        LIMIT 15
     ");
-    $stmt->execute([$user['departemen_id'], $user['id']]);
+    $stmt->execute([$user['id']]);
     while ($row = $stmt->fetch()) {
         $notifications[] = [
             'id' => 'appr_' . $row['id'],
             'leave_id' => (int)$row['id'],
             'type' => 'approval_required',
             'title' => 'Menunggu Persetujuan Manager',
-            'message' => "Pengajuan {$row['nama_cuti']} ({$row['total_hari']} hari) oleh {$row['nama_lengkap']} telah disetujui Spv dan menunggu persetujuan Anda.",
+            'message' => "Pengajuan {$row['nama_cuti']} ({$row['total_hari']} hari) oleh {$row['nama_lengkap']} ({$row['nama_dept']}) memerlukan persetujuan Manager.",
             'time' => $row['created_at'],
             'read' => false,
         ];

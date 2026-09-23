@@ -54,8 +54,9 @@ if ($leave['status'] !== 'pending') {
 
 $currentStep = $leave['approval_step'] ?? 'pending_spv';
 
-// Security check based on department (unless admin)
-if ($user['role'] !== 'admin' && $hierarki < 7 && $user['departemen_id'] != $leave['departemen_id']) {
+// Security check: HRD/Admin and Plant Manager can process approvals across all departments
+// Leader / Spv (level 3-4) can only process approvals for their own department
+if ($user['role'] !== 'superadmin' && $user['role'] !== 'admin' && $user['role'] !== 'hrd' && $user['role'] !== 'manager' && $hierarki < 5 && $user['departemen_id'] != $leave['departemen_id']) {
     jsonResponse(false, 'Akses ditolak. Anda hanya dapat memproses pengajuan cuti anggota departemen Anda.', null, 403);
 }
 
