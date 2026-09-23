@@ -41,6 +41,9 @@ class ApiConfig {
 
   static String get employeeOptions => '$baseUrl/employees/options.php';
   static String get employeeCreate => '$baseUrl/employees/create.php';
+  static String get employeeUpdate => '$baseUrl/employees/update.php';
+  static String get employeeResetPassword => '$baseUrl/employees/reset_password.php';
+  static String get employeeDelete => '$baseUrl/employees/delete.php';
   static String get employeesList => '$baseUrl/employees/list.php';
   static String get employeeTemplate => '$baseUrl/employees/template.php';
   static String get employeeImportPreview => '$baseUrl/employees/import_preview.php';

@@ -8,6 +8,7 @@ import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'add_employee_screen.dart';
+import 'edit_employee_screen.dart';
 
 class EmployeeListScreen extends StatefulWidget {
   const EmployeeListScreen({super.key});
@@ -39,7 +40,6 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
   }
 
   Future<void> _loadInitialData() async {
-    // Load departments for filter
     final optRes = await ApiService.getEmployeeOptions();
     if (mounted && optRes.success && optRes.data != null) {
       setState(() {
@@ -95,6 +95,122 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
     }
   }
 
+  Future<void> _resetPassword(UserModel emp) async {
+    final newPassCtrl = TextEditingController(text: 'password123');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_reset_rounded, color: Color(0xFFFF9500)),
+            SizedBox(width: 8),
+            Text('Reset Password', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Reset password akun ${emp.namaLengkap} (${emp.nik}):', style: const TextStyle(fontSize: 13)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: newPassCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Password Baru',
+                hintText: 'password123',
+                prefixIcon: Icon(Icons.key_outlined, size: 20),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF9500),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Reset Password'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final res = await ApiService.resetEmployeePassword(
+        emp.id,
+        newPassword: newPassCtrl.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res.message),
+          backgroundColor: res.success ? const Color(0xFF10B981) : AppTheme.statusRejected,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _deleteEmployee(UserModel emp) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppTheme.statusRejected),
+            SizedBox(width: 8),
+            Text('Hapus Karyawan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text('Apakah Anda yakin ingin menghapus data karyawan ${emp.namaLengkap} (${emp.nik})? Tindakan ini tidak dapat dibatalkan.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.statusRejected,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Ya, Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final res = await ApiService.deleteEmployee(emp.id);
+      if (!mounted) return;
+      if (res.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res.message),
+            backgroundColor: const Color(0xFF10B981),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        _loadEmployees();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res.message),
+            backgroundColor: AppTheme.statusRejected,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   void _showEmployeeDetailModal(UserModel emp) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
@@ -102,6 +218,7 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
     final textHead = isDark ? Colors.white : AppTheme.textPrimary;
     final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
     final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
+    final canManage = AuthService.currentUser?.isAdmin == true;
 
     showModalBottomSheet(
       context: context,
@@ -184,13 +301,72 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
             if (emp.alamat != null && emp.alamat!.isNotEmpty)
               _buildDetailRow('Alamat', emp.alamat!, textHead, textSub, icon: Icons.location_on_outlined),
             const SizedBox(height: 20),
+
+            // Action Buttons for HRD / Super Admin
+            if (canManage) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryAccent,
+                        foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      label: const Text('Edit Data', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => EditEmployeeScreen(employee: emp)),
+                        ).then((val) {
+                          if (val == true) _loadEmployees();
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFFF9500)),
+                      foregroundColor: const Color(0xFFFF9500),
+                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: const Icon(Icons.lock_reset_rounded, size: 18),
+                    label: const Text('Reset Pass', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5)),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _resetPassword(emp);
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    style: IconButton.styleFrom(
+                      foregroundColor: AppTheme.statusRejected,
+                      backgroundColor: AppTheme.statusRejected.withOpacity(0.1),
+                    ),
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    tooltip: 'Hapus Karyawan',
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _deleteEmployee(emp);
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+            ],
+
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryAccent,
-                  foregroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: borderCol),
+                  foregroundColor: textSub,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () => Navigator.pop(ctx),

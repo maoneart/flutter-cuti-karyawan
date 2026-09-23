@@ -589,5 +589,72 @@ class ApiService {
       return ApiResponse(success: false, message: 'Gagal menghubungi server');
     }
   }
+
+  /// 19. Update Employee Data
+  static Future<ApiResponse<Map<String, dynamic>>> updateEmployee(Map<String, dynamic> data) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.employeeUpdate),
+            headers: _getHeaders(),
+            body: jsonEncode(data),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? (response.statusCode == 200 ? 'Data karyawan berhasil diperbarui' : 'Gagal memperbarui karyawan'),
+        data: body['data'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal memperbarui data karyawan');
+    }
+  }
+
+  /// 20. Reset Employee Password
+  static Future<ApiResponse<void>> resetEmployeePassword(int id, {String? newPassword}) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.employeeResetPassword),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'id': id,
+              if (newPassword != null && newPassword.isNotEmpty) 'new_password': newPassword,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? (response.statusCode == 200 ? 'Password berhasil direset' : 'Gagal mereset password'),
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal mereset password karyawan');
+    }
+  }
+
+  /// 21. Delete Employee
+  static Future<ApiResponse<void>> deleteEmployee(int id) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.employeeDelete),
+            headers: _getHeaders(),
+            body: jsonEncode({'id': id}),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? (response.statusCode == 200 ? 'Data karyawan berhasil dihapus' : 'Gagal menghapus karyawan'),
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal menghapus data karyawan');
+    }
+  }
 }
 
