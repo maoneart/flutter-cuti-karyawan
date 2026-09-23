@@ -2,6 +2,7 @@
 /**
  * Leave Controller
  * PT. Nakakin Indonesia Leave Management System
+ * 3-Tier Multi-Level Approval System (Synchronized with Mobile & API)
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -24,15 +25,17 @@ class LeaveController {
 
         $pdo = getDbConnection();
         $currentUser = getCurrentUser();
+        $hierarki = (int)($currentUser['level_hierarki'] ?? 1);
         
         // Check if Admin/HRD is submitting on behalf of an absent employee
         $targetEmpId = (int)($_POST['target_employee_id'] ?? 0);
-        $isAdminOnBehalf = ($currentUser['role'] === 'admin' && $targetEmpId > 0 && $targetEmpId !== $currentUser['id']);
+        $isAdmin = ($currentUser['role'] === 'superadmin' || $currentUser['role'] === 'admin' || $currentUser['role'] === 'hrd' || $hierarki >= 7);
+        $isAdminOnBehalf = ($isAdmin && $targetEmpId > 0 && $targetEmpId !== $currentUser['id']);
         
         $employeeId = $isAdminOnBehalf ? $targetEmpId : $currentUser['id'];
 
         // Fetch employee data
-        $stmtTargetEmp = $pdo->prepare("SELECT e.*, d.nama_dept, p.nama_jabatan FROM karyawan e JOIN departemen d ON e.departemen_id = d.id JOIN jabatan p ON e.jabatan_id = p.id WHERE e.id = ?");
+        $stmtTargetEmp = $pdo->prepare("SELECT e.*, d.nama_dept, p.nama_jabatan, p.level_hierarki FROM karyawan e JOIN departemen d ON e.departemen_id = d.id JOIN jabatan p ON e.jabatan_id = p.id WHERE e.id = ?");
         $stmtTargetEmp->execute([$employeeId]);
         $targetEmp = $stmtTargetEmp->fetch();
 
@@ -49,7 +52,7 @@ class LeaveController {
         $reason = cleanInput($_POST['alasan'] ?? '');
         $addressDuringLeave = cleanInput($_POST['alamat_selama_cuti'] ?? ($targetEmp['alamat'] ?? '-'));
         $emergencyContact = cleanInput($_POST['kontak_darurat'] ?? ($targetEmp['no_hp'] ?? '-'));
-        $directApprove = ($currentUser['role'] === 'admin' && isset($_POST['direct_approve']) && $_POST['direct_approve'] == '1');
+        $directApprove = ($isAdmin && isset($_POST['direct_approve']) && $_POST['direct_approve'] == '1');
 
         if (!$leaveTypeId || !$startDate || !$endDate || $totalDays <= 0 || empty($reason)) {
             setFlash('error', 'Mohon lengkapi semua data formulir permohonan cuti!');
@@ -96,43 +99,60 @@ class LeaveController {
                 exit;
             }
 
-            $uploadDir = __DIR__ . '/../assets/uploads/attachments/';
+            $uploadDir = __DIR__ . '/../assets/uploads/leaves/';
             if (!is_dir($uploadDir)) {
                 mkdir($uploadDir, 0777, true);
             }
 
-            $attachmentName = 'att_' . time() . '_' . uniqid() . '.' . $fileExt;
-            $destination = $uploadDir . $attachmentName;
-
-            if (!move_uploaded_file($file['tmp_name'], $destination)) {
+            $attachmentName = 'LEAVE_' . time() . '_' . uniqid() . '.' . $fileExt;
+            if (!move_uploaded_file($file['tmp_name'], $uploadDir . $attachmentName)) {
                 setFlash('error', 'Gagal mengunggah file lampiran!');
                 header('Location: ' . BASE_URL . '/index.php?page=leave-create');
                 exit;
             }
-        } else if ($leaveType['butuh_lampiran'] == 1 && !$isAdminOnBehalf) {
-            setFlash('error', 'Permohonan jenis cuti ini wajib melampirkan file Surat Keterangan Dokter asli!');
-            header('Location: ' . BASE_URL . '/index.php?page=leave-create');
-            exit;
         }
 
-        // Generate Letter Number
-        $nomorSurat = generateNomorSurat($pdo);
+        // Generate Nomor Surat
+        $year = date('Y');
+        $month = date('m');
+        $stmtCount = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE YEAR(created_at) = '$year'");
+        $countThisYear = (int)$stmtCount->fetchColumn() + 1;
+        $nomorSurat = sprintf("CUTI/NAK/%s/%s/%03d", $year, $month, $countThisYear);
+
+        // Determine Initial Approval Step based on Applicant Hierarchy
+        $empHierarki = (int)($targetEmp['level_hierarki'] ?? 1);
+        $initialStep = 'pending_spv';
+        $initialStatus = 'pending';
+
+        if ($directApprove || $isAdmin || $empHierarki >= 7) {
+            $initialStep = 'approved';
+            $initialStatus = 'approved';
+        } elseif ($targetEmp['role'] === 'manager' || $empHierarki >= 5) {
+            $initialStep = 'pending_hrd';
+            $initialStatus = 'pending';
+        } elseif ($targetEmp['role'] === 'leader' || $targetEmp['role'] === 'supervisor' || $empHierarki >= 3) {
+            $initialStep = 'pending_manager';
+            $initialStatus = 'pending';
+        } else {
+            $initialStep = 'pending_spv';
+            $initialStatus = 'pending';
+        }
 
         $pdo->beginTransaction();
         try {
-            if ($directApprove) {
-                // Direct Approval by HRD based on absence audit
+            if ($initialStatus === 'approved') {
+                // Direct Auto-Approval
                 $stmtInsert = $pdo->prepare("
                     INSERT INTO pengajuan_cuti (
                         nomor_surat, employee_id, leave_type_id, 
                         tanggal_mulai, tanggal_selesai, total_hari, 
                         alasan, alamat_selama_cuti, kontak_darurat, 
-                        attachment, status, approved_by, approved_at, catatan_atasan, created_at
+                        attachment, status, approval_step, approved_by, approved_at, catatan_atasan, created_at
                     ) VALUES (
                         ?, ?, ?, 
                         ?, ?, ?, 
                         ?, ?, ?, 
-                        ?, 'approved', ?, NOW(), 'Diinput & disetujui langsung oleh HRD berdasarkan rekap absensi / ketidakhadiran', NOW()
+                        ?, 'approved', 'approved', ?, NOW(), 'Disetujui langsung oleh HRD/Sistem', NOW()
                     )
                 ");
                 $stmtInsert->execute([
@@ -165,13 +185,13 @@ class LeaveController {
                     ");
                     $stmtLog->execute([
                         $employeeId, $kuotaSebelum, -$totalDays, $kuotaSesudah,
-                        "Input cuti {$nomorSurat} oleh HRD (Rekap Absensi: {$leaveType['nama_cuti']} - {$totalDays} hari)",
+                        "Input cuti {$nomorSurat} oleh HRD ({$leaveType['nama_cuti']} - {$totalDays} hari)",
                         $currentUser['id']
                     ]);
                 }
 
                 $pdo->commit();
-                setFlash('success', "Data cuti ({$nomorSurat}) untuk karyawan {$targetEmp['nama_lengkap']} berhasil diinput dan diverifikasi langsung oleh HRD!");
+                setFlash('success', "Data cuti ({$nomorSurat}) untuk karyawan {$targetEmp['nama_lengkap']} berhasil disimpan dan diverifikasi!");
                 header('Location: ' . BASE_URL . '/index.php?page=leaves-team');
                 exit;
 
@@ -182,27 +202,27 @@ class LeaveController {
                         nomor_surat, employee_id, leave_type_id, 
                         tanggal_mulai, tanggal_selesai, total_hari, 
                         alasan, alamat_selama_cuti, kontak_darurat, 
-                        attachment, status, created_at
+                        attachment, status, approval_step, created_at
                     ) VALUES (
                         ?, ?, ?, 
                         ?, ?, ?, 
                         ?, ?, ?, 
-                        ?, 'pending', NOW()
+                        ?, 'pending', ?, NOW()
                     )
                 ");
                 $stmtInsert->execute([
                     $nomorSurat, $employeeId, $leaveTypeId,
                     $startDate, $endDate, $totalDays,
                     $reason, $addressDuringLeave, $emergencyContact,
-                    $attachmentName
+                    $attachmentName, $initialStep
                 ]);
 
                 $pdo->commit();
                 if ($isAdminOnBehalf) {
-                    setFlash('success', "Permohonan cuti ({$nomorSurat}) untuk karyawan {$targetEmp['nama_lengkap']} berhasil dibuat dan menunggu persetujuan atasan!");
+                    setFlash('success', "Permohonan cuti ({$nomorSurat}) untuk karyawan {$targetEmp['nama_lengkap']} berhasil dibuat dan menunggu persetujuan!");
                     header('Location: ' . BASE_URL . '/index.php?page=leaves-team');
                 } else {
-                    setFlash('success', "Permohonan cuti ({$nomorSurat}) berhasil diajukan dan sedang menunggu persetujuan atasan!");
+                    setFlash('success', "Permohonan cuti ({$nomorSurat}) berhasil diajukan dan sedang menunggu persetujuan alur hierarki!");
                     header('Location: ' . BASE_URL . '/index.php?page=leaves-my');
                 }
                 exit;
@@ -216,20 +236,22 @@ class LeaveController {
         }
     }
 
-    // Approve Leave Request
+    // Approve Leave Request (Multi-Tier Hierarchical Approval)
     public function approve() {
         requireLogin();
         
         $leaveId = (int)($_GET['id'] ?? 0);
-        $catatan = cleanInput($_GET['note'] ?? '');
+        $notes = cleanInput($_GET['note'] ?? ($_POST['note'] ?? ''));
         $currentUser = getCurrentUser();
         $pdo = getDbConnection();
+        $hierarki = (int)($currentUser['level_hierarki'] ?? 1);
 
-        // Get leave request with employee & leave type details
         $stmt = $pdo->prepare("
-            SELECT lr.*, e.departemen_id, e.nama_lengkap, e.sisa_cuti, e.cuti_terpakai, lt.potong_kuota, lt.nama_cuti
+            SELECT lr.*, e.departemen_id, e.nama_lengkap, e.sisa_cuti, e.cuti_terpakai, lt.potong_kuota, lt.nama_cuti,
+                   j.level_hierarki as employee_level
             FROM pengajuan_cuti lr
             JOIN karyawan e ON lr.employee_id = e.id
+            JOIN jabatan j ON e.jabatan_id = j.id
             JOIN jenis_cuti lt ON lr.leave_type_id = lt.id
             WHERE lr.id = ?
         ");
@@ -242,62 +264,90 @@ class LeaveController {
             exit;
         }
 
-        // Authorization check: Admin OR Atasan in the SAME department
-        $isAuthorized = ($currentUser['role'] === 'admin') || 
-                         ($currentUser['role'] === 'atasan' && $currentUser['departemen_id'] == $leave['departemen_id']);
-
-        if (!$isAuthorized || $currentUser['id'] == $leave['employee_id']) {
-            setFlash('error', 'Akses ditolak! Anda tidak memiliki wewenang untuk menyetujui pengajuan cuti ini.');
-            header('Location: ' . BASE_URL . '/index.php?page=dashboard');
-            exit;
-        }
-
         if ($leave['status'] !== 'pending') {
             setFlash('warning', 'Pengajuan cuti ini sudah diproses sebelumnya!');
             header('Location: ' . BASE_URL . '/index.php?page=leave-detail&id=' . $leaveId);
             exit;
         }
 
-        // Begin transaction to guarantee quota integrity
+        $currentStep = $leave['approval_step'] ?? 'pending_spv';
+
+        // Authorization check: Plant Manager & HRD across all depts, Spv/Leader for own dept
+        $isHRD = ($currentUser['role'] === 'superadmin' || $currentUser['role'] === 'admin' || $currentUser['role'] === 'hrd' || $hierarki >= 7);
+        $isManager = ($currentUser['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6));
+        $isSpv = ($currentUser['role'] === 'supervisor' || $currentUser['role'] === 'leader' || $hierarki >= 3);
+
+        if (!$isHRD && !$isManager && ($currentUser['departemen_id'] != $leave['departemen_id'])) {
+            setFlash('error', 'Akses ditolak! Anda hanya dapat memproses cuti dari departemen Anda.');
+            header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
+            exit;
+        }
+
         $pdo->beginTransaction();
         try {
-            // Update leave request status
-            $stmtApprove = $pdo->prepare("
-                UPDATE pengajuan_cuti 
-                SET status = 'approved', approved_by = ?, approved_at = NOW(), catatan_atasan = ?
-                WHERE id = ?
-            ");
-            $stmtApprove->execute([$currentUser['id'], $catatan, $leaveId]);
-
-            // If leave type deducts quota, update employee table and log quota history
-            if ($leave['potong_kuota'] == 1) {
-                $kuotaSebelum = $leave['sisa_cuti'];
-                $perubahan = -$leave['total_hari'];
-                $kuotaSesudah = max(0, $kuotaSebelum - $leave['total_hari']);
-
-                $stmtUpdateEmp = $pdo->prepare("
-                    UPDATE karyawan 
-                    SET cuti_terpakai = cuti_terpakai + ?, sisa_cuti = sisa_cuti - ?
+            if ($currentStep === 'pending_spv') {
+                if (!$isSpv && !$isManager && !$isHRD) {
+                    throw new Exception('Anda tidak memiliki wewenang untuk persetujuan Spv.');
+                }
+                $stmtUp = $pdo->prepare("
+                    UPDATE pengajuan_cuti 
+                    SET spv_id = ?, spv_at = NOW(), spv_notes = ?, approval_step = 'pending_manager' 
                     WHERE id = ?
                 ");
-                $stmtUpdateEmp->execute([$leave['total_hari'], $leave['total_hari'], $leave['employee_id']]);
+                $stmtUp->execute([$currentUser['id'], $notes, $leaveId]);
 
-                // Insert into quota history
-                $stmtLog = $pdo->prepare("
-                    INSERT INTO riwayat_kuota_cuti (
-                        employee_id, kuota_sebelum, perubahan, kuota_sesudah, 
-                        tipe, keterangan, created_by, created_at
-                    ) VALUES (
-                        ?, ?, ?, ?, 
-                        'potong_cuti', ?, ?, NOW()
-                    )
+            } elseif ($currentStep === 'pending_manager') {
+                if (!$isManager && !$isHRD) {
+                    throw new Exception('Persetujuan ini memerlukan wewenang Plant Manager.');
+                }
+                $stmtUp = $pdo->prepare("
+                    UPDATE pengajuan_cuti 
+                    SET manager_id = ?, manager_at = NOW(), manager_notes = ?, approval_step = 'pending_hrd' 
+                    WHERE id = ?
                 ");
-                $logDesc = "Pemotongan cuti disetujui ({$leave['nomor_surat']}) oleh " . $currentUser['nama_lengkap'];
-                $stmtLog->execute([$leave['employee_id'], $kuotaSebelum, $perubahan, $kuotaSesudah, $logDesc, $currentUser['id']]);
+                $stmtUp->execute([$currentUser['id'], $notes, $leaveId]);
+
+            } elseif ($currentStep === 'pending_hrd') {
+                if (!$isHRD) {
+                    throw new Exception('Persetujuan final ini memerlukan wewenang HRD.');
+                }
+                $stmtUp = $pdo->prepare("
+                    UPDATE pengajuan_cuti 
+                    SET hrd_id = ?, hrd_at = NOW(), hrd_notes = ?, approval_step = 'approved',
+                        status = 'approved', approved_by = ?, approved_at = NOW(), catatan_atasan = ?
+                    WHERE id = ?
+                ");
+                $stmtUp->execute([$currentUser['id'], $notes, $currentUser['id'], $notes, $leaveId]);
+
+                // Deduct Quota on Final HRD Approval
+                if ($leave['potong_kuota'] == 1) {
+                    $kuotaSebelum = (int)$leave['sisa_cuti'];
+                    $perubahan = -(int)$leave['total_hari'];
+                    $kuotaSesudah = max(0, $kuotaSebelum - (int)$leave['total_hari']);
+
+                    $stmtUpdateEmp = $pdo->prepare("
+                        UPDATE karyawan 
+                        SET cuti_terpakai = cuti_terpakai + ?, sisa_cuti = sisa_cuti - ?
+                        WHERE id = ?
+                    ");
+                    $stmtUpdateEmp->execute([$leave['total_hari'], $leave['total_hari'], $leave['employee_id']]);
+
+                    $stmtLog = $pdo->prepare("
+                        INSERT INTO riwayat_kuota_cuti (
+                            employee_id, kuota_sebelum, perubahan, kuota_sesudah, 
+                            tipe, keterangan, created_by, created_at
+                        ) VALUES (
+                            ?, ?, ?, ?, 
+                            'potong_cuti', ?, ?, NOW()
+                        )
+                    ");
+                    $logDesc = "Persetujuan final cuti ({$leave['nomor_surat']}) oleh HRD ({$currentUser['nama_lengkap']})";
+                    $stmtLog->execute([$leave['employee_id'], $kuotaSebelum, $perubahan, $kuotaSesudah, $logDesc, $currentUser['id']]);
+                }
             }
 
             $pdo->commit();
-            setFlash('success', "Permohonan cuti {$leave['nama_lengkap']} berhasil disetujui!");
+            setFlash('success', "Persetujuan tahap {$currentStep} untuk {$leave['nama_lengkap']} berhasil diproses!");
         } catch (Exception $e) {
             $pdo->rollBack();
             setFlash('error', 'Gagal memproses persetujuan cuti: ' . $e->getMessage());
@@ -312,9 +362,10 @@ class LeaveController {
         requireLogin();
 
         $leaveId = (int)($_GET['id'] ?? 0);
-        $reason = cleanInput($_GET['reason'] ?? '');
+        $reason = cleanInput($_GET['reason'] ?? ($_POST['reason'] ?? ''));
         $currentUser = getCurrentUser();
         $pdo = getDbConnection();
+        $hierarki = (int)($currentUser['level_hierarki'] ?? 1);
 
         if (empty($reason)) {
             setFlash('error', 'Alasan penolakan cuti wajib diisi!');
@@ -337,10 +388,10 @@ class LeaveController {
             exit;
         }
 
-        $isAuthorized = ($currentUser['role'] === 'admin') || 
-                         ($currentUser['role'] === 'atasan' && $currentUser['departemen_id'] == $leave['departemen_id']);
+        $isHRD = ($currentUser['role'] === 'superadmin' || $currentUser['role'] === 'admin' || $currentUser['role'] === 'hrd' || $hierarki >= 7);
+        $isManager = ($currentUser['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6));
 
-        if (!$isAuthorized || $currentUser['id'] == $leave['employee_id']) {
+        if (!$isHRD && !$isManager && ($currentUser['departemen_id'] != $leave['departemen_id'])) {
             setFlash('error', 'Akses ditolak!');
             header('Location: ' . BASE_URL . '/index.php?page=dashboard');
             exit;
@@ -348,39 +399,13 @@ class LeaveController {
 
         $stmtReject = $pdo->prepare("
             UPDATE pengajuan_cuti 
-            SET status = 'rejected', approved_by = ?, approved_at = NOW(), rejection_reason = ?
+            SET status = 'rejected', approval_step = 'rejected', rejection_reason = ?, approved_by = ?, approved_at = NOW()
             WHERE id = ?
         ");
-        $stmtReject->execute([$currentUser['id'], $reason, $leaveId]);
+        $stmtReject->execute([$reason, $currentUser['id'], $leaveId]);
 
         setFlash('success', "Permohonan cuti {$leave['nama_lengkap']} telah ditolak.");
         header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
-        exit;
-    }
-
-    // Cancel Leave Request (by Requester)
-    public function cancel() {
-        requireLogin();
-
-        $leaveId = (int)($_GET['id'] ?? 0);
-        $currentUser = getCurrentUser();
-        $pdo = getDbConnection();
-
-        $stmt = $pdo->prepare("SELECT * FROM pengajuan_cuti WHERE id = ? AND employee_id = ? AND status = 'pending'");
-        $stmt->execute([$leaveId, $currentUser['id']]);
-        $leave = $stmt->fetch();
-
-        if (!$leave) {
-            setFlash('error', 'Pengajuan cuti tidak ditemukan atau sudah diproses sehingga tidak dapat dibatalkan.');
-            header('Location: ' . BASE_URL . '/index.php?page=leaves-my');
-            exit;
-        }
-
-        $stmtCancel = $pdo->prepare("UPDATE pengajuan_cuti SET status = 'cancelled' WHERE id = ?");
-        $stmtCancel->execute([$leaveId]);
-
-        setFlash('success', 'Pengajuan cuti Anda telah berhasil dibatalkan.');
-        header('Location: ' . BASE_URL . '/index.php?page=leaves-my');
         exit;
     }
 }
