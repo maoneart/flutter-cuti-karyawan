@@ -278,27 +278,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
                               const SizedBox(height: 16),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
                                         const Icon(Icons.apartment_rounded, color: Colors.white70, size: 16),
                                         const SizedBox(width: 8),
-                                        Text(
-                                          'Dept: ${user?.namaDept ?? '-'}',
-                                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                                        Expanded(
+                                          child: Text(
+                                            'Dept: ${user?.namaDept ?? '-'}',
+                                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         ),
                                       ],
                                     ),
-                                    Text(
-                                      'Masa Kerja: ${user?.lamaBekerja ?? '-'}',
-                                      style: const TextStyle(color: Colors.white70, fontSize: 11.5, fontWeight: FontWeight.w600),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.timer_outlined, color: Colors.white70, size: 16),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Masa Kerja: ${user?.lamaBekerja ?? '-'}',
+                                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),

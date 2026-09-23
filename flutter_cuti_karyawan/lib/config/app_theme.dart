@@ -35,8 +35,10 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primary,
+        brightness: Brightness.light,
         primary: primary,
         secondary: secondary,
         background: background,
@@ -128,6 +130,106 @@ class AppTheme {
         ),
         labelStyle: const TextStyle(color: textSecondary, fontSize: 14),
         hintStyle: const TextStyle(color: textMuted, fontSize: 14),
+      ),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    const darkBg = Color(0xFF121824);
+    const darkSurface = Color(0xFF1E293B);
+    const darkBorder = Color(0xFF334155);
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF38BDF8),
+        secondary: Color(0xFF2DD4BF),
+        background: darkBg,
+        surface: darkSurface,
+      ),
+      scaffoldBackgroundColor: darkBg,
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(ThemeData.dark().textTheme).copyWith(
+        displayLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 28,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+          letterSpacing: -0.5,
+        ),
+        titleLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
+        titleMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+        bodyLarge: GoogleFonts.plusJakartaSans(
+          fontSize: 15,
+          fontWeight: FontWeight.normal,
+          color: Colors.white70,
+        ),
+        bodyMedium: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.normal,
+          color: const Color(0xFF94A3B8),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: false,
+        iconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      cardTheme: CardTheme(
+        color: darkSurface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: darkBorder, width: 1),
+        ),
+        margin: EdgeInsets.zero,
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF0284C7),
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: GoogleFonts.plusJakartaSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: darkSurface,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkBorder, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: darkBorder, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF38BDF8), width: 2),
+        ),
+        labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+        hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
       ),
     );
   }

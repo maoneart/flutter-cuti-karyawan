@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
 import '../config/app_theme.dart';
 import '../models/leave_type_model.dart';
 import '../services/api_service.dart';
@@ -25,6 +28,10 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   final _alasanController = TextEditingController();
   final _alamatController = TextEditingController();
   final _kontakDaruratController = TextEditingController();
+
+  String? _attachmentBase64;
+  String? _attachmentName;
+  int? _attachmentSizeBytes;
   
   bool _isLoadingTypes = true;
   bool _isSubmitting = false;
@@ -58,7 +65,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       setState(() {
         _leaveTypes = res.data!;
         if (_leaveTypes.isNotEmpty) {
-          // Default to annual leave CT or first eligible
           _selectedType = _leaveTypes.firstWhere(
             (t) => t.kode == 'CT' && t.eligible,
             orElse: () => _leaveTypes.firstWhere((t) => t.eligible, orElse: () => _leaveTypes.first),
@@ -92,7 +98,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     int days = 0;
     DateTime current = _startDate!;
     while (!current.isAfter(_endDate!)) {
-      // Exclude Sunday (7) and Saturday (6)
       if (current.weekday != DateTime.sunday && current.weekday != DateTime.saturday) {
         days++;
       }
@@ -113,19 +118,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       initialDateRange: (_startDate != null && _endDate != null)
           ? DateTimeRange(start: _startDate!, end: _endDate!)
           : DateTimeRange(start: now, end: now.add(const Duration(days: 1))),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.primary,
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: AppTheme.textPrimary,
-            ),
-          ),
-          child: child!,
-        );
-      },
     );
 
     if (picked != null) {
@@ -137,29 +129,75 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     }
   }
 
+  Future<void> _pickAttachment() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        withData: true,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        if (file.bytes != null) {
+          if (file.size > 5 * 1024 * 1024) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Ukuran file maksimal 5MB'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+            return;
+          }
+
+          setState(() {
+            _attachmentBase64 = base64Encode(file.bytes!);
+            _attachmentName = file.name;
+            _attachmentSizeBytes = file.size;
+          });
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memilih file: $e')),
+        );
+      }
+    }
+  }
+
+  void _removeAttachment() {
+    setState(() {
+      _attachmentBase64 = null;
+      _attachmentName = null;
+      _attachmentSizeBytes = null;
+    });
+  }
+
   Future<void> _submitLeave() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih jenis cuti terlebih dahulu')),
+        const SnackBar(content: Text('Silakan pilih jenis cuti terlebih dahulu.')),
       );
       return;
     }
 
     if (_startDate == null || _endDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pilih rentang tanggal cuti')),
+        const SnackBar(content: Text('Silakan tentukan rentang tanggal cuti.')),
       );
       return;
     }
 
-    final user = AuthService.currentUser;
-    if (_selectedType!.potongKuota && user != null && user.sisaCuti < _calculatedDays) {
+    if (_selectedType!.butuhLampiran && _attachmentBase64 == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppTheme.statusRejected,
-          content: Text('Sisa kuota cuti Anda (${user.sisaCuti} hari) tidak mencukupi untuk $_calculatedDays hari!'),
+          content: Text('Jenis cuti "${_selectedType!.namaCuti}" mewajibkan unggah dokumen/surat dokter!'),
         ),
       );
       return;
@@ -169,14 +207,15 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       _isSubmitting = true;
     });
 
-    final dateFormat = DateFormat('yyyy-MM-dd');
     final res = await ApiService.submitLeave(
       leaveTypeId: _selectedType!.id,
-      tanggalMulai: dateFormat.format(_startDate!),
-      tanggalSelesai: dateFormat.format(_endDate!),
+      tanggalMulai: DateFormat('yyyy-MM-dd').format(_startDate!),
+      tanggalSelesai: DateFormat('yyyy-MM-dd').format(_endDate!),
       alasan: _alasanController.text.trim(),
       alamatSelamaCuti: _alamatController.text.trim(),
       kontakDarurat: _kontakDaruratController.text.trim(),
+      attachmentBase64: _attachmentBase64,
+      attachmentName: _attachmentName,
     );
 
     if (!mounted) return;
@@ -210,7 +249,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Pengajuan cuti $_calculatedDays hari Anda telah tercatat dan menunggu persetujuan atasan.',
+                'Pengajuan cuti $_calculatedDays hari Anda telah tercatat dan masuk ke antrean persetujuan atasan.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
               ),
@@ -220,7 +259,6 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
-                // Reset form
                 setState(() {
                   _startDate = null;
                   _endDate = null;
@@ -228,6 +266,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   _alasanController.clear();
                   _alamatController.clear();
                   _kontakDaruratController.clear();
+                  _attachmentBase64 = null;
+                  _attachmentName = null;
+                  _attachmentSizeBytes = null;
                 });
               },
               child: const Text('Tutup & Selesai'),
@@ -248,16 +289,19 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Form Pengajuan Cuti'),
+        title: const Text('Form Pengajuan Cuti', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
       ),
       body: _isLoadingTypes
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
@@ -270,9 +314,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: cardBg,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            border: Border.all(color: borderCol),
                           ),
                           child: Row(
                             children: [
@@ -300,15 +344,15 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
 
                         // Form Container
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: cardBg,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            border: Border.all(color: borderCol),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,7 +377,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                             type.namaCuti,
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: type.eligible ? AppTheme.textPrimary : AppTheme.textMuted,
+                                              color: type.eligible ? (isDark ? Colors.white : AppTheme.textPrimary) : AppTheme.textMuted,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -376,7 +420,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                   decoration: BoxDecoration(
-                                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                                    border: Border.all(color: borderCol),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Row(
@@ -390,7 +434,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                               : 'Pilih Tanggal Mulai dan Selesai',
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: (_startDate != null) ? AppTheme.textPrimary : AppTheme.textMuted,
+                                            color: (_startDate != null) ? (isDark ? Colors.white : AppTheme.textPrimary) : AppTheme.textMuted,
                                             fontWeight: (_startDate != null) ? FontWeight.w600 : FontWeight.normal,
                                           ),
                                         ),
@@ -426,7 +470,95 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               ),
                               const SizedBox(height: 18),
 
-                              // 4. Alamat Selama Cuti
+                              // 4. Dokumen / Foto Lampiran (Upload)
+                              Row(
+                                children: [
+                                  Text(
+                                    'Lampiran / Surat Dokter',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: isDark ? Colors.white : AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                  if (_selectedType?.butuhLampiran == true)
+                                    const Text(' * (Wajib)', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 13)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Mendukung format JPG, PNG, atau PDF (Maks. 5MB).',
+                                style: TextStyle(fontSize: 11.5, color: AppTheme.textMuted),
+                              ),
+                              const SizedBox(height: 8),
+                              if (_attachmentName == null)
+                                InkWell(
+                                  onTap: _pickAttachment,
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                                      border: Border.all(color: borderCol, style: BorderStyle.solid),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(CupertinoIcons.cloud_upload, color: Color(0xFF0284C7), size: 22),
+                                        SizedBox(width: 10),
+                                        Text(
+                                          'Pilih Berkas Lampiran / Foto',
+                                          style: TextStyle(
+                                            color: Color(0xFF0284C7),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13.5,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              else
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0284C7).withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: const Color(0xFF0284C7).withOpacity(0.3)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(CupertinoIcons.doc_fill, color: Color(0xFF0284C7), size: 24),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              _attachmentName!,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            Text(
+                                              '${((_attachmentSizeBytes ?? 0) / 1024).toStringAsFixed(1)} KB',
+                                              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(CupertinoIcons.trash, color: Colors.red, size: 20),
+                                        onPressed: _removeAttachment,
+                                        tooltip: 'Hapus Berkas',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              const SizedBox(height: 18),
+
+                              // 5. Alamat Selama Cuti
                               const Text('Alamat Selama Cuti (Opsional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                               const SizedBox(height: 8),
                               TextFormField(
@@ -438,7 +570,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                               ),
                               const SizedBox(height: 18),
 
-                              // 5. Kontak Darurat
+                              // 6. Kontak Darurat
                               const Text('Kontak Darurat (Opsional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                               const SizedBox(height: 8),
                               TextFormField(
