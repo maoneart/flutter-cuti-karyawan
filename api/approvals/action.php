@@ -92,12 +92,17 @@ try {
         // 2. If currently at pending_manager -> moves to pending_hrd
         // 3. If currently at pending_hrd (or user is HRD/Admin) -> Final Approval!
         
-        $isHrd = ($user['role'] === 'admin' || $hierarki >= 7);
-        $isManager = ($hierarki >= 5 && $hierarki <= 6);
-        $isSpv = ($hierarki >= 3 && $hierarki <= 4);
+        $isHrd = ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role'] === 'hrd' || $hierarki >= 7);
+        $isManager = ($user['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6));
+        $isSpv = ($user['role'] === 'supervisor' || $user['role'] === 'leader' || ($hierarki >= 3 && $hierarki <= 4));
 
-        if ($currentStep === 'pending_spv' && !$isHrd && !$isManager) {
-            // Level 1: Leader/Supervisor Approval
+        if ($currentStep === 'pending_spv') {
+            // Stage 1: MUST be approved by Leader / Supervisor of the applicant's department
+            if (!$isSpv || ($user['departemen_id'] != $leave['departemen_id'])) {
+                $pdo->rollBack();
+                jsonResponse(false, 'Pengajuan ini masih menunggu persetujuan dari Leader / Supervisor departemen pemohon.', null, 403);
+            }
+
             $stmtUpd = $pdo->prepare("
                 UPDATE pengajuan_cuti 
                 SET approval_step = 'pending_manager',
@@ -111,14 +116,19 @@ try {
             $stmtUpd->execute([$user['id'], $notes, $leaveId]);
             $pdo->commit();
 
-            jsonResponse(true, "Persetujuan Spv berhasil! Pengajuan diteruskan ke Department Manager.", [
+            jsonResponse(true, "Persetujuan Leader/Spv berhasil! Pengajuan diteruskan ke Plant Manager.", [
                 'id' => $leaveId,
                 'status' => 'pending',
                 'approval_step' => 'pending_manager'
             ]);
 
-        } elseif (($currentStep === 'pending_manager' || ($currentStep === 'pending_spv' && $isManager)) && !$isHrd) {
-            // Level 2: Manager Approval
+        } elseif ($currentStep === 'pending_manager') {
+            // Stage 2: MUST be approved by Plant Manager (or HRD override)
+            if (!$isManager && !$isHrd) {
+                $pdo->rollBack();
+                jsonResponse(false, 'Pengajuan ini sedang menunggu persetujuan dari Plant Manager.', null, 403);
+            }
+
             $stmtUpd = $pdo->prepare("
                 UPDATE pengajuan_cuti 
                 SET approval_step = 'pending_hrd',
@@ -132,14 +142,18 @@ try {
             $stmtUpd->execute([$user['id'], $notes, $leaveId]);
             $pdo->commit();
 
-            jsonResponse(true, "Persetujuan Manager berhasil! Pengajuan diteruskan ke HRD untuk persetujuan final.", [
+            jsonResponse(true, "Persetujuan Plant Manager berhasil! Pengajuan diteruskan ke HRD untuk persetujuan final.", [
                 'id' => $leaveId,
                 'status' => 'pending',
                 'approval_step' => 'pending_hrd'
             ]);
 
-        } else {
-            // Level 3: HRD Final Approval (or Admin override)
+        } elseif ($currentStep === 'pending_hrd') {
+            // Stage 3: Final HRD Approval & Quota Deduction
+            if (!$isHrd) {
+                $pdo->rollBack();
+                jsonResponse(false, 'Persetujuan akhir dan pemotongan kuota cuti memerlukan wewenang HRD.', null, 403);
+            }
             $potongKuota = (int)$leave['potong_kuota'];
             $totalHari = (int)$leave['total_hari'];
             $employeeId = (int)$leave['employee_id'];

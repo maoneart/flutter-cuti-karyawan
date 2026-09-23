@@ -56,10 +56,13 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
 
     final step = leave.approvalStep.toLowerCase();
     if (step == 'pending_spv') {
-      return (user.isSupervisor && user.departemenId == leave.departemenId) || user.isManager || user.isAdmin;
+      // HANYA Leader / Supervisor departemen yang sama dengan pemohon
+      return user.isSupervisor && user.departemenId == leave.departemenId;
     } else if (step == 'pending_manager') {
-      return user.isManager || user.isAdmin;
+      // HANYA Plant Manager (setelah disetujui Leader/Spv)
+      return user.isManager;
     } else if (step == 'pending_hrd') {
+      // HANYA HRD / Super Admin (setelah disetujui Plant Manager)
       return user.isAdmin;
     }
     return false;
@@ -767,7 +770,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Direct Approval Actions (if authorized approver)
+                          // Direct Approval Actions (if authorized approver for current step)
                           if (canApproveNow) ...[
                             Container(
                               padding: const EdgeInsets.all(16),
@@ -829,6 +832,44 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                                         ),
                                       ],
                                     ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ] else if (!isOwner && _leave!.isPending && (user?.canApprove == true)) ...[
+                            // Informational waiting banner for higher/other tiers
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: borderCol),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(CupertinoIcons.clock_fill, color: Color(0xFFFF9500), size: 18),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Menunggu Giliran Persetujuan',
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: textHead),
+                                        ),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          _leave!.approvalStep == 'pending_spv'
+                                              ? 'Pengajuan ini saat ini sedang dalam antrean persetujuan Leader / Supervisor Departemen ${_leave!.namaDept ?? ""}. Anda baru dapat memproses setelah disetujui Leader / Supervisor.'
+                                              : (_leave!.approvalStep == 'pending_manager'
+                                                  ? 'Pengajuan ini telah disetujui Leader/Spv dan saat ini sedang menunggu persetujuan Plant Manager.'
+                                                  : 'Pengajuan ini telah disetujui Plant Manager dan saat ini sedang menunggu persetujuan akhir HRD.'),
+                                          style: TextStyle(fontSize: 12, color: textSub, height: 1.3),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
