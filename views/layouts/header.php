@@ -13,21 +13,32 @@ require_once __DIR__ . '/../../config/session.php';
 $currentUser = getCurrentUser();
 $flash = getFlash();
 
-// Calculate pending approvals count for Atasan in their department
+// Calculate pending approvals count based on 3-tier hierarchy
 $pendingApprovalCount = 0;
-if ($currentUser && in_array($currentUser['role'], ['atasan', 'admin'])) {
+if ($currentUser) {
+    $userRole = strtolower($currentUser['role'] ?? '');
+    $userLevel = (int)($currentUser['level_hierarki'] ?? 1);
+    $isHRD = in_array($userRole, ['admin', 'superadmin', 'hrd']) || $userLevel >= 7;
+    $isManager = $userRole === 'manager' || ($userLevel >= 5 && $userLevel <= 6);
+    $isSpv = in_array($userRole, ['supervisor', 'leader', 'atasan']) || ($userLevel >= 3 && $userLevel <= 4);
+
     $pdo = getDbConnection();
-    if ($currentUser['role'] === 'admin') {
-        $stmt = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending'");
-    } else {
+    if ($isHRD) {
+        $stmt = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending' AND approval_step = 'pending_hrd'");
+        $pendingApprovalCount = (int)$stmt->fetchColumn();
+    } elseif ($isManager) {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending' AND approval_step = 'pending_manager' AND employee_id != ?");
+        $stmt->execute([$currentUser['id']]);
+        $pendingApprovalCount = (int)$stmt->fetchColumn();
+    } elseif ($isSpv) {
         $stmt = $pdo->prepare("
             SELECT COUNT(*) FROM pengajuan_cuti lr
             JOIN karyawan e ON lr.employee_id = e.id
-            WHERE lr.status = 'pending' AND e.departemen_id = ? AND e.id != ?
+            WHERE lr.status = 'pending' AND lr.approval_step = 'pending_spv' AND e.departemen_id = ? AND e.id != ?
         ");
         $stmt->execute([$currentUser['departemen_id'], $currentUser['id']]);
+        $pendingApprovalCount = (int)$stmt->fetchColumn();
     }
-    $pendingApprovalCount = $stmt->fetchColumn();
 }
 $appSettings = getAppSettings();
 $headerFaviconUrl = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . $appSettings['favicon'] : BASE_URL . '/assets/images/Nakakin.png';

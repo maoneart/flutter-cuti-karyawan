@@ -30,24 +30,36 @@ $stmt->execute([$id]);
 $leave = $stmt->fetch();
 
 if (!$leave) {
-    setFlash('error', 'Data permohonan cuti tidak ditemukan!');
-    header('Location: ' . BASE_URL . '/index.php?page=leaves-my');
+    echo '<div class="p-6 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 font-bold text-sm">Data permohonan cuti tidak ditemukan!</div>';
+    require_once __DIR__ . '/../layouts/footer.php';
     exit;
 }
 
-$canView = ($currentUser['id'] == $leave['employee_id']) || 
-           ($currentUser['role'] === 'admin') || 
-           ($currentUser['role'] === 'atasan' && $currentUser['departemen_id'] == $leave['departemen_id']);
+$userRole = strtolower($currentUser['role'] ?? '');
+$userLevel = (int)($currentUser['level_hierarki'] ?? 1);
+$isHRD = in_array($userRole, ['admin', 'superadmin', 'hrd']) || $userLevel >= 7;
+$isManager = $userRole === 'manager' || ($userLevel >= 5 && $userLevel <= 6);
+$isSpv = in_array($userRole, ['supervisor', 'leader', 'atasan']) || ($userLevel >= 3 && $userLevel <= 4);
+
+$canView = ($currentUser['id'] == $leave['employee_id']) || $isHRD || $isManager || ($currentUser['departemen_id'] == $leave['departemen_id']);
 
 if (!$canView) {
-    setFlash('error', 'Akses ditolak!');
-    header('Location: ' . BASE_URL . '/index.php?page=dashboard');
+    echo '<div class="p-6 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 font-bold text-sm">Akses ditolak! Anda tidak memiliki izin untuk melihat pengajuan ini.</div>';
+    require_once __DIR__ . '/../layouts/footer.php';
     exit;
 }
 
-$canApprove = ($leave['status'] === 'pending') && 
-              ($currentUser['id'] != $leave['employee_id']) && 
-              (($currentUser['role'] === 'atasan' && $currentUser['departemen_id'] == $leave['departemen_id']) || ($currentUser['role'] === 'admin'));
+$step = $leave['approval_step'] ?? 'pending_spv';
+$canApprove = false;
+if ($leave['status'] === 'pending' && $currentUser['id'] != $leave['employee_id']) {
+    if ($step === 'pending_spv') {
+        $canApprove = $isSpv && ($currentUser['departemen_id'] == $leave['departemen_id']);
+    } elseif ($step === 'pending_manager') {
+        $canApprove = $isManager;
+    } elseif ($step === 'pending_hrd') {
+        $canApprove = $isHRD;
+    }
+}
 ?>
 
 <div class="w-full space-y-6">

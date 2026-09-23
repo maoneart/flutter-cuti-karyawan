@@ -7,22 +7,28 @@
 $pageTitle = 'Persetujuan Cuti Tim';
 require_once __DIR__ . '/../layouts/header.php';
 
-if (!in_array($currentUser['role'], ['atasan', 'admin'])) {
-    setFlash('error', 'Akses ditolak!');
-    header('Location: ' . BASE_URL . '/index.php?page=dashboard');
+$userRole = strtolower($currentUser['role'] ?? '');
+$userLevel = (int)($currentUser['level_hierarki'] ?? 1);
+$isHRD = in_array($userRole, ['admin', 'superadmin', 'hrd']) || $userLevel >= 7;
+$isManager = $userRole === 'manager' || ($userLevel >= 5 && $userLevel <= 6);
+$isSpv = in_array($userRole, ['supervisor', 'leader', 'atasan']) || ($userLevel >= 3 && $userLevel <= 4);
+$isApprover = $isHRD || $isManager || $isSpv;
+
+if (!$isApprover) {
+    echo '<div class="p-6 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 font-bold text-sm">Akses ditolak! Halaman ini hanya untuk Leader, Manager, dan HRD.</div>';
+    require_once __DIR__ . '/../layouts/footer.php';
     exit;
 }
 
 $pdo = getDbConnection();
 $deptId = $currentUser['departemen_id'];
-$userRole = $currentUser['role'];
 $statusFilter = cleanInput($_GET['status'] ?? 'pending');
 
 $sql = "
     SELECT lr.*, 
            e.nik, e.nama_lengkap, e.email, e.no_hp, e.sisa_cuti, e.kuota_cuti, e.tanggal_masuk,
            d.nama_dept, d.kode_dept,
-           p.nama_jabatan,
+           p.nama_jabatan, p.level_hierarki as employee_level,
            lt.nama_cuti, lt.potong_kuota,
            ap.nama_lengkap as nama_atasan
     FROM pengajuan_cuti lr
@@ -36,15 +42,35 @@ $sql = "
 
 $params = [];
 
-if ($userRole === 'atasan') {
+if ($isHRD) {
+    // HRD can view across all departments, if pending show pending_hrd
+    if ($statusFilter === 'pending') {
+        $sql .= " AND lr.approval_step = 'pending_hrd' AND lr.status = 'pending' ";
+    } elseif ($statusFilter !== 'all') {
+        $sql .= " AND lr.status = ? ";
+        $params[] = $statusFilter;
+    }
+} elseif ($isManager) {
+    // Manager can view across all departments, excluding self
+    $sql .= " AND lr.employee_id != ? ";
+    $params[] = $currentUser['id'];
+    if ($statusFilter === 'pending') {
+        $sql .= " AND lr.approval_step = 'pending_manager' AND lr.status = 'pending' ";
+    } elseif ($statusFilter !== 'all') {
+        $sql .= " AND lr.status = ? ";
+        $params[] = $statusFilter;
+    }
+} else {
+    // Leader / Spv for their own department
     $sql .= " AND e.departemen_id = ? AND e.id != ? ";
     $params[] = $deptId;
     $params[] = $currentUser['id'];
-}
-
-if ($statusFilter !== 'all') {
-    $sql .= " AND lr.status = ? ";
-    $params[] = $statusFilter;
+    if ($statusFilter === 'pending') {
+        $sql .= " AND lr.approval_step = 'pending_spv' AND lr.status = 'pending' ";
+    } elseif ($statusFilter !== 'all') {
+        $sql .= " AND lr.status = ? ";
+        $params[] = $statusFilter;
+    }
 }
 
 $sql .= " ORDER BY CASE WHEN lr.status = 'pending' THEN 1 ELSE 2 END, lr.created_at DESC";
