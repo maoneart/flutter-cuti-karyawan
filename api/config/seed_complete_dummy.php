@@ -6,7 +6,9 @@
  * - 1 HRD (HR Management & Final Leave Approval)
  * - 1 GA (General Affairs)
  * - 1 Manager (Plant / Operational Manager)
- * - In EACH of the 15 Departments: 1 Supervisor, 1 Leader, 2 Operators + 1 Leave Request for Testing!
+ * - In EACH of the 15 Departments: 1 Supervisor, 1 Leader, 2 Operators
+ * - 15 Active Pending Leaves (1 per department) for testing approval flow
+ * - 3 Approved Past Leaves with exact matching cuti_terpakai & riwayat_kuota_cuti
  */
 
 require_once __DIR__ . '/../../config/database.php';
@@ -97,27 +99,31 @@ $stmtEmp = $pdo->prepare("
 $empId = 1;
 
 // 4.1 Super Admin (System Controller - 1 account)
+$superAdminId = $empId++;
 $stmtEmp->execute([
-    $empId++, 'ADM-001', 'Master Super Admin', 'admin@nakakin.co.id', $defaultPass, 'superadmin',
+    $superAdminId, 'ADM-001', 'Master Super Admin', 'admin@nakakin.co.id', $defaultPass, 'superadmin',
     8, 7, '2020-01-01', 12, 0, 12, 'Laki-laki', '081100000001', 'Kantor Pusat PT. Nakakin Indonesia'
 ]);
 
-// 4.2 HRD Official (1 account)
+// 4.2 HRD Official (1 account) -> starts clean with 0 used
+$hrdId = $empId++;
 $stmtEmp->execute([
-    $empId++, 'NAK-001', 'Hermawan (HRD)', 'hermawan@nakakin.co.id', $defaultPass, 'hrd',
-    8, 6, '2020-03-01', 12, 2, 10, 'Laki-laki', '081234567890', 'Kawasan Industri KIIC, Karawang Barat'
+    $hrdId, 'NAK-001', 'Hermawan (HRD)', 'hermawan@nakakin.co.id', $defaultPass, 'hrd',
+    8, 6, '2020-03-01', 12, 0, 12, 'Laki-laki', '081234567890', 'Kawasan Industri KIIC, Karawang Barat'
 ]);
 
 // 4.3 General Affairs / GA (1 account)
+$gaId = $empId++;
 $stmtEmp->execute([
-    $empId++, 'NAK-002', 'Bambang Setyo (GA)', 'ga@nakakin.co.id', $defaultPass, 'staff',
-    7, 2, '2021-02-15', 12, 1, 11, 'Laki-laki', '081234567891', 'Perum Resinda, Karawang Barat'
+    $gaId, 'NAK-002', 'Bambang Setyo (GA)', 'ga@nakakin.co.id', $defaultPass, 'staff',
+    7, 2, '2021-02-15', 12, 0, 12, 'Laki-laki', '081234567891', 'Perum Resinda, Karawang Barat'
 ]);
 
 // 4.4 Single General / Operational Manager (1 account)
+$managerId = $empId++;
 $stmtEmp->execute([
-    $empId++, 'MGR-001', 'Ir. Hendra Wijaya (Manager)', 'manager@nakakin.co.id', $defaultPass, 'manager',
-    5, 5, '2018-01-10', 12, 1, 11, 'Laki-laki', '081399990001', 'Grand Taruma, Karawang Barat'
+    $managerId, 'MGR-001', 'Ir. Hendra Wijaya (Manager)', 'manager@nakakin.co.id', $defaultPass, 'manager',
+    5, 5, '2018-01-10', 12, 0, 12, 'Laki-laki', '081399990001', 'Grand Taruma, Karawang Barat'
 ]);
 
 $createdOperators = [];
@@ -192,16 +198,61 @@ foreach ($createdOperators as $op) {
     $seq++;
 }
 
+// 6. Create 1 Approved Past Leave for Operator 2 Core (with exact matching cuti_terpakai & riwayat_kuota_cuti)
+// Op 2 Core has ID 16
+$op2Core = $pdo->query("SELECT id, sisa_cuti, cuti_terpakai FROM karyawan WHERE email = 'op2.core@nakakin.co.id'")->fetch(PDO::FETCH_ASSOC);
+if ($op2Core) {
+    $op2Id = $op2Core['id'];
+    $pastLeaveNomor = sprintf("CUTI/NAK/%s/%s/%03d", $year, $month, $seq++);
+    
+    // Insert Approved Leave (2 days)
+    $stmtApprovedLeave = $pdo->prepare("
+        INSERT INTO pengajuan_cuti (
+            nomor_surat, employee_id, leave_type_id,
+            tanggal_mulai, tanggal_selesai, total_hari,
+            alasan, alamat_selama_cuti, kontak_darurat,
+            status, approval_step, approved_by, approved_at,
+            spv_id, spv_at, spv_notes,
+            manager_id, manager_at, manager_notes,
+            hrd_id, hrd_at, hrd_notes,
+            notif_read, created_at, updated_at
+        ) VALUES (
+            ?, ?, 3,
+            '2026-09-01', '2026-09-02', 2,
+            'Acara keluarga dan mudik awal bulan.', 'Karawang', '0812345678',
+            'approved', 'approved', ?, '2026-09-01 10:00:00',
+            13, '2026-08-31 09:00:00', 'Disetujui oleh Spv',
+            4, '2026-08-31 14:00:00', 'Disetujui oleh Manager',
+            2, '2026-09-01 10:00:00', 'Disetujui HRD dan kuota dipotong',
+            1, '2026-08-30 08:00:00', '2026-09-01 10:00:00'
+        )
+    ");
+    $stmtApprovedLeave->execute([$pastLeaveNomor, $op2Id, $hrdId]);
+
+    // Update Employee Quota: cuti_terpakai = 2, sisa_cuti = 10
+    $pdo->exec("UPDATE karyawan SET cuti_terpakai = 2, sisa_cuti = 10 WHERE id = $op2Id");
+
+    // Insert into riwayat_kuota_cuti
+    $stmtQuotaLog = $pdo->prepare("
+        INSERT INTO riwayat_kuota_cuti (
+            employee_id, kuota_sebelum, perubahan, kuota_sesudah,
+            tipe, keterangan, created_by, created_at
+        ) VALUES (?, 12, -2, 10, 'potong_cuti', ?, ?, '2026-09-01 10:00:00')
+    ");
+    $stmtQuotaLog->execute([$op2Id, "Pemotongan cuti disetujui ({$pastLeaveNomor}) oleh HRD", $hrdId]);
+}
+
 $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 echo "=== SEEDER SUCCESSFUL ===\n";
 echo "Total Departemen: 15\n";
-echo "1 Super Admin (admin@nakakin.co.id)\n";
-echo "1 HRD (hermawan@nakakin.co.id)\n";
-echo "1 GA (ga@nakakin.co.id)\n";
-echo "1 Manager (manager@nakakin.co.id)\n";
-echo "15 Supervisor (spv.<kode>@nakakin.co.id)\n";
-echo "15 Leader (ldr.<kode>@nakakin.co.id)\n";
+echo "1 Super Admin (admin@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
+echo "1 HRD (hermawan@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
+echo "1 GA (ga@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
+echo "1 Manager (manager@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
+echo "15 Supervisor (spv.<kode>@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
+echo "15 Leader (ldr.<kode>@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
 echo "30 Operator (op1.<kode>@nakakin.co.id, op2.<kode>@nakakin.co.id)\n";
 echo "Total Karyawan: " . ($empId - 1) . "\n";
-echo "Total Pengajuan Cuti Demo: " . count($createdOperators) . " (1 di setiap departemen siap di-testing!)\n";
+echo "Total Pengajuan Cuti Demo Pending: " . count($createdOperators) . " (1 di setiap departemen siap di-testing!)\n";
+echo "1 Pengajuan Cuti Approved Demo: Operator 2 Core (CUTI/NAK/2026/09/016) [Cuti Terpakai: 2, Sisa: 10, Log Riwayat: Ada]\n";
 echo "Password default untuk semua akun: password123\n";

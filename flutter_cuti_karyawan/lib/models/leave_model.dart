@@ -36,11 +36,14 @@ class LeaveModel {
   final String? hrdAt;
   final String? hrdNotes;
 
-  // Joins
+  // Joins & Employee Info
   final String? namaLengkap;
   final String? nik;
+  final int? departemenId;
   final String? namaDept;
   final String? namaJabatan;
+  final int employeeLevel;
+  final String? employeeRole;
   final String? namaCuti;
   final String? kodeCuti;
   final bool potongKuota;
@@ -81,8 +84,11 @@ class LeaveModel {
     this.hrdNotes,
     this.namaLengkap,
     this.nik,
+    this.departemenId,
     this.namaDept,
     this.namaJabatan,
+    this.employeeLevel = 1,
+    this.employeeRole,
     this.namaCuti,
     this.kodeCuti,
     this.potongKuota = true,
@@ -103,9 +109,9 @@ class LeaveModel {
       case 'pending_spv':
         return 'Tahap 1: Review Spv / Leader';
       case 'pending_manager':
-        return 'Tahap 2: Review Manager';
+        return employeeLevel <= 2 ? 'Tahap 2: Review Manager' : 'Tahap 1: Review Manager';
       case 'pending_hrd':
-        return 'Tahap 3: Review HRD Final';
+        return employeeLevel <= 2 ? 'Tahap 3: Review HRD Final' : (employeeLevel <= 4 ? 'Tahap 2: Review HRD Final' : 'Tahap 1: Review HRD Final');
       default:
         return 'Menunggu Persetujuan';
     }
@@ -147,8 +153,11 @@ class LeaveModel {
       hrdNotes: json['hrd_notes']?.toString(),
       namaLengkap: json['nama_lengkap']?.toString(),
       nik: json['nik']?.toString(),
+      departemenId: json['departemen_id'] != null ? int.tryParse(json['departemen_id'].toString()) : null,
       namaDept: json['nama_dept']?.toString(),
       namaJabatan: json['nama_jabatan']?.toString(),
+      employeeLevel: int.tryParse(json['employee_level']?.toString() ?? json['level_hierarki']?.toString() ?? '1') ?? 1,
+      employeeRole: json['role']?.toString() ?? json['employee_role']?.toString(),
       namaCuti: json['nama_cuti']?.toString(),
       kodeCuti: json['kode_cuti']?.toString(),
       potongKuota: (json['potong_kuota']?.toString() == '1' || json['potong_kuota'] == true),

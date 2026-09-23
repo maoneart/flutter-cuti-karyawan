@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../config/app_theme.dart';
 import '../models/leave_model.dart';
+import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
@@ -17,6 +18,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
   LeaveModel? _leave;
   bool _isLoading = true;
   bool _isCancelling = false;
+  bool _isProcessingAction = false;
   String? _errorMessage;
 
   @override
@@ -45,6 +47,187 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
         _errorMessage = res.message;
         _isLoading = false;
       });
+    }
+  }
+
+  bool _canUserApprove(LeaveModel leave, UserModel? user) {
+    if (user == null || !leave.isPending) return false;
+    if (user.id == leave.employeeId) return false; // Tidak bisa approve pengajuan diri sendiri
+
+    final step = leave.approvalStep.toLowerCase();
+    if (step == 'pending_spv') {
+      return (user.isSupervisor && user.departemenId == leave.departemenId) || user.isManager || user.isAdmin;
+    } else if (step == 'pending_manager') {
+      return user.isManager || user.isAdmin;
+    } else if (step == 'pending_hrd') {
+      return user.isAdmin;
+    }
+    return false;
+  }
+
+  Future<void> _handleApproveAction() async {
+    final noteController = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(CupertinoIcons.checkmark_seal_fill, color: Color(0xFF34C759), size: 24),
+            SizedBox(width: 8),
+            Text('Setujui Pengajuan', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Apakah Anda yakin ingin menyetujui pengajuan cuti ini?',
+              style: TextStyle(fontSize: 13, color: isDark ? const Color(0xFFCBD5E1) : AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: noteController,
+              decoration: const InputDecoration(
+                hintText: 'Catatan persetujuan (opsional)...',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF34C759)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Ya, Setujui', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isProcessingAction = true);
+
+    final res = await ApiService.processApprovalAction(
+      leaveId: widget.leaveId,
+      action: 'approve',
+      notes: noteController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    setState(() => _isProcessingAction = false);
+
+    if (res.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF34C759),
+          content: Text(res.message.isNotEmpty ? res.message : 'Pengajuan cuti berhasil disetujui.'),
+        ),
+      );
+      _loadDetail();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(backgroundColor: AppTheme.statusRejected, content: Text(res.message)),
+      );
+    }
+  }
+
+  Future<void> _handleRejectAction() async {
+    final reasonController = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(CupertinoIcons.xmark_circle_fill, color: Color(0xFFFF3B30), size: 24),
+            SizedBox(width: 8),
+            Text('Tolak Pengajuan', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Masukkan alasan penolakan pengajuan cuti ini:',
+              style: TextStyle(fontSize: 13, color: isDark ? const Color(0xFFCBD5E1) : AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(
+                hintText: 'Alasan penolakan (wajib)...',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF3B30)),
+            onPressed: () {
+              if (reasonController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Alasan penolakan wajib diisi.')),
+                );
+                return;
+              }
+              Navigator.pop(ctx, true);
+            },
+            child: const Text('Tolak Cuti', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isProcessingAction = true);
+
+    final res = await ApiService.processApprovalAction(
+      leaveId: widget.leaveId,
+      action: 'reject',
+      rejectionReason: reasonController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    setState(() => _isProcessingAction = false);
+
+    if (res.success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFFFF3B30),
+          content: Text(res.message.isNotEmpty ? res.message : 'Pengajuan cuti telah ditolak.'),
+        ),
+      );
+      _loadDetail();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(backgroundColor: AppTheme.statusRejected, content: Text(res.message)),
+      );
     }
   }
 
@@ -131,9 +314,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
         if (leave.approvalStep == 'pending_spv') {
           desc = 'Menunggu persetujuan dari Supervisor / Leader departemen.';
         } else if (leave.approvalStep == 'pending_manager') {
-          desc = 'Disetujui Leader, menunggu persetujuan Manager.';
+          desc = 'Menunggu persetujuan Plant Manager.';
         } else {
-          desc = 'Disetujui Manager, menunggu persetujuan akhir HRD.';
+          desc = 'Menunggu persetujuan akhir dan pemotongan kuota oleh HRD.';
         }
     }
 
@@ -278,6 +461,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
   ) {
     final isRejected = leave.isRejected;
     final isApproved = leave.isApproved;
+    final empLevel = leave.employeeLevel;
 
     // Spv logic
     final spvDone = leave.spvId != null || (leave.approvalStep != 'pending_spv' && !isRejected) || isApproved;
@@ -294,6 +478,118 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     final hrdCurrent = leave.approvalStep == 'pending_hrd' && !isRejected && !isApproved;
     final hrdRejected = isRejected && leave.approvalStep == 'pending_hrd';
 
+    List<Widget> timelineItems = [];
+    String tierTitle = 'Hierarki Persetujuan';
+
+    if (empLevel <= 2) {
+      // 3 TAHAP: Operator & Staff -> Spv -> Manager -> HRD
+      tierTitle = 'Hierarki Persetujuan (3 Tahap)';
+      timelineItems = [
+        _buildTimelineStep(
+          title: '1. Supervisor / Leader',
+          subtitle: leave.spvName != null ? 'Oleh: ${leave.spvName}' : (spvDone ? 'Disetujui' : (spvCurrent ? 'Menunggu review' : 'Antrean')),
+          isDone: spvDone,
+          isCurrent: spvCurrent,
+          isRejected: spvRejected,
+          isDark: isDark,
+          textHead: textHead,
+          textSub: textSub,
+          note: leave.spvNotes,
+          date: leave.spvAt,
+        ),
+        _buildTimelineStep(
+          title: '2. Plant Manager',
+          subtitle: leave.managerName != null ? 'Oleh: ${leave.managerName}' : (mgrDone ? 'Disetujui' : (mgrCurrent ? 'Menunggu review' : 'Antrean')),
+          isDone: mgrDone,
+          isCurrent: mgrCurrent,
+          isRejected: mgrRejected,
+          isDark: isDark,
+          textHead: textHead,
+          textSub: textSub,
+          note: leave.managerNotes,
+          date: leave.managerAt,
+        ),
+        _buildTimelineStep(
+          title: '3. HRD (Final & Potong Kuota)',
+          subtitle: leave.hrdName != null ? 'Oleh: ${leave.hrdName}' : (hrdDone ? 'Disetujui & Kuota Dipotong' : (hrdCurrent ? 'Menunggu review final' : 'Antrean')),
+          isDone: hrdDone,
+          isCurrent: hrdCurrent,
+          isRejected: hrdRejected,
+          isDark: isDark,
+          textHead: textHead,
+          textSub: textSub,
+          note: leave.hrdNotes ?? leave.catatanAtasan,
+          date: leave.hrdAt ?? leave.approvedAt,
+          isLast: true,
+        ),
+      ];
+    } else if (empLevel <= 4) {
+      // 2 TAHAP: Leader & Supervisor -> Langsung ke Plant Manager -> HRD
+      tierTitle = 'Hierarki Persetujuan (2 Tahap)';
+      timelineItems = [
+        _buildTimelineStep(
+          title: '1. Plant Manager',
+          subtitle: leave.managerName != null ? 'Oleh: ${leave.managerName}' : (mgrDone ? 'Disetujui' : (mgrCurrent ? 'Menunggu review' : 'Antrean')),
+          isDone: mgrDone,
+          isCurrent: mgrCurrent,
+          isRejected: mgrRejected,
+          isDark: isDark,
+          textHead: textHead,
+          textSub: textSub,
+          note: leave.managerNotes,
+          date: leave.managerAt,
+        ),
+        _buildTimelineStep(
+          title: '2. HRD (Final & Potong Kuota)',
+          subtitle: leave.hrdName != null ? 'Oleh: ${leave.hrdName}' : (hrdDone ? 'Disetujui & Kuota Dipotong' : (hrdCurrent ? 'Menunggu review final' : 'Antrean')),
+          isDone: hrdDone,
+          isCurrent: hrdCurrent,
+          isRejected: hrdRejected,
+          isDark: isDark,
+          textHead: textHead,
+          textSub: textSub,
+          note: leave.hrdNotes ?? leave.catatanAtasan,
+          date: leave.hrdAt ?? leave.approvedAt,
+          isLast: true,
+        ),
+      ];
+    } else if (empLevel <= 6) {
+      // 1 TAHAP: Manager -> Langsung ke HRD
+      tierTitle = 'Hierarki Persetujuan (1 Tahap)';
+      timelineItems = [
+        _buildTimelineStep(
+          title: '1. HRD (Final & Potong Kuota)',
+          subtitle: leave.hrdName != null ? 'Oleh: ${leave.hrdName}' : (hrdDone ? 'Disetujui & Kuota Dipotong' : (hrdCurrent ? 'Menunggu review final' : 'Antrean')),
+          isDone: hrdDone,
+          isCurrent: hrdCurrent,
+          isRejected: hrdRejected,
+          isDark: isDark,
+          textHead: textHead,
+          textSub: textSub,
+          note: leave.hrdNotes ?? leave.catatanAtasan,
+          date: leave.hrdAt ?? leave.approvedAt,
+          isLast: true,
+        ),
+      ];
+    } else {
+      // HRD & Super Admin -> Auto-approved
+      tierTitle = 'Hierarki Persetujuan (Auto-Approved)';
+      timelineItems = [
+        _buildTimelineStep(
+          title: '1. Persetujuan HRD / Mandiri',
+          subtitle: 'Disetujui Langsung & Kuota Dipotong Otomatis',
+          isDone: true,
+          isCurrent: false,
+          isRejected: false,
+          isDark: isDark,
+          textHead: textHead,
+          textSub: textSub,
+          date: leave.approvedAt ?? leave.createdAt,
+          isLast: true,
+        ),
+      ];
+    }
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -305,47 +601,11 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hierarki Alur Persetujuan (3-Tier)',
+            tierTitle,
             style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textHead),
           ),
           const SizedBox(height: 16),
-          _buildTimelineStep(
-            title: '1. Supervisor / Leader',
-            subtitle: leave.spvName != null ? 'Oleh: ${leave.spvName}' : (spvDone ? 'Disetujui' : (spvCurrent ? 'Menunggu review' : 'Antrean')),
-            isDone: spvDone,
-            isCurrent: spvCurrent,
-            isRejected: spvRejected,
-            isDark: isDark,
-            textHead: textHead,
-            textSub: textSub,
-            note: leave.spvNotes,
-            date: leave.spvAt,
-          ),
-          _buildTimelineStep(
-            title: '2. Manager Departemen',
-            subtitle: leave.managerName != null ? 'Oleh: ${leave.managerName}' : (mgrDone ? 'Disetujui' : (mgrCurrent ? 'Menunggu review' : 'Antrean')),
-            isDone: mgrDone,
-            isCurrent: mgrCurrent,
-            isRejected: mgrRejected,
-            isDark: isDark,
-            textHead: textHead,
-            textSub: textSub,
-            note: leave.managerNotes,
-            date: leave.managerAt,
-          ),
-          _buildTimelineStep(
-            title: '3. HRD / Admin (Final)',
-            subtitle: leave.hrdName != null ? 'Oleh: ${leave.hrdName}' : (hrdDone ? 'Disetujui & Kuota Dipotong' : (hrdCurrent ? 'Menunggu review final' : 'Antrean')),
-            isDone: hrdDone,
-            isCurrent: hrdCurrent,
-            isRejected: hrdRejected,
-            isDark: isDark,
-            textHead: textHead,
-            textSub: textSub,
-            note: leave.hrdNotes ?? leave.catatanAtasan,
-            date: leave.hrdAt ?? leave.approvedAt,
-            isLast: true,
-          ),
+          ...timelineItems,
         ],
       ),
     );
@@ -380,6 +640,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
     final isOwner = _leave != null && user != null && _leave!.employeeId == user.id;
+    final canApproveNow = _leave != null && _canUserApprove(_leave!, user);
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
@@ -448,7 +709,7 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                           _buildStatusBanner(_leave!),
                           const SizedBox(height: 16),
 
-                          // 3-Tier Approval Flow Card
+                          // Dynamic Hierarchical Approval Flow Card
                           _buildTimelineSection(_leave!, cardBg, borderCol, textHead, textSub, isDark),
                           const SizedBox(height: 16),
 
@@ -505,6 +766,74 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
+
+                          // Direct Approval Actions (if authorized approver)
+                          if (canApproveNow) ...[
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: cardBg,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: borderCol),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(CupertinoIcons.checkmark_shield_fill, color: Color(0xFF007AFF), size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Tindakan Persetujuan',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: textHead),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Pengajuan ini sedang menunggu tindakan dari Anda.',
+                                    style: TextStyle(fontSize: 12.5, color: textSub),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  if (_isProcessingAction)
+                                    const Center(child: CupertinoActivityIndicator(radius: 14))
+                                  else
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: OutlinedButton.icon(
+                                            style: OutlinedButton.styleFrom(
+                                              foregroundColor: const Color(0xFFFF3B30),
+                                              side: const BorderSide(color: Color(0xFFFF3B30), width: 1.5),
+                                              padding: const EdgeInsets.symmetric(vertical: 13),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+                                            icon: const Icon(CupertinoIcons.xmark_circle, size: 18),
+                                            label: const Text('Tolak', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                            onPressed: _handleRejectAction,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(0xFF34C759),
+                                              foregroundColor: Colors.white,
+                                              padding: const EdgeInsets.symmetric(vertical: 13),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                            ),
+                                            icon: const Icon(CupertinoIcons.checkmark_alt_circle, size: 18),
+                                            label: const Text('Setujui', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                            onPressed: _handleApproveAction,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
 
                           // Cancel Button (if pending and is owner)
                           if (isOwner && _leave!.isPending)

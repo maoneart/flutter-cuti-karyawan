@@ -27,9 +27,9 @@ $stats = $stmtSummary->fetch();
 
 // 2. Pending Approvals Count (Filtered by 3-Tier Stage for this specific user role)
 $pendingApprovalsCount = 0;
-if ($user['role'] === 'admin' || $hierarki >= 7) {
-    // HRD Admin -> pending_hrd
-    $stmtPending = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE approval_step = 'pending_hrd' AND status = 'pending'");
+if ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role'] === 'hrd' || $hierarki >= 7) {
+    // HRD & Superadmin: Count ALL pending leaves across company for realtime monitoring & badge counter
+    $stmtPending = $pdo->query("SELECT COUNT(*) FROM pengajuan_cuti WHERE status = 'pending'");
     $pendingApprovalsCount = (int)$stmtPending->fetchColumn();
 } elseif ($user['role'] === 'manager' || ($hierarki >= 5 && $hierarki <= 6)) {
     // Manager -> pending_manager across all departments (except own leave)
