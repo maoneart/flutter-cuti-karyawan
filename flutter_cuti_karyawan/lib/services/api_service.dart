@@ -509,7 +509,8 @@ class ApiService {
 
   /// 17. Preview Employee Excel Import
   static Future<ApiResponse<Map<String, dynamic>>> previewEmployeeImport({
-    required List<int> fileBytes,
+    List<int>? fileBytes,
+    String? filePath,
     required String fileName,
   }) async {
     try {
@@ -521,11 +522,21 @@ class ApiService {
         request.headers['Authorization'] = 'Bearer $token';
       }
 
-      request.files.add(http.MultipartFile.fromBytes(
-        'file',
-        fileBytes,
-        filename: fileName,
-      ));
+      if (fileBytes != null && fileBytes.isNotEmpty) {
+        request.files.add(http.MultipartFile.fromBytes(
+          'file',
+          fileBytes,
+          filename: fileName,
+        ));
+      } else if (filePath != null && filePath.isNotEmpty) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'file',
+          filePath,
+          filename: fileName,
+        ));
+      } else {
+        return ApiResponse(success: false, message: 'File tidak dapat dibaca');
+      }
 
       final streamedResponse = await request.send().timeout(timeoutDuration);
       final response = await http.Response.fromStream(streamedResponse);
