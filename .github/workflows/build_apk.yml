@@ -29,9 +29,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Install Flutter Dependencies
+      - name: Generate Platform Files & Dependencies
         run: |
           cd flutter_cuti_karyawan
+          flutter create --platforms=android,web,ios .
           flutter pub get
 
       - name: Build Android Release APK
