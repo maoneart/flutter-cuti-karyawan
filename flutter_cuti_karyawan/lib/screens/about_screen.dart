@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../config/app_theme.dart';
 import '../config/api_config.dart';
 import '../services/auth_service.dart';
+import 'user_guide_screen.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -350,22 +351,28 @@ class AboutScreen extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
-                              onPressed: () => openGuideDoc(context, defaultRole),
-                              icon: const Icon(CupertinoIcons.arrow_down_doc_fill, size: 18),
-                              label: Text('Panduan Saya (${user?.role.toUpperCase() ?? "PDF"})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const UserGuideScreen()),
+                                );
+                              },
+                              icon: const Icon(CupertinoIcons.book_fill, size: 18),
+                              label: Text('Buka Panduan (${user?.role.toUpperCase() ?? "SAYA"})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                             ),
                           ),
                           const SizedBox(width: 8),
-                          ElevatedButton(
+                          ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white.withOpacity(0.2),
                               foregroundColor: Colors.white,
                               elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                             ),
-                            onPressed: () => showGuideSelectionModal(context),
-                            child: const Text('Semua (4 PDF)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            onPressed: () => openGuideDoc(context, defaultRole),
+                            icon: const Icon(CupertinoIcons.arrow_down_doc_fill, size: 16),
+                            label: const Text('Unduh PDF', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                           ),
                         ],
                       ),

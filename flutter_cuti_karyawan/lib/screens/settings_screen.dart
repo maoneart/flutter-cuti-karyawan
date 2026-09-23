@@ -8,7 +8,9 @@ import 'profile_detail_screen.dart';
 import 'change_password_screen.dart';
 import 'server_setting_screen.dart';
 import 'add_employee_screen.dart';
+import 'employee_list_screen.dart';
 import 'about_screen.dart';
+import 'user_guide_screen.dart';
 import 'login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -307,10 +309,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 _buildIosGroup([
                   _buildIosTile(
-                    icon: CupertinoIcons.info_circle_fill,
+                    icon: CupertinoIcons.book_fill,
                     iconColor: const Color(0xFF0284C7),
-                    title: 'Tentang Aplikasi & Panduan',
-                    subtitle: 'Buku panduan PDF, alur approval, & info rilis',
+                    title: 'Buku Panduan (${user?.namaJabatan ?? "Peran"})',
+                    subtitle: 'Panduan interaktif & unduh PDF sesuai role',
+                    isDark: isDark,
+                    showDivider: true,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const UserGuideScreen()),
+                      );
+                    },
+                  ),
+                  _buildIosTile(
+                    icon: CupertinoIcons.info_circle_fill,
+                    iconColor: const Color(0xFF64748B),
+                    title: 'Tentang Aplikasi',
+                    subtitle: 'Informasi versi rilis & pengembang',
                     isDark: isDark,
                     showDivider: false,
                     onTap: () {

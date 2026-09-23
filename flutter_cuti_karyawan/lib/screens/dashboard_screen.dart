@@ -11,6 +11,7 @@ import 'public_board_screen.dart';
 import 'add_employee_screen.dart';
 import 'employee_list_screen.dart';
 import 'about_screen.dart';
+import 'user_guide_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final Function(int)? onNavigateToTab;
@@ -450,9 +451,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Quick Tutorial & PDF Guide Banner
+                        // Quick Tutorial & PDF Guide Banner (Role-Specific Native Page)
                         InkWell(
-                          onTap: () => AboutScreen.showGuideSelectionModal(context),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const UserGuideScreen()),
+                            );
+                          },
                           borderRadius: BorderRadius.circular(14),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -477,7 +483,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Buku Panduan & Unduh PDF',
+                                        'Buku Panduan & Tutorial',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 13.5,
@@ -486,8 +492,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Tutorial alur pengajuan cuti (4 PDF Per Role)',
+                                        'Panduan langkah pengoperasian khusus peran ${user?.namaJabatan ?? "Karyawan"}',
                                         style: TextStyle(fontSize: 11.5, color: textSub),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -502,9 +510,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(CupertinoIcons.arrow_down_doc_fill, color: Colors.white, size: 14),
+                                      Icon(CupertinoIcons.arrow_right_circle_fill, color: Colors.white, size: 14),
                                       SizedBox(width: 4),
-                                      Text('Unduh PDF', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
+                                      Text('Buka', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
                                     ],
                                   ),
                                 ),
