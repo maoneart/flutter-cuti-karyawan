@@ -1,0 +1,20 @@
+# Environment & IDE
+.idea/
+.vscode/
+*.swp
+*.log
+
+# Assets Uploads (ignore uploaded test files except keep folder)
+assets/uploads/leaves/*
+!assets/uploads/leaves/.gitkeep
+
+# Flutter Build Artifacts
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+
+# Secrets
+.env

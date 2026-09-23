@@ -1,0 +1,483 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../config/app_theme.dart';
+import '../models/leave_type_model.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
+
+class LeaveRequestScreen extends StatefulWidget {
+  const LeaveRequestScreen({super.key});
+
+  @override
+  State<LeaveRequestScreen> createState() => _LeaveRequestScreenState();
+}
+
+class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
+  final _formKey = GlobalKey<FormState>();
+  
+  List<LeaveTypeModel> _leaveTypes = [];
+  LeaveTypeModel? _selectedType;
+  
+  DateTime? _startDate;
+  DateTime? _endDate;
+  int _calculatedDays = 0;
+  
+  final _alasanController = TextEditingController();
+  final _alamatController = TextEditingController();
+  final _kontakDaruratController = TextEditingController();
+  
+  bool _isLoadingTypes = true;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLeaveTypes();
+  }
+
+  @override
+  void dispose() {
+    _alasanController.dispose();
+    _alamatController.dispose();
+    _kontakDaruratController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadLeaveTypes() async {
+    setState(() {
+      _isLoadingTypes = true;
+      _errorMessage = null;
+    });
+
+    final res = await ApiService.getLeaveTypes();
+
+    if (!mounted) return;
+
+    if (res.success && res.data != null) {
+      setState(() {
+        _leaveTypes = res.data!;
+        if (_leaveTypes.isNotEmpty) {
+          // Default to annual leave CT or first eligible
+          _selectedType = _leaveTypes.firstWhere(
+            (t) => t.kode == 'CT' && t.eligible,
+            orElse: () => _leaveTypes.firstWhere((t) => t.eligible, orElse: () => _leaveTypes.first),
+          );
+        }
+        _isLoadingTypes = false;
+      });
+    } else {
+      setState(() {
+        _errorMessage = res.message;
+        _isLoadingTypes = false;
+      });
+    }
+  }
+
+  void _calculateDays() {
+    if (_startDate == null || _endDate == null) {
+      setState(() {
+        _calculatedDays = 0;
+      });
+      return;
+    }
+
+    if (_endDate!.isBefore(_startDate!)) {
+      setState(() {
+        _calculatedDays = 0;
+      });
+      return;
+    }
+
+    int days = 0;
+    DateTime current = _startDate!;
+    while (!current.isAfter(_endDate!)) {
+      // Exclude Sunday (7) and Saturday (6)
+      if (current.weekday != DateTime.sunday && current.weekday != DateTime.saturday) {
+        days++;
+      }
+      current = current.add(const Duration(days: 1));
+    }
+
+    setState(() {
+      _calculatedDays = days == 0 ? 1 : days;
+    });
+  }
+
+  Future<void> _pickDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: now.subtract(const Duration(days: 30)),
+      lastDate: now.add(const Duration(days: 365)),
+      initialDateRange: (_startDate != null && _endDate != null)
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : DateTimeRange(start: now, end: now.add(const Duration(days: 1))),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.primary,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: AppTheme.textPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+      _calculateDays();
+    }
+  }
+
+  Future<void> _submitLeave() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih jenis cuti terlebih dahulu')),
+      );
+      return;
+    }
+
+    if (_startDate == null || _endDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih rentang tanggal cuti')),
+      );
+      return;
+    }
+
+    final user = AuthService.currentUser;
+    if (_selectedType!.potongKuota && user != null && user.sisaCuti < _calculatedDays) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.statusRejected,
+          content: Text('Sisa kuota cuti Anda (${user.sisaCuti} hari) tidak mencukupi untuk $_calculatedDays hari!'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final dateFormat = DateFormat('yyyy-MM-dd');
+    final res = await ApiService.submitLeave(
+      leaveTypeId: _selectedType!.id,
+      tanggalMulai: dateFormat.format(_startDate!),
+      tanggalSelesai: dateFormat.format(_endDate!),
+      alasan: _alasanController.text.trim(),
+      alamatSelamaCuti: _alamatController.text.trim(),
+      kontakDarurat: _kontakDaruratController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _isSubmitting = false;
+    });
+
+    if (res.success) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(
+                  color: AppTheme.statusApprovedBg,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle_rounded, color: AppTheme.statusApproved, size: 48),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Pengajuan Berhasil Dikirim!',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Pengajuan cuti $_calculatedDays hari Anda telah tercatat dan menunggu persetujuan atasan.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                // Reset form
+                setState(() {
+                  _startDate = null;
+                  _endDate = null;
+                  _calculatedDays = 0;
+                  _alasanController.clear();
+                  _alamatController.clear();
+                  _kontakDaruratController.clear();
+                });
+              },
+              child: const Text('Tutup & Selesai'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppTheme.statusRejected,
+          content: Text(res.message),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = AuthService.currentUser;
+
+    return Scaffold(
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        title: const Text('Form Pengajuan Cuti'),
+      ),
+      body: _isLoadingTypes
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Quota Indicator Banner
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.account_balance_wallet_outlined, color: AppTheme.primary, size: 24),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Sisa Kuota Cuti Anda', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                                    Text(
+                                      '${user?.sisaCuti ?? 0} Hari',
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.primary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Form Container
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // 1. Jenis Cuti
+                              const Text('Jenis Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              const SizedBox(height: 8),
+                              DropdownButtonFormField<LeaveTypeModel>(
+                                value: _selectedType,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  prefixIcon: Icon(Icons.category_outlined, size: 20),
+                                ),
+                                items: _leaveTypes.map((type) {
+                                  return DropdownMenuItem(
+                                    value: type,
+                                    enabled: type.eligible,
+                                    child: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            type.namaCuti,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: type.eligible ? AppTheme.textPrimary : AppTheme.textMuted,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        if (type.potongKuota)
+                                          Container(
+                                            margin: const EdgeInsets.only(left: 6),
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: AppTheme.statusPendingBg,
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: const Text('Potong Kuota', style: TextStyle(fontSize: 10, color: AppTheme.statusPending, fontWeight: FontWeight.bold)),
+                                          ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (val) {
+                                  setState(() {
+                                    _selectedType = val;
+                                  });
+                                },
+                              ),
+                              if (_selectedType?.deskripsi != null) ...[
+                                const SizedBox(height: 6),
+                                Text(
+                                  _selectedType!.deskripsi!,
+                                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontStyle: FontStyle.italic),
+                                ),
+                              ],
+                              const SizedBox(height: 18),
+
+                              // 2. Tanggal Cuti
+                              const Text('Rentang Tanggal Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              const SizedBox(height: 8),
+                              InkWell(
+                                onTap: _pickDateRange,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: const Color(0xFFCBD5E1)),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.date_range_rounded, color: AppTheme.primary, size: 20),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          (_startDate != null && _endDate != null)
+                                              ? '${DateFormat('dd MMM yyyy').format(_startDate!)} s/d ${DateFormat('dd MMM yyyy').format(_endDate!)}'
+                                              : 'Pilih Tanggal Mulai dan Selesai',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: (_startDate != null) ? AppTheme.textPrimary : AppTheme.textMuted,
+                                            fontWeight: (_startDate != null) ? FontWeight.w600 : FontWeight.normal,
+                                          ),
+                                        ),
+                                      ),
+                                      if (_calculatedDays > 0)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: AppTheme.primary.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '$_calculatedDays Hari Kerja',
+                                            style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold, fontSize: 12),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+
+                              // 3. Alasan Cuti
+                              const Text('Alasan Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _alasanController,
+                                maxLines: 3,
+                                decoration: const InputDecoration(
+                                  hintText: 'Tuliskan keperluan/alasan pengajuan cuti secara jelas...',
+                                ),
+                                validator: (v) => (v == null || v.trim().isEmpty) ? 'Alasan cuti wajib diisi' : null,
+                              ),
+                              const SizedBox(height: 18),
+
+                              // 4. Alamat Selama Cuti
+                              const Text('Alamat Selama Cuti (Opsional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _alamatController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Alamat tempat tinggal/kampung selama cuti...',
+                                  prefixIcon: Icon(Icons.location_on_outlined, size: 20),
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+
+                              // 5. Kontak Darurat
+                              const Text('Kontak Darurat (Opsional)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              const SizedBox(height: 8),
+                              TextFormField(
+                                controller: _kontakDaruratController,
+                                keyboardType: TextInputType.phone,
+                                decoration: const InputDecoration(
+                                  hintText: 'No. HP / Telepon keluarga yang bisa dihubungi...',
+                                  prefixIcon: Icon(Icons.phone_outlined, size: 20),
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+
+                              // Submit Button
+                              ElevatedButton(
+                                onPressed: _isSubmitting ? null : _submitLeave,
+                                child: _isSubmitting
+                                    ? const SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                                      )
+                                    : const Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.send_rounded, size: 18),
+                                          SizedBox(width: 8),
+                                          Text('Kirim Pengajuan Cuti', style: TextStyle(fontSize: 16)),
+                                        ],
+                                      ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+}
