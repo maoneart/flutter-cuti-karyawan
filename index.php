@@ -142,6 +142,18 @@ switch ($page) {
         (new EmployeeController())->delete();
         break;
 
+    case 'employee-template':
+        (new EmployeeController())->template();
+        break;
+
+    case 'employee-import-preview':
+        (new EmployeeController())->importPreview();
+        break;
+
+    case 'employee-import-commit':
+        (new EmployeeController())->importCommit();
+        break;
+
     // Profile Management
     case 'profile':
         requireLogin();

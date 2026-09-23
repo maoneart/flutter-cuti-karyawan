@@ -506,5 +506,77 @@ class ApiService {
       return ApiResponse(success: false, message: 'Gagal menghubungi server');
     }
   }
+
+  /// 17. Preview Employee Excel Import
+  static Future<ApiResponse<Map<String, dynamic>>> previewEmployeeImport({
+    required List<int> fileBytes,
+    required String fileName,
+  }) async {
+    try {
+      final uri = Uri.parse(ApiConfig.employeeImportPreview);
+      final request = http.MultipartRequest('POST', uri);
+
+      final token = AuthService.token;
+      if (token != null && token.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+
+      request.files.add(http.MultipartFile.fromBytes(
+        'file',
+        fileBytes,
+        filename: fileName,
+      ));
+
+      final streamedResponse = await request.send().timeout(timeoutDuration);
+      final response = await http.Response.fromStream(streamedResponse);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: body['message'] ?? 'Validasi berhasil',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      } else {
+        return ApiResponse(
+          success: false,
+          message: body['message'] ?? 'Gagal memvalidasi file Excel',
+        );
+      }
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal mengunggah file ke server');
+    }
+  }
+
+  /// 18. Commit Employee Excel Import
+  static Future<ApiResponse<Map<String, dynamic>>> commitEmployeeImport(
+    List<dynamic> validRows,
+  ) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.employeeImportCommit),
+            headers: _getHeaders(),
+            body: jsonEncode({'valid_rows': validRows}),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && body['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: body['message'] ?? 'Data karyawan berhasil diimpor',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      } else {
+        return ApiResponse(
+          success: false,
+          message: body['message'] ?? 'Gagal menyimpan data karyawan',
+        );
+      }
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal menghubungi server');
+    }
+  }
 }
 

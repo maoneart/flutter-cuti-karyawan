@@ -1,5 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../config/api_config.dart';
 import '../config/app_theme.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
@@ -225,6 +228,386 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
     );
   }
 
+  Future<void> _downloadTemplate() async {
+    final uri = Uri.parse(ApiConfig.employeeTemplate);
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Buka browser untuk unduh template: $uri'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal membuka URL template: $e'),
+            backgroundColor: AppTheme.statusRejected,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickAndImportExcel() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx', 'csv', 'xls'],
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+      final file = result.files.first;
+
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Memvalidasi data Excel...', style: TextStyle(fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final res = await ApiService.previewEmployeeImport(
+        fileBytes: file.bytes,
+        filePath: file.path,
+        fileName: file.name,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context, rootNavigator: true).pop(); // Close loading
+
+      if (res.success && res.data != null) {
+        _showImportPreviewModal(res.data!);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(res.message.isNotEmpty ? res.message : 'Gagal memproses file'),
+            backgroundColor: AppTheme.statusRejected,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error memilih file: $e'),
+            backgroundColor: AppTheme.statusRejected,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showImportPreviewModal(Map<String, dynamic> data) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderCol = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final textHead = isDark ? Colors.white : AppTheme.textPrimary;
+    final textSub = isDark ? const Color(0xFF94A3B8) : AppTheme.textSecondary;
+    final primaryAccent = isDark ? const Color(0xFF38BDF8) : AppTheme.primary;
+
+    final summary = data['summary'] as Map<String, dynamic>? ?? {};
+    final int total = (summary['total'] as num?)?.toInt() ?? 0;
+    final int validCount = (summary['valid_count'] as num?)?.toInt() ?? 0;
+    final int invalidCount = (summary['invalid_count'] as num?)?.toInt() ?? 0;
+
+    final List<dynamic> validRows = data['valid_rows'] as List<dynamic>? ?? [];
+    final List<dynamic> invalidRows = data['invalid_rows'] as List<dynamic>? ?? [];
+
+    bool isSubmitting = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (modalCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(color: borderCol),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: borderCol,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.table_view_rounded, color: Color(0xFF10B981), size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Hasil Validasi Import Excel', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: textHead)),
+                        Text('Pastikan data sudah sesuai sebelum disimpan', style: TextStyle(fontSize: 12, color: textSub)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: () => Navigator.pop(modalCtx),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Summary Stats Row
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: borderCol.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text('$total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textHead)),
+                          Text('Total Baris', style: TextStyle(fontSize: 11, color: textSub)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF10B981).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text('$validCount', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                          const Text('Siap Diimport', style: TextStyle(fontSize: 11, color: Color(0xFF10B981), fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: invalidCount > 0 ? const Color(0xFFEF4444).withOpacity(0.15) : borderCol.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        children: [
+                          Text('$invalidCount', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: invalidCount > 0 ? const Color(0xFFEF4444) : textSub)),
+                          Text('Tidak Valid', style: TextStyle(fontSize: 11, color: invalidCount > 0 ? const Color(0xFFEF4444) : textSub, fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Body Content (Tabs or list of errors & preview)
+              Expanded(
+                child: ListView(
+                  children: [
+                    if (invalidRows.isNotEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444).withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.warning_amber_rounded, color: Color(0xFFEF4444), size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Ditemukan $invalidCount Baris Tidak Valid (Dilewati):',
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFEF4444)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            ...invalidRows.map((inv) {
+                              final errors = (inv['errors'] as List<dynamic>?)?.join(', ') ?? 'Data tidak valid';
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Text(
+                                  '• Baris ${inv['row_number']}: [NIK: ${inv['nik'] ?? '-'}] - $errors',
+                                  style: const TextStyle(fontSize: 12, color: Color(0xFFEF4444)),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    if (validRows.isNotEmpty) ...[
+                      Text(
+                        'Preview Karyawan Valid ($validCount):',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textHead),
+                      ),
+                      const SizedBox(height: 8),
+                      ...validRows.map((v) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: borderCol.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: borderCol),
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: primaryAccent.withOpacity(0.15),
+                                child: Text(
+                                  (v['nama_lengkap'] ?? '?')[0].toUpperCase(),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: primaryAccent, fontSize: 14),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      v['nama_lengkap'] ?? '',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13.5, color: textHead),
+                                    ),
+                                    Text(
+                                      '${v['nik']} • ${v['nama_dept']} • ${v['nama_jabatan']}',
+                                      style: TextStyle(fontSize: 11.5, color: textSub),
+                                    ),
+                                    Text(
+                                      '${v['email']} | Kuota: ${v['kuota_cuti'] ?? 12} Hari',
+                                      style: TextStyle(fontSize: 11, color: textSub),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ] else ...[
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 30),
+                          child: Text(
+                            'Tidak ada baris valid yang dapat diimport.',
+                            style: TextStyle(color: AppTheme.statusRejected, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              // Bottom Action Button
+              if (validCount > 0)
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF10B981),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    icon: isSubmitting
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Icon(Icons.check_circle_outline, size: 20),
+                    label: Text(
+                      isSubmitting ? 'Menyimpan...' : 'Simpan $validCount Karyawan ke Database',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14.5),
+                    ),
+                    onPressed: isSubmitting
+                        ? null
+                        : () async {
+                            setModalState(() => isSubmitting = true);
+                            final commitRes = await ApiService.commitEmployeeImport(validRows);
+                            setModalState(() => isSubmitting = false);
+
+                            if (!mounted) return;
+                            if (commitRes.success) {
+                              Navigator.pop(modalCtx);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(commitRes.message.isNotEmpty ? commitRes.message : 'Berhasil mengimpor $validCount karyawan!'),
+                                  backgroundColor: const Color(0xFF10B981),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                              _loadEmployees();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(commitRes.message.isNotEmpty ? commitRes.message : 'Gagal menyimpan data import'),
+                                  backgroundColor: AppTheme.statusRejected,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
@@ -242,22 +625,97 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
       appBar: AppBar(
         title: Text('Daftar Karyawan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
         actions: [
-          if (canAdd)
-            IconButton(
-              icon: const Icon(CupertinoIcons.person_add_solid, size: 22),
-              tooltip: 'Tambah Karyawan Baru',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddEmployeeScreen()),
-                ).then((_) => _loadEmployees());
+          if (canAdd) ...[
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              tooltip: 'Opsi Karyawan',
+              onSelected: (val) {
+                if (val == 'add') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AddEmployeeScreen()),
+                  ).then((_) => _loadEmployees());
+                } else if (val == 'import') {
+                  _pickAndImportExcel();
+                } else if (val == 'template') {
+                  _downloadTemplate();
+                }
               },
+              itemBuilder: (ctx) => [
+                const PopupMenuItem(
+                  value: 'add',
+                  child: Row(
+                    children: [
+                      Icon(CupertinoIcons.person_add_solid, size: 18, color: Color(0xFF007AFF)),
+                      SizedBox(width: 10),
+                      Text('Tambah Manual'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'import',
+                  child: Row(
+                    children: [
+                      Icon(Icons.file_upload_outlined, size: 18, color: Color(0xFF10B981)),
+                      SizedBox(width: 10),
+                      Text('Import Data Excel'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'template',
+                  child: Row(
+                    children: [
+                      Icon(Icons.download_rounded, size: 18, color: Color(0xFF6366F1)),
+                      SizedBox(width: 10),
+                      Text('Unduh Template Excel'),
+                    ],
+                  ),
+                ),
+              ],
             ),
+          ],
           const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
+          if (canAdd)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: isDark ? const Color(0xFF1A2234) : Colors.white,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        side: const BorderSide(color: Color(0xFF10B981)),
+                        foregroundColor: const Color(0xFF10B981),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.file_upload_outlined, size: 16),
+                      label: const Text('Import Excel', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                      onPressed: _pickAndImportExcel,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        side: BorderSide(color: primaryAccent),
+                        foregroundColor: primaryAccent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.download_rounded, size: 16),
+                      label: const Text('Template', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+                      onPressed: _downloadTemplate,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Search Box
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),

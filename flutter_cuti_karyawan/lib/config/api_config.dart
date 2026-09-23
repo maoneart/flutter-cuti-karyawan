@@ -42,4 +42,7 @@ class ApiConfig {
   static String get employeeOptions => '$baseUrl/employees/options.php';
   static String get employeeCreate => '$baseUrl/employees/create.php';
   static String get employeesList => '$baseUrl/employees/list.php';
+  static String get employeeTemplate => '$baseUrl/employees/template.php';
+  static String get employeeImportPreview => '$baseUrl/employees/import_preview.php';
+  static String get employeeImportCommit => '$baseUrl/employees/import_commit.php';
 }
