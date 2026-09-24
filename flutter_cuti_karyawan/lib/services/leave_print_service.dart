@@ -1,20 +1,21 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../models/leave_model.dart';
 
 class LeavePrintService {
+  static const pdfBlack = PdfColor.fromInt(0xFF000000);
   static const pdfBluePrimary = PdfColor.fromInt(0xFF1E3A8A);
-  static const pdfBlueHeader = PdfColor.fromInt(0xFFEFF6FF);
-  static const pdfSuccessGreen = PdfColor.fromInt(0xFF15803D);
+  static const pdfSuccessGreen = PdfColor.fromInt(0xFF16A34A);
   static const pdfDangerRed = PdfColor.fromInt(0xFFDC2626);
-  static const pdfWarningAmber = PdfColor.fromInt(0xFFD97706);
-  static const pdfBorderGrey = PdfColor.fromInt(0xFFCBD5E1);
+  static const pdfBorderGrey = PdfColor.fromInt(0xFF000000);
   static const pdfBgLight = PdfColor.fromInt(0xFFF8FAFC);
-  static const pdfTextDark = PdfColor.fromInt(0xFF0F172A);
-  static const pdfTextMuted = PdfColor.fromInt(0xFF475569);
+  static const pdfBgRowAlt = PdfColor.fromInt(0xFFFAFAFA);
+  static const pdfTextDark = PdfColor.fromInt(0xFF111827);
+  static const pdfTextMuted = PdfColor.fromInt(0xFF4B5563);
 
   /// Format tanggal Indonesia
   static String formatTanggalIndo(String? dateStr) {
@@ -31,7 +32,45 @@ class LeavePrintService {
     }
   }
 
-  /// Generate PDF Dokumen Surat Izin Cuti A4
+  /// Format tanggal singkat (dd/mm/yyyy)
+  static String formatTanggalSingkat(String? dateStr) {
+    if (dateStr == null || dateStr.isEmpty) return '-';
+    try {
+      final date = DateTime.parse(dateStr);
+      final d = date.day.toString().padLeft(2, '0');
+      final m = date.month.toString().padLeft(2, '0');
+      return '$d/$m/${date.year}';
+    } catch (_) {
+      return dateStr;
+    }
+  }
+
+  /// Hitung masa kerja karyawan dari tanggal masuk
+  static String hitungMasaKerja(String? tglMasukStr) {
+    if (tglMasukStr == null || tglMasukStr.isEmpty) return '-';
+    try {
+      final tglMasuk = DateTime.parse(tglMasukStr);
+      final now = DateTime.now();
+      int years = now.year - tglMasuk.year;
+      int months = now.month - tglMasuk.month;
+      int days = now.day - tglMasuk.day;
+      if (days < 0) {
+        months -= 1;
+      }
+      if (months < 0) {
+        years -= 1;
+        months += 12;
+      }
+      if (years <= 0 && months <= 0) return 'Kurang dari 1 bulan';
+      if (years <= 0) return '$months Bulan';
+      if (months <= 0) return '$years Tahun';
+      return '$years Thn $months Bln';
+    } catch (_) {
+      return '-';
+    }
+  }
+
+  /// Generate PDF Dokumen Surat Izin Cuti A4 (1:1 Sesuai Versi Web Base)
   static Future<Uint8List> generateLeavePdf(LeaveModel leave, {PdfPageFormat pageFormat = PdfPageFormat.a4}) async {
     final pdf = pw.Document();
 
@@ -41,21 +80,29 @@ class LeavePrintService {
     final formattedStartDate = formatTanggalIndo(leave.tanggalMulai);
     final formattedEndDate = formatTanggalIndo(leave.tanggalSelesai);
     final formattedCreatedDate = formatTanggalIndo(leave.createdAt);
-    final now = DateTime.now();
-    const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    final printDate = '${now.day} ${bulan[now.month - 1]} ${now.year}';
+    final masaKerjaText = hitungMasaKerja(leave.tanggalMasuk);
+
+    // Muat Logo Perusahaan dari Asset
+    pw.MemoryImage? logoImage;
+    try {
+      final byteData = await rootBundle.load('assets/images/Nakakin.png');
+      final bytes = byteData.buffer.asUint8List();
+      logoImage = pw.MemoryImage(bytes);
+    } catch (_) {
+      logoImage = null;
+    }
 
     pdf.addPage(
       pw.Page(
         pageFormat: pageFormat,
-        margin: const pw.EdgeInsets.all(36),
+        margin: const pw.EdgeInsets.symmetric(horizontal: 36, vertical: 28),
         build: (pw.Context context) {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              // 1. KOP SURAT PERUSAHAAN
+              // 1. KOP SURAT PERUSAHAAN (Teks Kiri, Logo Kanan)
               pw.Row(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                crossAxisAlignment: pw.CrossAxisAlignment.center,
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Expanded(
@@ -66,8 +113,9 @@ class LeavePrintService {
                           'PT. NAKAKIN INDONESIA',
                           style: pw.TextStyle(
                             fontWeight: pw.FontWeight.bold,
-                            fontSize: 15,
-                            color: pdfBluePrimary,
+                            fontSize: 16,
+                            color: pdfBlack,
+                            letterSpacing: 0.5,
                           ),
                         ),
                         pw.SizedBox(height: 2),
@@ -76,45 +124,36 @@ class LeavePrintService {
                           style: pw.TextStyle(
                             fontWeight: pw.FontWeight.bold,
                             fontSize: 8.5,
-                            color: pdfTextDark,
+                            color: pdfBlack,
                           ),
                         ),
                         pw.SizedBox(height: 2),
                         pw.Text(
                           'Kawasan Industri KIIC, Jl. Maligi VI Lot L-4, Telukjambe Barat, Karawang 41361',
-                          style: const pw.TextStyle(fontSize: 8, color: pdfTextMuted),
+                          style: const pw.TextStyle(fontSize: 8, color: pdfTextDark),
                         ),
                         pw.Text(
                           'Telp: (0267) 863-1234 • Email: hrd@nakakin.co.id • Website: www.nakakin.co.id',
-                          style: const pw.TextStyle(fontSize: 8, color: pdfTextMuted),
+                          style: const pw.TextStyle(fontSize: 8, color: pdfTextDark),
                         ),
                       ],
                     ),
                   ),
-                  pw.Container(
-                    padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: pdfBluePrimary, width: 1.5),
-                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  if (logoImage != null)
+                    pw.Container(
+                      width: 90,
+                      height: 52,
+                      child: pw.Image(logoImage, fit: pw.BoxFit.contain),
                     ),
-                    child: pw.Text(
-                      'NAKAKIN',
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 13,
-                        color: pdfBluePrimary,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                  ),
                 ],
               ),
               pw.SizedBox(height: 6),
-              // Double divider lines
-              pw.Container(height: 2, color: pdfBluePrimary),
-              pw.SizedBox(height: 1.5),
-              pw.Container(height: 0.75, color: pdfBluePrimary),
-              pw.SizedBox(height: 12),
+
+              // Garis Ganda Pembatas Kop Surat (Double Border Style)
+              pw.Container(height: 1.8, color: pdfBlack),
+              pw.SizedBox(height: 1.2),
+              pw.Container(height: 0.6, color: pdfBlack),
+              pw.SizedBox(height: 14),
 
               // 2. JUDUL DOKUMEN & NOMOR SURAT
               pw.Center(
@@ -125,113 +164,164 @@ class LeavePrintService {
                       style: pw.TextStyle(
                         fontWeight: pw.FontWeight.bold,
                         fontSize: 13,
-                        color: pdfTextDark,
                         decoration: pw.TextDecoration.underline,
                       ),
                     ),
                     pw.SizedBox(height: 3),
                     pw.Text(
-                      'Nomor: ${leave.nomorSurat.isNotEmpty ? leave.nomorSurat : "-"}',
-                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9.5, color: pdfTextMuted),
+                      'Nomor: ${leave.nomorSurat}',
+                      style: const pw.TextStyle(fontSize: 9.5, color: pdfTextDark),
                     ),
                   ],
                 ),
               ),
               pw.SizedBox(height: 12),
 
+              // Kalimat Pembuka
               pw.Text(
                 'Yang bertanda tangan di bawah ini, menerangkan bahwa karyawan:',
-                style: const pw.TextStyle(fontSize: 9),
+                style: const pw.TextStyle(fontSize: 8.5, color: pdfTextDark),
               ),
               pw.SizedBox(height: 6),
 
-              // 3. TABEL IDENTITAS KARYAWAN
-              pw.Container(
-                padding: const pw.EdgeInsets.all(8),
-                decoration: pw.BoxDecoration(
-                  color: pdfBgLight,
-                  border: pw.Border.all(color: pdfBorderGrey),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
-                ),
-                child: pw.Table(
-                  columnWidths: {
-                    0: const pw.FlexColumnWidth(2.5),
-                    1: const pw.FlexColumnWidth(0.3),
-                    2: const pw.FlexColumnWidth(4.5),
-                    3: const pw.FlexColumnWidth(2.2),
-                    4: const pw.FlexColumnWidth(0.3),
-                    5: const pw.FlexColumnWidth(3.5),
-                  },
-                  children: [
-                    pw.TableRow(
-                      children: [
-                        pw.Text('Nama Lengkap', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                        pw.Text(':', style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text(leave.namaLengkap ?? '-', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5, color: pdfBluePrimary)),
-                        pw.Text('Departemen', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                        pw.Text(':', style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text(leave.namaDept ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
-                      ],
-                    ),
-                    pw.TableRow(
-                      children: [
-                        pw.Text('N I K', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                        pw.Text(':', style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text(leave.nik ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text('Jabatan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                        pw.Text(':', style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text(leave.namaJabatan ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
-                      ],
-                    ),
-                    pw.TableRow(
-                      children: [
-                        pw.Text('Tgl Pengajuan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                        pw.Text(':', style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text(formattedCreatedDate, style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text('No. Handphone / WA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
-                        pw.Text(':', style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text((leave.noHp?.isNotEmpty == true ? leave.noHp : leave.kontakDarurat) ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              pw.SizedBox(height: 10),
-
-              pw.Text(
-                'Mengajukan permohonan izin cuti kerja dengan rincian data sebagai berikut:',
-                style: const pw.TextStyle(fontSize: 9),
-              ),
-              pw.SizedBox(height: 6),
-
-              // 4. TABEL DETAIL PERMOHONAN CUTI
+              // 3. TABEL DATA KARYAWAN (2 Kolom Data)
               pw.Table(
-                border: pw.TableBorder.all(color: pdfBorderGrey, width: 0.8),
                 columnWidths: {
-                  0: const pw.FlexColumnWidth(2.5),
-                  1: const pw.FlexColumnWidth(3.5),
-                  2: const pw.FlexColumnWidth(1.8),
-                  3: const pw.FlexColumnWidth(4.2),
+                  0: const pw.FlexColumnWidth(2.3),
+                  1: const pw.FlexColumnWidth(0.2),
+                  2: const pw.FlexColumnWidth(3.8),
+                  3: const pw.FlexColumnWidth(2.0),
+                  4: const pw.FlexColumnWidth(0.2),
+                  5: const pw.FlexColumnWidth(3.0),
                 },
                 children: [
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: pdfBlueHeader),
                     children: [
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Jenis Cuti', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5, color: pdfBluePrimary)),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('Nama Lengkap', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 2), child: pw.Text(':', style: const pw.TextStyle(fontSize: 8.5))),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text(leave.namaLengkap ?? '-', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                       ),
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Periode Tanggal Cuti', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5, color: pdfBluePrimary), textAlign: pw.TextAlign.center),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('Tanggal Masuk', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 2), child: pw.Text(':', style: const pw.TextStyle(fontSize: 8.5))),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text(formatTanggalIndo(leave.tanggalMasuk), style: const pw.TextStyle(fontSize: 8.5)),
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('N I K', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 2), child: pw.Text(':', style: const pw.TextStyle(fontSize: 8.5))),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text(leave.nik ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
                       ),
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Jumlah Hari', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5, color: pdfBluePrimary), textAlign: pw.TextAlign.center),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('Masa Kerja', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 2), child: pw.Text(':', style: const pw.TextStyle(fontSize: 8.5))),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text(masaKerjaText, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('Departemen / Bagian', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 2), child: pw.Text(':', style: const pw.TextStyle(fontSize: 8.5))),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('${leave.namaDept ?? "-"} (${leave.kodeCuti ?? "-"})', style: const pw.TextStyle(fontSize: 8.5)),
                       ),
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Alasan / Keperluan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5, color: pdfBluePrimary)),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('Sisa Hak Cuti', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 2), child: pw.Text(':', style: const pw.TextStyle(fontSize: 8.5))),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('${leave.sisaCuti ?? 12} Hari', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                    ],
+                  ),
+                  pw.TableRow(
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('Jabatan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 2), child: pw.Text(':', style: const pw.TextStyle(fontSize: 8.5))),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text(leave.namaJabatan ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text('No. Handphone / WA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                      ),
+                      pw.Padding(padding: const pw.EdgeInsets.symmetric(vertical: 2), child: pw.Text(':', style: const pw.TextStyle(fontSize: 8.5))),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Text((leave.noHp?.isNotEmpty == true ? leave.noHp : leave.kontakDarurat) ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 10),
+
+              // Kalimat Pengantar Detail Cuti
+              pw.Text(
+                'Mengajukan permohonan izin cuti dengan rincian sebagai berikut:',
+                style: const pw.TextStyle(fontSize: 8.5, color: pdfTextDark),
+              ),
+              pw.SizedBox(height: 6),
+
+              // 4. TABEL DETAIL PERMOHONAN CUTI (Sama Persis Web Base)
+              pw.Table(
+                border: pw.TableBorder.all(color: pdfBlack, width: 0.7),
+                columnWidths: {
+                  0: const pw.FlexColumnWidth(2.5),
+                  1: const pw.FlexColumnWidth(2.8),
+                  2: const pw.FlexColumnWidth(1.5),
+                  3: const pw.FlexColumnWidth(3.2),
+                },
+                children: [
+                  pw.TableRow(
+                    decoration: const pw.BoxDecoration(color: pdfBgLight),
+                    children: [
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text('Jenis Cuti', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5), textAlign: pw.TextAlign.center),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text('Periode Tanggal Cuti', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5), textAlign: pw.TextAlign.center),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text('Jumlah Hari', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5), textAlign: pw.TextAlign.center),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(5),
+                        child: pw.Text('Alasan / Keperluan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5), textAlign: pw.TextAlign.center),
                       ),
                     ],
                   ),
@@ -253,7 +343,7 @@ class LeavePrintService {
                         padding: const pw.EdgeInsets.all(6),
                         child: pw.Text(
                           '${leave.totalHari} Hari Kerja',
-                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5, color: pdfBluePrimary),
+                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
                           textAlign: pw.TextAlign.center,
                         ),
                       ),
@@ -268,71 +358,65 @@ class LeavePrintService {
                   ),
                   pw.TableRow(
                     children: [
-                      pw.Padding(
+                      pw.Container(
+                        color: pdfBgRowAlt,
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Alamat Selama Cuti', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-                      ),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text(
-                          '${(leave.alamatSelamaCuti != null && leave.alamatSelamaCuti!.isNotEmpty) ? leave.alamatSelamaCuti! : (leave.alamat ?? "Di alamat tempat tinggal terdaftar")}'
-                          '${(leave.kontakDarurat != null && leave.kontakDarurat!.isNotEmpty) ? " (Darurat: ${leave.kontakDarurat})" : ""}',
-                          style: const pw.TextStyle(fontSize: 8),
-                        ),
-                      ),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Status Approval', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-                      ),
-                      pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text(
-                          isApproved ? 'DISETUJUI (APPROVED)' : (isRejected ? 'DITOLAK (REJECTED)' : 'PROSES REVIEW (PENDING)'),
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 8,
-                            color: isApproved ? pdfSuccessGreen : (isRejected ? pdfDangerRed : pdfWarningAmber),
-                          ),
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            pw.RichText(
+                              text: pw.TextSpan(
+                                children: [
+                                  pw.TextSpan(
+                                    text: 'Alamat / Kontak Selama Cuti: ',
+                                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5, color: pdfBlack),
+                                  ),
+                                  pw.TextSpan(
+                                    text: '${(leave.alamatSelamaCuti != null && leave.alamatSelamaCuti!.isNotEmpty) ? leave.alamatSelamaCuti! : (leave.alamat ?? "Di alamat tempat tinggal terdaftar")} (Kontak Darurat: ${(leave.kontakDarurat != null && leave.kontakDarurat!.isNotEmpty) ? leave.kontakDarurat! : (leave.noHp ?? "-")})',
+                                    style: const pw.TextStyle(fontSize: 7.5, color: pdfTextDark),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-              pw.SizedBox(height: 10),
+              pw.SizedBox(height: 8),
 
-              // 5. CATATAN / KEPUTUSAN ATASAN
+              // 5. KOTAK KEPUTUSAN & CATATAN ATASAN
               pw.Container(
                 width: double.infinity,
-                padding: const pw.EdgeInsets.all(7),
+                padding: const pw.EdgeInsets.all(6),
                 decoration: pw.BoxDecoration(
                   color: pdfBgLight,
-                  border: pw.Border.all(color: pdfBorderGrey),
-                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  border: pw.Border.all(color: const PdfColor.fromInt(0xFFE2E8F0), width: 0.8),
                 ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('Catatan & Keputusan Atasan:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-                    pw.SizedBox(height: 2),
-                    pw.Text(
-                      (leave.catatanAtasan != null && leave.catatanAtasan!.isNotEmpty)
-                          ? leave.catatanAtasan!
-                          : (isApproved
-                              ? 'Disetujui sesuai dengan ketentuan dan prosedur ketenagakerjaan PT. Nakakin Indonesia.'
-                              : (isRejected
-                                  ? 'Pengajuan tidak dapat disetujui: ${leave.rejectionReason ?? "Kebutuhan operasional pabrik."}'
-                                  : 'Sedang dalam proses peninjauan persetujuan hierarki atasan.')),
-                      style: const pw.TextStyle(fontStyle: pw.FontStyle.italic, fontSize: 7.5, color: pdfTextDark),
-                    ),
-                  ],
+                child: pw.RichText(
+                  text: pw.TextSpan(
+                    children: [
+                      pw.TextSpan(
+                        text: 'Catatan & Keputusan: ',
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5, color: pdfBlack),
+                      ),
+                      pw.TextSpan(
+                        text: leave.catatanAtasan?.isNotEmpty == true
+                            ? leave.catatanAtasan!
+                            : 'Disetujui sesuai dengan ketentuan dan prosedur operasional PT. Nakakin Indonesia.',
+                        style: const pw.TextStyle(fontSize: 7.5, color: pdfTextDark),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              pw.SizedBox(height: 18),
+              pw.SizedBox(height: 14),
 
-              // 6. LEMBAR TANDA TANGAN (4 KOLOM APPROVAL)
+              // 6. LEMBAR TANDA TANGAN (4 KOLOM APPROVAL BERIKAN BORDER HITAM 1:1 SESUAI WEB BASE)
               pw.Table(
-                border: pw.TableBorder.all(color: pdfBorderGrey, width: 0.6),
+                border: pw.TableBorder.all(color: pdfBlack, width: 0.7),
                 columnWidths: {
                   0: const pw.FlexColumnWidth(1),
                   1: const pw.FlexColumnWidth(1),
@@ -345,25 +429,25 @@ class LeavePrintService {
                     decoration: const pw.BoxDecoration(color: pdfBgLight),
                     children: [
                       pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                         child: pw.Center(
                           child: pw.Text('1. Operator / Karyawan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
                         ),
                       ),
                       pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                         child: pw.Center(
                           child: pw.Text('2. Leader / Supervisor', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
                         ),
                       ),
                       pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                         child: pw.Center(
                           child: pw.Text('3. Manager', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
                         ),
                       ),
                       pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 2),
                         child: pw.Center(
                           child: pw.Text('4. HRD', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
                         ),
@@ -375,29 +459,29 @@ class LeavePrintService {
                     children: [
                       // 1. Kolom Pemohon
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
                           children: [
-                            pw.Text('Karawang, $formattedCreatedDate', style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted)),
-                            pw.SizedBox(height: 8),
+                            pw.Text('Karawang, ${formatTanggalSingkat(leave.createdAt)}', style: const pw.TextStyle(fontSize: 6.5, color: pdfTextDark)),
+                            pw.SizedBox(height: 6),
                             pw.Container(
                               padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                               decoration: pw.BoxDecoration(
-                                border: pw.Border.all(color: pdfBluePrimary, width: 0.8),
-                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2.5)),
+                                border: pw.Border.all(color: pdfSuccessGreen, width: 1),
+                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
                               ),
                               child: pw.Text(
                                 'DIGITAL SIGNED',
-                                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfBluePrimary),
+                                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfSuccessGreen),
                               ),
                             ),
-                            pw.SizedBox(height: 8),
+                            pw.SizedBox(height: 6),
                             pw.Text('( ${leave.namaLengkap ?? "Pemohon"} )', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7), textAlign: pw.TextAlign.center),
                             pw.SizedBox(height: 1),
                             pw.Text(
-                              '${leave.namaJabatan ?? "Karyawan"}${leave.namaDept != null ? " (${leave.namaDept})" : ""}',
-                              style: const pw.TextStyle(fontSize: 6, color: pdfTextMuted),
+                              '${leave.namaJabatan ?? "Karyawan"} ${leave.namaDept ?? ""}',
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextDark),
                               textAlign: pw.TextAlign.center,
                             ),
                           ],
@@ -406,46 +490,60 @@ class LeavePrintService {
 
                       // 2. Kolom Leader / Supervisor
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
                           children: [
                             pw.Text(
-                              leave.spvAt != null ? formatTanggalIndo(leave.spvAt) : '-',
-                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
+                              leave.spvAt != null ? formatTanggalSingkat(leave.spvAt) : '-',
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextDark),
                             ),
-                            pw.SizedBox(height: 8),
-                            pw.Container(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                              decoration: pw.BoxDecoration(
-                                border: pw.Border.all(
-                                  color: leave.spvId != null
-                                      ? pdfSuccessGreen
-                                      : (leave.employeeLevel >= 3
-                                          ? pdfBorderGrey
-                                          : (isRejected && leave.spvId == null ? pdfDangerRed : pdfBorderGrey)),
-                                  width: 0.8,
+                            pw.SizedBox(height: 6),
+                            if (leave.spvId != null)
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                decoration: pw.BoxDecoration(
+                                  border: pw.Border.all(color: pdfSuccessGreen, width: 1),
+                                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
                                 ),
-                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2.5)),
-                              ),
-                              child: pw.Text(
-                                leave.spvId != null
-                                    ? 'APPROVED'
-                                    : (leave.employeeLevel >= 3
-                                        ? 'BYPASS'
-                                        : (isRejected && leave.spvId == null ? 'REJECTED' : 'MENUNGGU')),
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 6.5,
-                                  color: leave.spvId != null
-                                      ? pdfSuccessGreen
-                                      : (leave.employeeLevel >= 3
-                                          ? pdfTextMuted
-                                          : (isRejected && leave.spvId == null ? pdfDangerRed : pdfTextMuted)),
+                                child: pw.Text(
+                                  'APPROVED',
+                                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfSuccessGreen),
+                                ),
+                              )
+                            else if (leave.employeeLevel >= 3)
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                decoration: pw.BoxDecoration(
+                                  border: pw.Border.all(color: pdfTextMuted, width: 1),
+                                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
+                                ),
+                                child: pw.Text(
+                                  'BYPASS',
+                                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfTextMuted),
+                                ),
+                              )
+                            else if (isRejected && leave.spvId == null)
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                decoration: pw.BoxDecoration(
+                                  border: pw.Border.all(color: pdfDangerRed, width: 1),
+                                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
+                                ),
+                                child: pw.Text(
+                                  'REJECTED',
+                                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfDangerRed),
+                                ),
+                              )
+                            else
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                                child: pw.Text(
+                                  '(Menunggu Approval)',
+                                  style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted, fontStyle: pw.FontStyle.italic),
                                 ),
                               ),
-                            ),
-                            pw.SizedBox(height: 8),
+                            pw.SizedBox(height: 6),
                             pw.Text(
                               '( ${leave.spvId != null ? (leave.spvName ?? "Leader / Spv") : (leave.employeeLevel >= 3 ? "-" : "...................")} )',
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7),
@@ -456,7 +554,7 @@ class LeavePrintService {
                               leave.spvId != null
                                   ? '${leave.spvJabatan ?? "Leader / Supervisor"}${leave.spvDept != null ? " (${leave.spvDept})" : ""}'
                                   : 'Leader / Supervisor',
-                              style: const pw.TextStyle(fontSize: 6, color: pdfTextMuted),
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextDark),
                               textAlign: pw.TextAlign.center,
                             ),
                           ],
@@ -465,46 +563,60 @@ class LeavePrintService {
 
                       // 3. Kolom Manager
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
                           children: [
                             pw.Text(
-                              leave.managerAt != null ? formatTanggalIndo(leave.managerAt) : '-',
-                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
+                              leave.managerAt != null ? formatTanggalSingkat(leave.managerAt) : '-',
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextDark),
                             ),
-                            pw.SizedBox(height: 8),
-                            pw.Container(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                              decoration: pw.BoxDecoration(
-                                border: pw.Border.all(
-                                  color: leave.managerId != null
-                                      ? pdfSuccessGreen
-                                      : (leave.employeeLevel >= 6
-                                          ? pdfBorderGrey
-                                          : (isRejected && leave.spvId != null && leave.managerId == null ? pdfDangerRed : pdfBorderGrey)),
-                                  width: 0.8,
+                            pw.SizedBox(height: 6),
+                            if (leave.managerId != null)
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                decoration: pw.BoxDecoration(
+                                  border: pw.Border.all(color: pdfSuccessGreen, width: 1),
+                                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
                                 ),
-                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2.5)),
-                              ),
-                              child: pw.Text(
-                                leave.managerId != null
-                                    ? 'APPROVED'
-                                    : (leave.employeeLevel >= 6
-                                        ? 'BYPASS'
-                                        : (isRejected && leave.spvId != null && leave.managerId == null ? 'REJECTED' : 'MENUNGGU')),
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 6.5,
-                                  color: leave.managerId != null
-                                      ? pdfSuccessGreen
-                                      : (leave.employeeLevel >= 6
-                                          ? pdfTextMuted
-                                          : (isRejected && leave.spvId != null && leave.managerId == null ? pdfDangerRed : pdfTextMuted)),
+                                child: pw.Text(
+                                  'APPROVED',
+                                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfSuccessGreen),
+                                ),
+                              )
+                            else if (leave.employeeLevel >= 6)
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                decoration: pw.BoxDecoration(
+                                  border: pw.Border.all(color: pdfTextMuted, width: 1),
+                                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
+                                ),
+                                child: pw.Text(
+                                  'BYPASS',
+                                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfTextMuted),
+                                ),
+                              )
+                            else if (isRejected && leave.spvId != null && leave.managerId == null)
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                decoration: pw.BoxDecoration(
+                                  border: pw.Border.all(color: pdfDangerRed, width: 1),
+                                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
+                                ),
+                                child: pw.Text(
+                                  'REJECTED',
+                                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfDangerRed),
+                                ),
+                              )
+                            else
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                                child: pw.Text(
+                                  '(Menunggu Approval)',
+                                  style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted, fontStyle: pw.FontStyle.italic),
                                 ),
                               ),
-                            ),
-                            pw.SizedBox(height: 8),
+                            pw.SizedBox(height: 6),
                             pw.Text(
                               '( ${leave.managerId != null ? (leave.managerName ?? "Manager") : (leave.employeeLevel >= 6 ? "-" : "...................")} )',
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7),
@@ -514,8 +626,8 @@ class LeavePrintService {
                             pw.Text(
                               leave.managerId != null
                                   ? (leave.managerJabatan ?? "Department Manager")
-                                  : 'Plant / Dept Manager',
-                              style: const pw.TextStyle(fontSize: 6, color: pdfTextMuted),
+                                  : 'Department / Plant Manager',
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextDark),
                               textAlign: pw.TextAlign.center,
                             ),
                           ],
@@ -524,51 +636,59 @@ class LeavePrintService {
 
                       // 4. Kolom HRD
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(6),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
                           children: [
                             pw.Text(
                               (isApproved && (leave.hrdAt != null || leave.approvedAt != null))
-                                  ? formatTanggalIndo(leave.hrdAt ?? leave.approvedAt)
+                                  ? formatTanggalSingkat(leave.hrdAt ?? leave.approvedAt)
                                   : '-',
-                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextDark),
                             ),
-                            pw.SizedBox(height: 8),
-                            pw.Container(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                              decoration: pw.BoxDecoration(
-                                border: pw.Border.all(
-                                  color: isApproved
-                                      ? pdfBluePrimary
-                                      : (isRejected && (leave.managerId != null || leave.employeeLevel >= 5) ? pdfDangerRed : pdfBorderGrey),
-                                  width: 0.8,
+                            pw.SizedBox(height: 6),
+                            if (isApproved)
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                decoration: pw.BoxDecoration(
+                                  border: pw.Border.all(color: pdfBluePrimary, width: 1),
+                                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
                                 ),
-                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2.5)),
-                              ),
-                              child: pw.Text(
-                                isApproved
-                                    ? 'VERIFIED HRD'
-                                    : (isRejected && (leave.managerId != null || leave.employeeLevel >= 5) ? 'REJECTED' : 'MENUNGGU'),
-                                style: pw.TextStyle(
-                                  fontWeight: pw.FontWeight.bold,
-                                  fontSize: 6.5,
-                                  color: isApproved
-                                      ? pdfBluePrimary
-                                      : (isRejected && (leave.managerId != null || leave.employeeLevel >= 5) ? pdfDangerRed : pdfTextMuted),
+                                child: pw.Text(
+                                  'VERIFIED HRD',
+                                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfBluePrimary),
+                                ),
+                              )
+                            else if (isRejected && (leave.managerId != null || leave.employeeLevel >= 5))
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                                decoration: pw.BoxDecoration(
+                                  border: pw.Border.all(color: pdfDangerRed, width: 1),
+                                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2)),
+                                ),
+                                child: pw.Text(
+                                  'REJECTED',
+                                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfDangerRed),
+                                ),
+                              )
+                            else
+                              pw.Padding(
+                                padding: const pw.EdgeInsets.symmetric(vertical: 3),
+                                child: pw.Text(
+                                  '(Menunggu Approval)',
+                                  style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted, fontStyle: pw.FontStyle.italic),
                                 ),
                               ),
-                            ),
-                            pw.SizedBox(height: 8),
+                            pw.SizedBox(height: 6),
                             pw.Text(
-                              '( ${isApproved ? (leave.hrdName ?? leave.approverName ?? "HRD Department") : "..................."} )',
+                              '( ${isApproved ? (leave.hrdName ?? leave.approverName ?? "Siti Rahmawati, S.Psi") : "..................."} )',
                               style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7),
                               textAlign: pw.TextAlign.center,
                             ),
                             pw.SizedBox(height: 1),
                             pw.Text(
-                              isApproved ? (leave.hrdJabatan ?? "HRD & GA Manager") : "HRD Department",
-                              style: const pw.TextStyle(fontSize: 6, color: pdfTextMuted),
+                              isApproved ? (leave.hrdJabatan ?? "HRD & GA Manager") : "HRD",
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextDark),
                               textAlign: pw.TextAlign.center,
                             ),
                           ],
@@ -580,24 +700,18 @@ class LeavePrintService {
               ),
               pw.Spacer(),
 
-              // 7. FOOTER ELEKTRONIK
+              // 7. FOOTER RESMI DOKUMEN ELEKTRONIK (Garis Putus-putus)
               pw.Container(
-                padding: const pw.EdgeInsets.only(top: 8),
+                padding: const pw.EdgeInsets.only(top: 6),
                 decoration: const pw.BoxDecoration(
-                  border: pw.Border(top: pw.BorderSide(color: pdfBorderGrey, width: 0.5)),
+                  border: pw.Border(top: pw.BorderSide(color: PdfColor.fromInt(0xFFCCCCCC), width: 0.6, style: pw.BorderStyle.dashed)),
                 ),
-                child: pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'Dicetak melalui Aplikasi E-Cuti PT. Nakakin Indonesia pada $printDate',
-                      style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
-                    ),
-                    pw.Text(
-                      'Dokumen elektronik sah tanpa tanda tangan basah.',
-                      style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
-                    ),
-                  ],
+                child: pw.Center(
+                  child: pw.Text(
+                    'Dokumen ini diterbitkan secara elektronik oleh Aplikasi E-Cuti PT. Nakakin Indonesia • Sah tanpa tanda tangan basah berdasarkan verifikasi sistem.',
+                    style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
+                    textAlign: pw.TextAlign.center,
+                  ),
                 ),
               ),
             ],
