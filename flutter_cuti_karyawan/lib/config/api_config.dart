@@ -48,4 +48,9 @@ class ApiConfig {
   static String get employeeTemplate => '$baseUrl/employees/template.php';
   static String get employeeImportPreview => '$baseUrl/employees/import_preview.php';
   static String get employeeImportCommit => '$baseUrl/employees/import_commit.php';
+
+  static String get quotasList => '$baseUrl/quotas/list.php';
+  static String get quotaAdjust => '$baseUrl/quotas/adjust.php';
+  static String get quotaBulk => '$baseUrl/quotas/bulk.php';
+  static String get quotaLogs => '$baseUrl/quotas/logs.php';
 }

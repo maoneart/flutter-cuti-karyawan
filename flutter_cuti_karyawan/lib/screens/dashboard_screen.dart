@@ -11,6 +11,7 @@ import 'public_board_screen.dart';
 import 'add_employee_screen.dart';
 import 'employee_list_screen.dart';
 import 'manage_leaves_screen.dart';
+import 'manage_quota_screen.dart';
 import 'about_screen.dart';
 import 'user_guide_screen.dart';
 
@@ -343,7 +344,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (_) => const ManageLeavesScreen()),
+                                      MaterialPageRoute(builder: (_) => const ManageQuotaScreen()),
                                     ).then((_) => _loadStats());
                                   },
                                   borderRadius: BorderRadius.circular(16),
@@ -368,7 +369,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     child: const Row(
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        Icon(CupertinoIcons.doc_text_fill, color: Colors.white, size: 22),
+                                        Icon(CupertinoIcons.slider_horizontal_3, color: Colors.white, size: 22),
                                         SizedBox(width: 10),
                                         Expanded(
                                           child: Column(
@@ -376,7 +377,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'Kelola Data Cuti',
+                                                'Kelola Jatah Cuti',
                                                 style: TextStyle(
                                                   color: Colors.white,
                                                   fontWeight: FontWeight.bold,
@@ -387,7 +388,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                               ),
                                               SizedBox(height: 2),
                                               Text(
-                                                'Kelola Seluruh Cuti',
+                                                'Alokasi Kuota Pegawai',
                                                 style: TextStyle(color: Colors.white70, fontSize: 11),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,

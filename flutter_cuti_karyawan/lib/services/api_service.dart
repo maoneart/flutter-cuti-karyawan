@@ -658,5 +658,129 @@ class ApiService {
       return ApiResponse(success: false, message: 'Gagal menghapus data karyawan');
     }
   }
+
+  /// 22. Get Quotas List & Summary
+  static Future<ApiResponse<Map<String, dynamic>>> getQuotasList({
+    int? deptId,
+    String search = '',
+  }) async {
+    try {
+      final uri = Uri.parse(ApiConfig.quotasList).replace(queryParameters: {
+        if (deptId != null && deptId > 0) 'dept_id': deptId.toString(),
+        if (search.isNotEmpty) 'search': search,
+      });
+
+      final response = await http.get(uri, headers: _getHeaders()).timeout(timeoutDuration);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: 'Sukses',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      } else {
+        return ApiResponse(success: false, message: body['message'] ?? 'Gagal memuat data jatah kuota');
+      }
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal menghubungi server');
+    }
+  }
+
+  /// 23. Adjust Individual Employee Quota
+  static Future<ApiResponse<Map<String, dynamic>>> adjustQuota({
+    required int employeeId,
+    required String mode,
+    int? totalKuota,
+    int? delta,
+    required String keterangan,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.quotaAdjust),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'employee_id': employeeId,
+              'mode': mode,
+              if (totalKuota != null) 'total_kuota': totalKuota,
+              if (delta != null) 'delta': delta,
+              'keterangan': keterangan,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? 'Penyesuaian kuota diproses',
+        data: body['data'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal memproses penyesuaian kuota');
+    }
+  }
+
+  /// 24. Bulk Quota Allocation
+  static Future<ApiResponse<Map<String, dynamic>>> bulkAllocateQuota({
+    required String targetScope,
+    int targetId = 0,
+    required String batchAction,
+    required int quotaAmount,
+    required String keterangan,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.quotaBulk),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'target_scope': targetScope,
+              'target_id': targetId,
+              'batch_action': batchAction,
+              'quota_amount': quotaAmount,
+              'keterangan': keterangan,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? 'Alokasi massal diproses',
+        data: body['data'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal memproses alokasi massal');
+    }
+  }
+
+  /// 25. Get Quota Mutation Logs
+  static Future<ApiResponse<List<dynamic>>> getQuotaLogs({
+    int? employeeId,
+    int limit = 50,
+  }) async {
+    try {
+      final uri = Uri.parse(ApiConfig.quotaLogs).replace(queryParameters: {
+        if (employeeId != null && employeeId > 0) 'employee_id': employeeId.toString(),
+        'limit': limit.toString(),
+      });
+
+      final response = await http.get(uri, headers: _getHeaders()).timeout(timeoutDuration);
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        return ApiResponse(
+          success: true,
+          message: 'Sukses',
+          data: body['data'] as List<dynamic>?,
+        );
+      } else {
+        return ApiResponse(success: false, message: body['message'] ?? 'Gagal memuat riwayat mutasi kuota');
+      }
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal memuat riwayat mutasi kuota');
+    }
+  }
 }
 
