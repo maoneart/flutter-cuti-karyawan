@@ -20,3 +20,7 @@ assets/uploads/leaves/*
 
 # Secrets
 .env
+
+# Scratch scripts
+scratch/
+

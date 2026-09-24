@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   await AuthService.setCustomBaseUrl(newUrl);
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Server diatur ke: \')),
+                      SnackBar(content: Text('Server diatur ke: $newUrl')),
                     );
                   }
                 }
