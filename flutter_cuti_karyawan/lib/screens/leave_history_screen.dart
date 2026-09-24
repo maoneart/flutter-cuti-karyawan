@@ -5,6 +5,7 @@ import '../models/leave_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'leave_detail_screen.dart';
+import 'leave_print_preview_screen.dart';
 
 class LeaveHistoryScreen extends StatefulWidget {
   const LeaveHistoryScreen({super.key});
@@ -443,6 +444,38 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
+                                        const SizedBox(height: 10),
+                                        Divider(height: 1, thickness: 0.8, color: borderCol),
+                                        const SizedBox(height: 6),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'Ketuk untuk lihat detail',
+                                              style: TextStyle(fontSize: 11.5, color: textSub.withOpacity(0.8)),
+                                            ),
+                                            TextButton.icon(
+                                              style: TextButton.styleFrom(
+                                                foregroundColor: const Color(0xFF0284C7),
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                visualDensity: VisualDensity.compact,
+                                              ),
+                                              icon: const Icon(CupertinoIcons.printer_fill, size: 14),
+                                              label: const Text(
+                                                'Cetak Surat',
+                                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                              ),
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (_) => LeavePrintPreviewScreen(leave: leave),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -456,3 +489,4 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
     );
   }
 }
+

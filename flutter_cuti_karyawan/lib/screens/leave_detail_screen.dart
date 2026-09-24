@@ -5,6 +5,8 @@ import '../models/leave_model.dart';
 import '../models/user_model.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import 'leave_print_preview_screen.dart';
+import '../services/leave_print_service.dart';
 
 class LeaveDetailScreen extends StatefulWidget {
   final int leaveId;
@@ -686,6 +688,22 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
             fontSize: 17,
           ),
         ),
+        actions: [
+          if (_leave != null)
+            IconButton(
+              icon: const Icon(CupertinoIcons.printer_fill, color: Color(0xFF007AFF), size: 22),
+              tooltip: 'Cetak Surat Cuti',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => LeavePrintPreviewScreen(leave: _leave!),
+                  ),
+                );
+              },
+            ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CupertinoActivityIndicator(radius: 14))
@@ -769,6 +787,31 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                                 ],
                               ],
                             ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Tombol Cetak Surat Cuti
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0284C7),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              elevation: 2,
+                            ),
+                            icon: const Icon(CupertinoIcons.printer_fill, size: 20),
+                            label: const Text(
+                              'Cetak Surat Cuti',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => LeavePrintPreviewScreen(leave: _leave!),
+                                ),
+                              );
+                            },
                           ),
                           const SizedBox(height: 20),
 
@@ -940,3 +983,4 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
     );
   }
 }
+
