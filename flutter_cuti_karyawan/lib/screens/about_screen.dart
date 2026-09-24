@@ -1,36 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import '../config/app_theme.dart';
 
-class AboutScreen extends StatefulWidget {
+class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
-  @override
-  State<AboutScreen> createState() => _AboutScreenState();
-}
-
-class _AboutScreenState extends State<AboutScreen> {
-  String _version = '1.0.0';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPackageInfo();
-  }
-
-  Future<void> _loadPackageInfo() async {
-    try {
-      final info = await PackageInfo.fromPlatform();
-      if (mounted && info.version.isNotEmpty) {
-        setState(() {
-          _version = info.version;
-        });
-      }
-    } catch (_) {
-      // Fallback default
-    }
-  }
+  static const String appVersion = '1.0.0';
+  static const String appName = 'Employee Leave';
+  static const String developer = 'MaoneArt';
+  static const String copyright = '© 2026 MaoneArt';
 
   @override
   Widget build(BuildContext context) {
@@ -104,7 +82,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
                   // App Name
                   Text(
-                    'Employee Leave',
+                    appName,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w800,
@@ -146,7 +124,7 @@ class _AboutScreenState extends State<AboutScreen> {
                           icon: CupertinoIcons.app_badge_fill,
                           iconColor: const Color(0xFF0284C7),
                           label: 'Nama Aplikasi',
-                          value: 'Employee Leave',
+                          value: appName,
                           isDark: isDark,
                           textHead: textHead,
                           textSub: textSub,
@@ -156,7 +134,7 @@ class _AboutScreenState extends State<AboutScreen> {
                           icon: CupertinoIcons.tag_fill,
                           iconColor: const Color(0xFF10B981),
                           label: 'Version',
-                          value: 'Version ${_version}',
+                          value: 'Version $appVersion',
                           isDark: isDark,
                           textHead: textHead,
                           textSub: textSub,
@@ -166,7 +144,7 @@ class _AboutScreenState extends State<AboutScreen> {
                           icon: CupertinoIcons.person_crop_circle_fill_badge_checkmark,
                           iconColor: const Color(0xFF8B5CF6),
                           label: 'Developed by',
-                          value: 'MaoneArt',
+                          value: developer,
                           isDark: isDark,
                           textHead: textHead,
                           textSub: textSub,
@@ -179,7 +157,7 @@ class _AboutScreenState extends State<AboutScreen> {
 
                   // Simple Copyright
                   Text(
-                    '© 2026 MaoneArt',
+                    copyright,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

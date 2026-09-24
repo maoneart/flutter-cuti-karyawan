@@ -1,12 +1,21 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../models/leave_model.dart';
 
 class LeavePrintService {
+  static const pdfBluePrimary = PdfColor.fromInt(0xFF1E3A8A);
+  static const pdfBlueHeader = PdfColor.fromInt(0xFFEFF6FF);
+  static const pdfSuccessGreen = PdfColor.fromInt(0xFF15803D);
+  static const pdfDangerRed = PdfColor.fromInt(0xFFDC2626);
+  static const pdfWarningAmber = PdfColor.fromInt(0xFFD97706);
+  static const pdfBorderGrey = PdfColor.fromInt(0xFFCBD5E1);
+  static const pdfBgLight = PdfColor.fromInt(0xFFF8FAFC);
+  static const pdfTextDark = PdfColor.fromInt(0xFF0F172A);
+  static const pdfTextMuted = PdfColor.fromInt(0xFF475569);
+
   /// Format tanggal Indonesia
   static String formatTanggalIndo(String? dateStr) {
     if (dateStr == null || dateStr.isEmpty) return '-';
@@ -36,7 +45,9 @@ class LeavePrintService {
     final formattedStartDate = formatTanggalIndo(leave.tanggalMulai);
     final formattedEndDate = formatTanggalIndo(leave.tanggalSelesai);
     final formattedCreatedDate = formatTanggalIndo(leave.createdAt);
-    final printDate = DateFormat('dd MMMM yyyy', 'id_ID').format(DateTime.now());
+    final now = DateTime.now();
+    const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    final printDate = '${now.day} ${bulan[now.month - 1]} ${now.year}';
 
     pdf.addPage(
       pw.Page(
@@ -60,7 +71,7 @@ class LeavePrintService {
                           style: pw.TextStyle(
                             font: fontBold,
                             fontSize: 15,
-                            color: PdfColors.blue900,
+                            color: pdfBluePrimary,
                           ),
                         ),
                         pw.SizedBox(height: 2),
@@ -69,17 +80,17 @@ class LeavePrintService {
                           style: pw.TextStyle(
                             font: fontBold,
                             fontSize: 8.5,
-                            color: PdfColors.grey800,
+                            color: pdfTextDark,
                           ),
                         ),
                         pw.SizedBox(height: 2),
                         pw.Text(
                           'Kawasan Industri KIIC, Jl. Maligi VI Lot L-4, Telukjambe Barat, Karawang 41361',
-                          style: pw.TextStyle(font: fontRegular, fontSize: 8, color: PdfColors.grey700),
+                          style: pw.TextStyle(font: fontRegular, fontSize: 8, color: pdfTextMuted),
                         ),
                         pw.Text(
                           'Telp: (0267) 863-1234 • Email: hrd@nakakin.co.id • Website: www.nakakin.co.id',
-                          style: pw.TextStyle(font: fontRegular, fontSize: 8, color: PdfColors.grey700),
+                          style: pw.TextStyle(font: fontRegular, fontSize: 8, color: pdfTextMuted),
                         ),
                       ],
                     ),
@@ -87,7 +98,7 @@ class LeavePrintService {
                   pw.Container(
                     padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: PdfColors.blue900, width: 1.5),
+                      border: pw.Border.all(color: pdfBluePrimary, width: 1.5),
                       borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
                     ),
                     child: pw.Text(
@@ -95,7 +106,7 @@ class LeavePrintService {
                       style: pw.TextStyle(
                         font: fontBold,
                         fontSize: 13,
-                        color: PdfColors.blue900,
+                        color: pdfBluePrimary,
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -104,9 +115,9 @@ class LeavePrintService {
               ),
               pw.SizedBox(height: 6),
               // Double divider lines
-              pw.Container(height: 2, color: PdfColors.blue900),
+              pw.Container(height: 2, color: pdfBluePrimary),
               pw.SizedBox(height: 1.5),
-              pw.Container(height: 0.75, color: PdfColors.blue900),
+              pw.Container(height: 0.75, color: pdfBluePrimary),
               pw.SizedBox(height: 12),
 
               // 2. JUDUL DOKUMEN & NOMOR SURAT
@@ -118,14 +129,14 @@ class LeavePrintService {
                       style: pw.TextStyle(
                         font: fontBold,
                         fontSize: 13,
-                        color: PdfColors.black,
+                        color: pdfTextDark,
                         decoration: pw.TextDecoration.underline,
                       ),
                     ),
                     pw.SizedBox(height: 3),
                     pw.Text(
                       'Nomor: ${leave.nomorSurat.isNotEmpty ? leave.nomorSurat : "-"}',
-                      style: pw.TextStyle(font: fontBold, fontSize: 9.5, color: PdfColors.grey800),
+                      style: pw.TextStyle(font: fontBold, fontSize: 9.5, color: pdfTextMuted),
                     ),
                   ],
                 ),
@@ -142,8 +153,8 @@ class LeavePrintService {
               pw.Container(
                 padding: const pw.EdgeInsets.all(8),
                 decoration: pw.BoxDecoration(
-                  color: PdfColors.grey100,
-                  border: pw.Border.all(color: PdfColors.grey300),
+                  color: pdfBgLight,
+                  border: pw.Border.all(color: pdfBorderGrey),
                   borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
                 ),
                 child: pw.Table(
@@ -160,7 +171,7 @@ class LeavePrintService {
                       children: [
                         pw.Text('Nama Lengkap', style: pw.TextStyle(font: fontBold, fontSize: 8.5)),
                         pw.Text(':', style: pw.TextStyle(font: fontRegular, fontSize: 8.5)),
-                        pw.Text(leave.namaLengkap ?? '-', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: PdfColors.blue900)),
+                        pw.Text(leave.namaLengkap ?? '-', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: pdfBluePrimary)),
                         pw.Text('Departemen', style: pw.TextStyle(font: fontBold, fontSize: 8.5)),
                         pw.Text(':', style: pw.TextStyle(font: fontRegular, fontSize: 8.5)),
                         pw.Text(leave.namaDept ?? '-', style: pw.TextStyle(font: fontRegular, fontSize: 8.5)),
@@ -199,7 +210,7 @@ class LeavePrintService {
 
               // 4. TABEL DETAIL PERMOHONAN CUTI
               pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.8),
+                border: pw.TableBorder.all(color: pdfBorderGrey, width: 0.8),
                 columnWidths: {
                   0: const pw.FlexColumnWidth(2.5),
                   1: const pw.FlexColumnWidth(3.5),
@@ -208,23 +219,23 @@ class LeavePrintService {
                 },
                 children: [
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.blue50),
+                    decoration: const pw.BoxDecoration(color: pdfBlueHeader),
                     children: [
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Jenis Cuti', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: PdfColors.blue900)),
+                        child: pw.Text('Jenis Cuti', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: pdfBluePrimary)),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Periode Tanggal Cuti', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: PdfColors.blue900), textAlign: pw.TextAlign.center),
+                        child: pw.Text('Periode Tanggal Cuti', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: pdfBluePrimary), textAlign: pw.TextAlign.center),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Jumlah Hari', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: PdfColors.blue900), textAlign: pw.TextAlign.center),
+                        child: pw.Text('Jumlah Hari', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: pdfBluePrimary), textAlign: pw.TextAlign.center),
                       ),
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
-                        child: pw.Text('Alasan / Keperluan', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: PdfColors.blue900)),
+                        child: pw.Text('Alasan / Keperluan', style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: pdfBluePrimary)),
                       ),
                     ],
                   ),
@@ -246,7 +257,7 @@ class LeavePrintService {
                         padding: const pw.EdgeInsets.all(6),
                         child: pw.Text(
                           '${leave.totalHari} Hari Kerja',
-                          style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: PdfColors.blue900),
+                          style: pw.TextStyle(font: fontBold, fontSize: 8.5, color: pdfBluePrimary),
                           textAlign: pw.TextAlign.center,
                         ),
                       ),
@@ -283,7 +294,7 @@ class LeavePrintService {
                           style: pw.TextStyle(
                             font: fontBold,
                             fontSize: 8,
-                            color: isApproved ? PdfColors.green700 : (isRejected ? PdfColors.red700 : PdfColors.orange700),
+                            color: isApproved ? pdfSuccessGreen : (isRejected ? pdfDangerRed : pdfWarningAmber),
                           ),
                         ),
                       ),
@@ -298,8 +309,8 @@ class LeavePrintService {
                 width: double.infinity,
                 padding: const pw.EdgeInsets.all(7),
                 decoration: pw.BoxDecoration(
-                  color: PdfColors.grey50,
-                  border: pw.Border.all(color: PdfColors.grey300),
+                  color: pdfBgLight,
+                  border: pw.Border.all(color: pdfBorderGrey),
                   borderRadius: const pw.BorderRadius.all(pw.Radius.circular(4)),
                 ),
                 child: pw.Column(
@@ -315,7 +326,7 @@ class LeavePrintService {
                               : (isRejected
                                   ? 'Pengajuan tidak dapat disetujui: ${leave.rejectionReason ?? "Kebutuhan operasional pabrik."}'
                                   : 'Sedang dalam proses peninjauan persetujuan hierarki atasan.')),
-                      style: pw.TextStyle(font: fontOblique, fontSize: 7.5, color: PdfColors.grey800),
+                      style: pw.TextStyle(font: fontOblique, fontSize: 7.5, color: pdfTextDark),
                     ),
                   ],
                 ),
@@ -324,7 +335,7 @@ class LeavePrintService {
 
               // 6. LEMBAR TANDA TANGAN (3 KOLOM)
               pw.Table(
-                border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.6),
+                border: pw.TableBorder.all(color: pdfBorderGrey, width: 0.6),
                 columnWidths: {
                   0: const pw.FlexColumnWidth(1),
                   1: const pw.FlexColumnWidth(1),
@@ -332,7 +343,7 @@ class LeavePrintService {
                 },
                 children: [
                   pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                    decoration: const pw.BoxDecoration(color: pdfBgLight),
                     children: [
                       pw.Padding(
                         padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 6),
@@ -367,12 +378,12 @@ class LeavePrintService {
                             pw.Container(
                               padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: pw.BoxDecoration(
-                                border: pw.Border.all(color: PdfColors.blue700, width: 1),
+                                border: pw.Border.all(color: pdfBluePrimary, width: 1),
                                 borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
                               ),
                               child: pw.Text(
                                 'DIGITAL SIGNED',
-                                style: pw.TextStyle(font: fontBold, fontSize: 7, color: PdfColors.blue700),
+                                style: pw.TextStyle(font: fontBold, fontSize: 7, color: pdfBluePrimary),
                               ),
                             ),
                             pw.SizedBox(height: 10),
@@ -394,7 +405,7 @@ class LeavePrintService {
                               padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: pw.BoxDecoration(
                                 border: pw.Border.all(
-                                  color: (leave.spvId != null || leave.managerId != null || isApproved) ? PdfColors.green700 : PdfColors.grey500,
+                                  color: (leave.spvId != null || leave.managerId != null || isApproved) ? pdfSuccessGreen : pdfTextMuted,
                                   width: 1,
                                 ),
                                 borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
@@ -404,7 +415,7 @@ class LeavePrintService {
                                 style: pw.TextStyle(
                                   font: fontBold,
                                   fontSize: 7,
-                                  color: (leave.spvId != null || leave.managerId != null || isApproved) ? PdfColors.green700 : PdfColors.grey600,
+                                  color: (leave.spvId != null || leave.managerId != null || isApproved) ? pdfSuccessGreen : pdfTextMuted,
                                 ),
                               ),
                             ),
@@ -427,7 +438,7 @@ class LeavePrintService {
                               padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: pw.BoxDecoration(
                                 border: pw.Border.all(
-                                  color: isApproved ? PdfColors.blue900 : PdfColors.grey500,
+                                  color: isApproved ? pdfBluePrimary : pdfTextMuted,
                                   width: 1,
                                 ),
                                 borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
@@ -437,7 +448,7 @@ class LeavePrintService {
                                 style: pw.TextStyle(
                                   font: fontBold,
                                   fontSize: 7,
-                                  color: isApproved ? PdfColors.blue900 : PdfColors.grey600,
+                                  color: isApproved ? pdfBluePrimary : pdfTextMuted,
                                 ),
                               ),
                             ),
@@ -457,18 +468,18 @@ class LeavePrintService {
               pw.Container(
                 padding: const pw.EdgeInsets.only(top: 8),
                 decoration: const pw.BoxDecoration(
-                  border: pw.Border(top: pw.BorderSide(color: PdfColors.grey300, width: 0.5)),
+                  border: pw.Border(top: pw.BorderSide(color: pdfBorderGrey, width: 0.5)),
                 ),
                 child: pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
                       'Dicetak melalui Aplikasi E-Cuti PT. Nakakin Indonesia pada $printDate',
-                      style: pw.TextStyle(font: fontRegular, fontSize: 6.5, color: PdfColors.grey600),
+                      style: pw.TextStyle(font: fontRegular, fontSize: 6.5, color: pdfTextMuted),
                     ),
                     pw.Text(
                       'Dokumen elektronik sah tanpa tanda tangan basah.',
-                      style: pw.TextStyle(font: fontRegular, fontSize: 6.5, color: PdfColors.grey600),
+                      style: pw.TextStyle(font: fontRegular, fontSize: 6.5, color: pdfTextMuted),
                     ),
                   ],
                 ),

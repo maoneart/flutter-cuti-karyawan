@@ -124,19 +124,13 @@ class LeavePrintPreviewScreen extends StatelessWidget {
                 canChangeOrientation: false,
                 canChangePageFormat: false,
                 canDebug: false,
+                allowPrinting: true,
+                allowSharing: true,
                 previewPageMargin: const EdgeInsets.all(16),
                 loadingWidget: const Center(
                   child: CupertinoActivityIndicator(radius: 16),
                 ),
                 pdfFileName: 'Surat_Cuti_${leave.nomorSurat.replaceAll("/", "_")}.pdf',
-                actions: [
-                  PdfPreviewAction(
-                    icon: const Icon(CupertinoIcons.printer_fill),
-                    onPressed: (ctx, build, format) async {
-                      await LeavePrintService.printLeave(context, leave);
-                    },
-                  ),
-                ],
               ),
             ),
           ],
