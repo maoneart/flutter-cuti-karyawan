@@ -59,6 +59,12 @@ if (!empty($type)) {
     $params[] = $type;
 }
 
+$filterDept = (int)($_GET['dept_id'] ?? 0);
+if ($filterDept > 0) {
+    $conditions[] = "k.departemen_id = ?";
+    $params[] = $filterDept;
+}
+
 if (!empty($search)) {
     $conditions[] = "(p.nomor_surat LIKE ? OR p.alasan LIKE ? OR k.nama_lengkap LIKE ? OR d.nama_dept LIKE ?)";
     $params[] = "%$search%";

@@ -239,12 +239,14 @@ class ApiService {
     String status = 'all',
     String scope = 'my',
     String search = '',
+    int? deptId,
   }) async {
     try {
       final uri = Uri.parse(ApiConfig.leavesList).replace(queryParameters: {
         'status': status,
         'scope': scope,
         if (search.isNotEmpty) 'search': search,
+        if (deptId != null && deptId > 0) 'dept_id': deptId.toString(),
       });
 
       final response = await http
