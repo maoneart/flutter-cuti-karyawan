@@ -29,10 +29,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Platform Files & Dependencies
+      - name: Generate Fresh Platform Files & Dependencies
         run: |
           cd flutter_cuti_karyawan
-          flutter create --platforms=android,web,ios .
+          rm -rf android ios web
+          flutter create --org com.nakakin.cutikaryawan --project-name flutter_cuti_karyawan --platforms=android,web,ios .
           flutter pub get
 
       - name: Build Android Release APK
@@ -42,6 +43,7 @@ jobs:
 
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: Cuti-Karyawan-Release-APK
           path: flutter_cuti_karyawan/build/app/outputs/flutter-apk/app-release.apk
@@ -66,10 +68,11 @@ jobs:
         run: |
           sudo gem install cocoapods
 
-      - name: Generate Platform Files & Dependencies
+      - name: Generate Fresh Platform Files & Dependencies
         run: |
           cd flutter_cuti_karyawan
-          flutter create --platforms=android,web,ios .
+          rm -rf android ios web
+          flutter create --org com.nakakin.cutikaryawan --project-name flutter_cuti_karyawan --platforms=android,web,ios .
           flutter pub get
           cd ios
           pod install --repo-update || true
@@ -90,6 +93,7 @@ jobs:
 
       - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: Cuti-Karyawan-iOS-IPA
           path: flutter_cuti_karyawan/CutiKaryawan-iOS.ipa
