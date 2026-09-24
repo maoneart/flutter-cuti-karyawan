@@ -15,6 +15,8 @@ class LeaveModel {
   final String approvalStep; // pending_spv, pending_manager, pending_hrd, approved, rejected
   final int? approvedBy;
   final String? approverName;
+  final String? approverJabatan;
+  final String? approverDept;
   final String? approvedAt;
   final String? rejectionReason;
   final String? catatanAtasan;
@@ -23,22 +25,33 @@ class LeaveModel {
   // 3-Tier Approval Flow Info
   final int? spvId;
   final String? spvName;
+  final String? spvJabatan;
+  final String? spvDept;
   final String? spvAt;
   final String? spvNotes;
 
   final int? managerId;
   final String? managerName;
+  final String? managerJabatan;
+  final String? managerDept;
   final String? managerAt;
   final String? managerNotes;
 
   final int? hrdId;
   final String? hrdName;
+  final String? hrdJabatan;
+  final String? hrdDept;
   final String? hrdAt;
   final String? hrdNotes;
 
   // Joins & Employee Info
   final String? namaLengkap;
   final String? nik;
+  final String? email;
+  final String? noHp;
+  final String? alamat;
+  final String? tanggalMasuk;
+  final int? sisaCuti;
   final int? departemenId;
   final String? namaDept;
   final String? namaJabatan;
@@ -66,24 +79,37 @@ class LeaveModel {
     this.approvalStep = 'pending_spv',
     this.approvedBy,
     this.approverName,
+    this.approverJabatan,
+    this.approverDept,
     this.approvedAt,
     this.rejectionReason,
     this.catatanAtasan,
     required this.createdAt,
     this.spvId,
     this.spvName,
+    this.spvJabatan,
+    this.spvDept,
     this.spvAt,
     this.spvNotes,
     this.managerId,
     this.managerName,
+    this.managerJabatan,
+    this.managerDept,
     this.managerAt,
     this.managerNotes,
     this.hrdId,
     this.hrdName,
+    this.hrdJabatan,
+    this.hrdDept,
     this.hrdAt,
     this.hrdNotes,
     this.namaLengkap,
     this.nik,
+    this.email,
+    this.noHp,
+    this.alamat,
+    this.tanggalMasuk,
+    this.sisaCuti,
     this.departemenId,
     this.namaDept,
     this.namaJabatan,
@@ -135,24 +161,37 @@ class LeaveModel {
       approvalStep: json['approval_step']?.toString() ?? 'pending_spv',
       approvedBy: json['approved_by'] != null ? int.tryParse(json['approved_by'].toString()) : null,
       approverName: json['approver_name']?.toString(),
+      approverJabatan: json['approver_jabatan']?.toString(),
+      approverDept: json['approver_dept']?.toString(),
       approvedAt: json['approved_at']?.toString(),
       rejectionReason: json['rejection_reason']?.toString(),
       catatanAtasan: json['catatan_atasan']?.toString(),
       createdAt: json['created_at']?.toString() ?? '',
       spvId: json['spv_id'] != null ? int.tryParse(json['spv_id'].toString()) : null,
       spvName: json['spv_name']?.toString(),
+      spvJabatan: json['spv_jabatan']?.toString(),
+      spvDept: json['spv_dept']?.toString(),
       spvAt: json['spv_at']?.toString(),
       spvNotes: json['spv_notes']?.toString(),
       managerId: json['manager_id'] != null ? int.tryParse(json['manager_id'].toString()) : null,
       managerName: json['manager_name']?.toString(),
+      managerJabatan: json['manager_jabatan']?.toString(),
+      managerDept: json['manager_dept']?.toString(),
       managerAt: json['manager_at']?.toString(),
       managerNotes: json['manager_notes']?.toString(),
       hrdId: json['hrd_id'] != null ? int.tryParse(json['hrd_id'].toString()) : null,
       hrdName: json['hrd_name']?.toString(),
+      hrdJabatan: json['hrd_jabatan']?.toString(),
+      hrdDept: json['hrd_dept']?.toString(),
       hrdAt: json['hrd_at']?.toString(),
       hrdNotes: json['hrd_notes']?.toString(),
       namaLengkap: json['nama_lengkap']?.toString(),
       nik: json['nik']?.toString(),
+      email: json['email']?.toString(),
+      noHp: json['no_hp']?.toString(),
+      alamat: json['alamat']?.toString() ?? json['alamat_karyawan']?.toString(),
+      tanggalMasuk: json['tanggal_masuk']?.toString(),
+      sisaCuti: int.tryParse(json['sisa_cuti']?.toString() ?? ''),
       departemenId: json['departemen_id'] != null ? int.tryParse(json['departemen_id'].toString()) : null,
       namaDept: json['nama_dept']?.toString(),
       namaJabatan: json['nama_jabatan']?.toString(),

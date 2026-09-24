@@ -9,7 +9,9 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
 class LeaveRequestScreen extends StatefulWidget {
-  const LeaveRequestScreen({super.key});
+  final VoidCallback? onLeaveSubmitted;
+
+  const LeaveRequestScreen({super.key, this.onLeaveSubmitted});
 
   @override
   State<LeaveRequestScreen> createState() => _LeaveRequestScreenState();
@@ -270,8 +272,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                   _attachmentName = null;
                   _attachmentSizeBytes = null;
                 });
+                widget.onLeaveSubmitted?.call();
               },
-              child: const Text('Tutup & Selesai'),
+              child: const Text('Lihat di Riwayat Cuti'),
             ),
           ],
         ),

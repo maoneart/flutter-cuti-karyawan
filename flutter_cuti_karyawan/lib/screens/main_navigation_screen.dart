@@ -17,10 +17,21 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
+  final GlobalKey<LeaveHistoryScreenState> _historyKey = GlobalKey<LeaveHistoryScreenState>();
 
   void _onTabSelected(int index) {
     setState(() {
       _currentIndex = index;
+    });
+  }
+
+  void _onLeaveSubmitted() {
+    setState(() {
+      _currentIndex = 2; // Switch to Riwayat Cuti Tab
+    });
+    // Auto-refresh Riwayat Cuti list immediately
+    Future.microtask(() {
+      _historyKey.currentState?.loadLeaves();
     });
   }
 
@@ -33,8 +44,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
     final List<Widget> pages = [
       DashboardScreen(onNavigateToTab: _onTabSelected),
-      const LeaveRequestScreen(),
-      const LeaveHistoryScreen(),
+      LeaveRequestScreen(onLeaveSubmitted: _onLeaveSubmitted),
+      LeaveHistoryScreen(key: _historyKey),
       if (canApprove) const LeaveApprovalScreen(),
       const SettingsScreen(),
     ];

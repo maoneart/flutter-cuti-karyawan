@@ -188,9 +188,9 @@ class LeavePrintService {
                         pw.Text('Tgl Pengajuan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                         pw.Text(':', style: const pw.TextStyle(fontSize: 8.5)),
                         pw.Text(formattedCreatedDate, style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text('No. HP / Kontak', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
+                        pw.Text('No. Handphone / WA', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8.5)),
                         pw.Text(':', style: const pw.TextStyle(fontSize: 8.5)),
-                        pw.Text(leave.kontakDarurat ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
+                        pw.Text((leave.noHp?.isNotEmpty == true ? leave.noHp : leave.kontakDarurat) ?? '-', style: const pw.TextStyle(fontSize: 8.5)),
                       ],
                     ),
                   ],
@@ -275,7 +275,8 @@ class LeavePrintService {
                       pw.Padding(
                         padding: const pw.EdgeInsets.all(6),
                         child: pw.Text(
-                          (leave.alamatSelamaCuti != null && leave.alamatSelamaCuti!.isNotEmpty) ? leave.alamatSelamaCuti! : 'Di alamat tempat tinggal terdaftar',
+                          '${(leave.alamatSelamaCuti != null && leave.alamatSelamaCuti!.isNotEmpty) ? leave.alamatSelamaCuti! : (leave.alamat ?? "Di alamat tempat tinggal terdaftar")}'
+                          '${(leave.kontakDarurat != null && leave.kontakDarurat!.isNotEmpty) ? " (Darurat: ${leave.kontakDarurat})" : ""}',
                           style: const pw.TextStyle(fontSize: 8),
                         ),
                       ),
@@ -329,128 +330,247 @@ class LeavePrintService {
               ),
               pw.SizedBox(height: 18),
 
-              // 6. LEMBAR TANDA TANGAN (3 KOLOM)
+              // 6. LEMBAR TANDA TANGAN (4 KOLOM APPROVAL)
               pw.Table(
                 border: pw.TableBorder.all(color: pdfBorderGrey, width: 0.6),
                 columnWidths: {
                   0: const pw.FlexColumnWidth(1),
                   1: const pw.FlexColumnWidth(1),
                   2: const pw.FlexColumnWidth(1),
+                  3: const pw.FlexColumnWidth(1),
                 },
                 children: [
+                  // Row Header Jabatan
                   pw.TableRow(
                     decoration: const pw.BoxDecoration(color: pdfBgLight),
                     children: [
                       pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                         child: pw.Center(
-                          child: pw.Text('Pemohon Cuti', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                          child: pw.Text('1. Operator / Karyawan', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
                         ),
                       ),
                       pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                         child: pw.Center(
-                          child: pw.Text('Mengetahui / Atasan Langsung', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                          child: pw.Text('2. Leader / Supervisor', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
                         ),
                       ),
                       pw.Padding(
-                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
                         child: pw.Center(
-                          child: pw.Text('Diverifikasi HRD Department', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                          child: pw.Text('3. Manager', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
+                        ),
+                      ),
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        child: pw.Center(
+                          child: pw.Text('4. HRD', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7.5)),
                         ),
                       ),
                     ],
                   ),
+                  // Row Isi Status & Nama Approver
                   pw.TableRow(
                     children: [
-                      // Kolom Pemohon
+                      // 1. Kolom Pemohon
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(8),
+                        padding: const pw.EdgeInsets.all(6),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
                           children: [
-                            pw.Text('Karawang, $formattedCreatedDate', style: const pw.TextStyle(fontSize: 7)),
-                            pw.SizedBox(height: 10),
+                            pw.Text('Karawang, $formattedCreatedDate', style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted)),
+                            pw.SizedBox(height: 8),
                             pw.Container(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                               decoration: pw.BoxDecoration(
-                                border: pw.Border.all(color: pdfBluePrimary, width: 1),
-                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                                border: pw.Border.all(color: pdfBluePrimary, width: 0.8),
+                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2.5)),
                               ),
                               child: pw.Text(
                                 'DIGITAL SIGNED',
-                                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7, color: pdfBluePrimary),
+                                style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 6.5, color: pdfBluePrimary),
                               ),
                             ),
-                            pw.SizedBox(height: 10),
-                            pw.Text('( ${leave.namaLengkap ?? "Pemohon"} )', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-                            pw.Text('NIK: ${leave.nik ?? "-"}', style: const pw.TextStyle(fontSize: 7)),
+                            pw.SizedBox(height: 8),
+                            pw.Text('( ${leave.namaLengkap ?? "Pemohon"} )', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7), textAlign: pw.TextAlign.center),
+                            pw.SizedBox(height: 1),
+                            pw.Text(
+                              '${leave.namaJabatan ?? "Karyawan"}${leave.namaDept != null ? " (${leave.namaDept})" : ""}',
+                              style: const pw.TextStyle(fontSize: 6, color: pdfTextMuted),
+                              textAlign: pw.TextAlign.center,
+                            ),
                           ],
                         ),
                       ),
 
-                      // Kolom Atasan Langsung
+                      // 2. Kolom Leader / Supervisor
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(8),
+                        padding: const pw.EdgeInsets.all(6),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
                           children: [
-                            pw.Text('Menyetujui,', style: const pw.TextStyle(fontSize: 7)),
-                            pw.SizedBox(height: 10),
+                            pw.Text(
+                              leave.spvAt != null ? formatTanggalIndo(leave.spvAt) : '-',
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
+                            ),
+                            pw.SizedBox(height: 8),
                             pw.Container(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                               decoration: pw.BoxDecoration(
                                 border: pw.Border.all(
-                                  color: (leave.spvId != null || leave.managerId != null || isApproved) ? pdfSuccessGreen : pdfTextMuted,
-                                  width: 1,
+                                  color: leave.spvId != null
+                                      ? pdfSuccessGreen
+                                      : (leave.employeeLevel >= 3
+                                          ? pdfBorderGrey
+                                          : (isRejected && leave.spvId == null ? pdfDangerRed : pdfBorderGrey)),
+                                  width: 0.8,
                                 ),
-                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2.5)),
                               ),
                               child: pw.Text(
-                                (leave.spvId != null || leave.managerId != null || isApproved) ? 'APPROVED BY ATASAN' : 'MENUNGGU APPROVAL',
+                                leave.spvId != null
+                                    ? 'APPROVED'
+                                    : (leave.employeeLevel >= 3
+                                        ? 'BYPASS'
+                                        : (isRejected && leave.spvId == null ? 'REJECTED' : 'MENUNGGU')),
                                 style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
-                                  fontSize: 7,
-                                  color: (leave.spvId != null || leave.managerId != null || isApproved) ? pdfSuccessGreen : pdfTextMuted,
+                                  fontSize: 6.5,
+                                  color: leave.spvId != null
+                                      ? pdfSuccessGreen
+                                      : (leave.employeeLevel >= 3
+                                          ? pdfTextMuted
+                                          : (isRejected && leave.spvId == null ? pdfDangerRed : pdfTextMuted)),
                                 ),
                               ),
                             ),
-                            pw.SizedBox(height: 10),
-                            pw.Text('( ${leave.spvName ?? leave.managerName ?? "..........................."} )', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-                            pw.Text('Leader / Spv / Manager Dept', style: const pw.TextStyle(fontSize: 7)),
+                            pw.SizedBox(height: 8),
+                            pw.Text(
+                              '( ${leave.spvId != null ? (leave.spvName ?? "Leader / Spv") : (leave.employeeLevel >= 3 ? "-" : "...................")} )',
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                            pw.SizedBox(height: 1),
+                            pw.Text(
+                              leave.spvId != null
+                                  ? '${leave.spvJabatan ?? "Leader / Supervisor"}${leave.spvDept != null ? " (${leave.spvDept})" : ""}'
+                                  : 'Leader / Supervisor',
+                              style: const pw.TextStyle(fontSize: 6, color: pdfTextMuted),
+                              textAlign: pw.TextAlign.center,
+                            ),
                           ],
                         ),
                       ),
 
-                      // Kolom HRD
+                      // 3. Kolom Manager
                       pw.Padding(
-                        padding: const pw.EdgeInsets.all(8),
+                        padding: const pw.EdgeInsets.all(6),
                         child: pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.center,
                           children: [
-                            pw.Text('Persetujuan Final,', style: const pw.TextStyle(fontSize: 7)),
-                            pw.SizedBox(height: 10),
+                            pw.Text(
+                              leave.managerAt != null ? formatTanggalIndo(leave.managerAt) : '-',
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
+                            ),
+                            pw.SizedBox(height: 8),
                             pw.Container(
-                              padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                               decoration: pw.BoxDecoration(
                                 border: pw.Border.all(
-                                  color: isApproved ? pdfBluePrimary : pdfTextMuted,
-                                  width: 1,
+                                  color: leave.managerId != null
+                                      ? pdfSuccessGreen
+                                      : (leave.employeeLevel >= 6
+                                          ? pdfBorderGrey
+                                          : (isRejected && leave.spvId != null && leave.managerId == null ? pdfDangerRed : pdfBorderGrey)),
+                                  width: 0.8,
                                 ),
-                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(3)),
+                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2.5)),
                               ),
                               child: pw.Text(
-                                isApproved ? 'VERIFIED HRD' : 'MENUNGGU VERIFIKASI',
+                                leave.managerId != null
+                                    ? 'APPROVED'
+                                    : (leave.employeeLevel >= 6
+                                        ? 'BYPASS'
+                                        : (isRejected && leave.spvId != null && leave.managerId == null ? 'REJECTED' : 'MENUNGGU')),
                                 style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
-                                  fontSize: 7,
-                                  color: isApproved ? pdfBluePrimary : pdfTextMuted,
+                                  fontSize: 6.5,
+                                  color: leave.managerId != null
+                                      ? pdfSuccessGreen
+                                      : (leave.employeeLevel >= 6
+                                          ? pdfTextMuted
+                                          : (isRejected && leave.spvId != null && leave.managerId == null ? pdfDangerRed : pdfTextMuted)),
                                 ),
                               ),
                             ),
-                            pw.SizedBox(height: 10),
-                            pw.Text('( ${leave.hrdName ?? leave.approverName ?? "HRD & GA Department"} )', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8)),
-                            pw.Text('HRD & GA Manager', style: const pw.TextStyle(fontSize: 7)),
+                            pw.SizedBox(height: 8),
+                            pw.Text(
+                              '( ${leave.managerId != null ? (leave.managerName ?? "Manager") : (leave.employeeLevel >= 6 ? "-" : "...................")} )',
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                            pw.SizedBox(height: 1),
+                            pw.Text(
+                              leave.managerId != null
+                                  ? (leave.managerJabatan ?? "Department Manager")
+                                  : 'Plant / Dept Manager',
+                              style: const pw.TextStyle(fontSize: 6, color: pdfTextMuted),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // 4. Kolom HRD
+                      pw.Padding(
+                        padding: const pw.EdgeInsets.all(6),
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.center,
+                          children: [
+                            pw.Text(
+                              (isApproved && (leave.hrdAt != null || leave.approvedAt != null))
+                                  ? formatTanggalIndo(leave.hrdAt ?? leave.approvedAt)
+                                  : '-',
+                              style: const pw.TextStyle(fontSize: 6.5, color: pdfTextMuted),
+                            ),
+                            pw.SizedBox(height: 8),
+                            pw.Container(
+                              padding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                              decoration: pw.BoxDecoration(
+                                border: pw.Border.all(
+                                  color: isApproved
+                                      ? pdfBluePrimary
+                                      : (isRejected && (leave.managerId != null || leave.employeeLevel >= 5) ? pdfDangerRed : pdfBorderGrey),
+                                  width: 0.8,
+                                ),
+                                borderRadius: const pw.BorderRadius.all(pw.Radius.circular(2.5)),
+                              ),
+                              child: pw.Text(
+                                isApproved
+                                    ? 'VERIFIED HRD'
+                                    : (isRejected && (leave.managerId != null || leave.employeeLevel >= 5) ? 'REJECTED' : 'MENUNGGU'),
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  fontSize: 6.5,
+                                  color: isApproved
+                                      ? pdfBluePrimary
+                                      : (isRejected && (leave.managerId != null || leave.employeeLevel >= 5) ? pdfDangerRed : pdfTextMuted),
+                                ),
+                              ),
+                            ),
+                            pw.SizedBox(height: 8),
+                            pw.Text(
+                              '( ${isApproved ? (leave.hrdName ?? leave.approverName ?? "HRD Department") : "..................."} )',
+                              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 7),
+                              textAlign: pw.TextAlign.center,
+                            ),
+                            pw.SizedBox(height: 1),
+                            pw.Text(
+                              isApproved ? (leave.hrdJabatan ?? "HRD & GA Manager") : "HRD Department",
+                              style: const pw.TextStyle(fontSize: 6, color: pdfTextMuted),
+                              textAlign: pw.TextAlign.center,
+                            ),
                           ],
                         ),
                       ),

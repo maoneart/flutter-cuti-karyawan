@@ -79,23 +79,31 @@ $stmt = $pdo->prepare("
         p.hrd_id, p.hrd_at, p.hrd_notes,
         p.approved_by, p.approved_at, p.rejection_reason, p.catatan_atasan,
         p.created_at, p.updated_at,
-        k.nama_lengkap, k.nik, k.foto as employee_foto, k.departemen_id,
+        k.nama_lengkap, k.nik, k.email, k.no_hp, k.alamat as alamat_karyawan, k.tanggal_masuk, k.sisa_cuti, k.foto as employee_foto, k.departemen_id,
         d.nama_dept, d.kode_dept,
-        jb.nama_jabatan,
+        jb.nama_jabatan, jb.level_hierarki as employee_level,
         j.nama_cuti, j.kode as kode_cuti, j.potong_kuota, j.butuh_lampiran,
-        spv.nama_lengkap as spv_name,
-        mgr.nama_lengkap as manager_name,
-        hrd.nama_lengkap as hrd_name,
-        appr.nama_lengkap as approver_name
+        spv.nama_lengkap as spv_name, spv_j.nama_jabatan as spv_jabatan, spv_d.nama_dept as spv_dept,
+        mgr.nama_lengkap as manager_name, mgr_j.nama_jabatan as manager_jabatan, mgr_d.nama_dept as manager_dept,
+        hrd.nama_lengkap as hrd_name, hrd_j.nama_jabatan as hrd_jabatan, hrd_d.nama_dept as hrd_dept,
+        appr.nama_lengkap as approver_name, appr_j.nama_jabatan as approver_jabatan, appr_d.nama_dept as approver_dept
     FROM pengajuan_cuti p
     JOIN karyawan k ON p.employee_id = k.id
     JOIN departemen d ON k.departemen_id = d.id
     JOIN jabatan jb ON k.jabatan_id = jb.id
     JOIN jenis_cuti j ON p.leave_type_id = j.id
     LEFT JOIN karyawan spv ON p.spv_id = spv.id
+    LEFT JOIN jabatan spv_j ON spv.jabatan_id = spv_j.id
+    LEFT JOIN departemen spv_d ON spv.departemen_id = spv_d.id
     LEFT JOIN karyawan mgr ON p.manager_id = mgr.id
+    LEFT JOIN jabatan mgr_j ON mgr.jabatan_id = mgr_j.id
+    LEFT JOIN departemen mgr_d ON mgr.departemen_id = mgr_d.id
     LEFT JOIN karyawan hrd ON p.hrd_id = hrd.id
+    LEFT JOIN jabatan hrd_j ON hrd.jabatan_id = hrd_j.id
+    LEFT JOIN departemen hrd_d ON hrd.departemen_id = hrd_d.id
     LEFT JOIN karyawan appr ON p.approved_by = appr.id
+    LEFT JOIN jabatan appr_j ON appr.jabatan_id = appr_j.id
+    LEFT JOIN departemen appr_d ON appr.departemen_id = appr_d.id
     $whereClause
     ORDER BY p.created_at DESC
 ");

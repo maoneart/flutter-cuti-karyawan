@@ -11,10 +11,10 @@ class LeaveHistoryScreen extends StatefulWidget {
   const LeaveHistoryScreen({super.key});
 
   @override
-  State<LeaveHistoryScreen> createState() => _LeaveHistoryScreenState();
+  State<LeaveHistoryScreen> createState() => LeaveHistoryScreenState();
 }
 
-class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTickerProviderStateMixin {
+class LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
 
@@ -32,10 +32,10 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
     _tabController = TabController(length: _tabTitles.length, vsync: this);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        _loadLeaves();
+        loadLeaves();
       }
     });
-    _loadLeaves();
+    loadLeaves();
   }
 
   @override
@@ -45,7 +45,8 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
     super.dispose();
   }
 
-  Future<void> _loadLeaves() async {
+  Future<void> loadLeaves() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -145,6 +146,14 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
           _selectedScope == 'my' ? 'Riwayat Cuti Saya' : 'Monitoring $teamLabel',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: loadLeaves,
+            tooltip: 'Segarkan Riwayat Cuti',
+          ),
+          const SizedBox(width: 6),
+        ],
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
@@ -174,7 +183,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                         onTap: () {
                           if (_selectedScope != 'my') {
                             setState(() => _selectedScope = 'my');
-                            _loadLeaves();
+                            loadLeaves();
                           }
                         },
                         borderRadius: BorderRadius.circular(10),
@@ -206,7 +215,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                         onTap: () {
                           if (_selectedScope != 'all') {
                             setState(() => _selectedScope = 'all');
-                            _loadLeaves();
+                            loadLeaves();
                           }
                         },
                         borderRadius: BorderRadius.circular(10),
@@ -265,20 +274,20 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                         icon: const Icon(Icons.clear, size: 18),
                         onPressed: () {
                           _searchController.clear();
-                          _loadLeaves();
+                          loadLeaves();
                         },
                       )
                     : null,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
-              onSubmitted: (_) => _loadLeaves(),
+              onSubmitted: (_) => loadLeaves(),
             ),
           ),
 
           // List Leaves
           Expanded(
             child: RefreshIndicator(
-              onRefresh: _loadLeaves,
+              onRefresh: loadLeaves,
               color: primaryAccent,
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -339,7 +348,7 @@ class _LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTick
                                       MaterialPageRoute(
                                         builder: (_) => LeaveDetailScreen(leaveId: leave.id),
                                       ),
-                                    ).then((_) => _loadLeaves());
+                                    ).then((_) => loadLeaves());
                                   },
                                   borderRadius: BorderRadius.circular(16),
                                   child: Container(

@@ -241,21 +241,6 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // Top Right Theme Switcher
-            Positioned(
-              top: 12,
-              right: 16,
-              child: IconButton(
-                icon: Icon(
-                  isDark ? CupertinoIcons.sun_max_fill : CupertinoIcons.moon_fill,
-                  color: isDark ? const Color(0xFFFBBF24) : AppTheme.textSecondary,
-                  size: 22,
-                ),
-                tooltip: isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap',
-                onPressed: () => ThemeService.toggleTheme(),
-              ),
-            ),
-
             Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -510,6 +495,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Top Right Floating Theme Switcher (Highest Z-Index)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: Material(
+                color: isDark ? AppTheme.darkSurface : Colors.white,
+                shape: const CircleBorder(),
+                elevation: 3,
+                shadowColor: Colors.black26,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () {
+                    ThemeService.toggleTheme();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(
+                      isDark ? CupertinoIcons.sun_max_fill : CupertinoIcons.moon_fill,
+                      color: isDark ? const Color(0xFFFBBF24) : AppTheme.primary,
+                      size: 22,
                     ),
                   ),
                 ),

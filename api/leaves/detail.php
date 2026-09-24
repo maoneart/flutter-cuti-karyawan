@@ -17,23 +17,31 @@ if ($id <= 0) {
 $stmt = $pdo->prepare("
     SELECT 
         p.*, 
-        k.nama_lengkap, k.nik, k.email, k.no_hp, k.foto as employee_foto, k.departemen_id,
+        k.nama_lengkap, k.nik, k.email, k.no_hp, k.alamat as alamat_karyawan, k.tanggal_masuk, k.sisa_cuti, k.foto as employee_foto, k.departemen_id,
         d.nama_dept, d.kode_dept,
         j.nama_jabatan, j.level_hierarki as employee_level,
         l.nama_cuti, l.kode as kode_cuti, l.potong_kuota, l.butuh_lampiran, l.deskripsi as deskripsi_cuti,
-        spv.nama_lengkap as spv_name, spv.nik as spv_nik,
-        mgr.nama_lengkap as manager_name, mgr.nik as manager_nik,
-        hrd.nama_lengkap as hrd_name, hrd.nik as hrd_nik,
-        appr.nama_lengkap as approver_name, appr.nik as approver_nik
+        spv.nama_lengkap as spv_name, spv.nik as spv_nik, spv_j.nama_jabatan as spv_jabatan, spv_d.nama_dept as spv_dept,
+        mgr.nama_lengkap as manager_name, mgr.nik as manager_nik, mgr_j.nama_jabatan as manager_jabatan, mgr_d.nama_dept as manager_dept,
+        hrd.nama_lengkap as hrd_name, hrd.nik as hrd_nik, hrd_j.nama_jabatan as hrd_jabatan, hrd_d.nama_dept as hrd_dept,
+        appr.nama_lengkap as approver_name, appr.nik as approver_nik, appr_j.nama_jabatan as approver_jabatan, appr_d.nama_dept as approver_dept
     FROM pengajuan_cuti p
     JOIN karyawan k ON p.employee_id = k.id
     JOIN departemen d ON k.departemen_id = d.id
     JOIN jabatan j ON k.jabatan_id = j.id
     JOIN jenis_cuti l ON p.leave_type_id = l.id
     LEFT JOIN karyawan spv ON p.spv_id = spv.id
+    LEFT JOIN jabatan spv_j ON spv.jabatan_id = spv_j.id
+    LEFT JOIN departemen spv_d ON spv.departemen_id = spv_d.id
     LEFT JOIN karyawan mgr ON p.manager_id = mgr.id
+    LEFT JOIN jabatan mgr_j ON mgr.jabatan_id = mgr_j.id
+    LEFT JOIN departemen mgr_d ON mgr.departemen_id = mgr_d.id
     LEFT JOIN karyawan hrd ON p.hrd_id = hrd.id
+    LEFT JOIN jabatan hrd_j ON hrd.jabatan_id = hrd_j.id
+    LEFT JOIN departemen hrd_d ON hrd.departemen_id = hrd_d.id
     LEFT JOIN karyawan appr ON p.approved_by = appr.id
+    LEFT JOIN jabatan appr_j ON appr.jabatan_id = appr_j.id
+    LEFT JOIN departemen appr_d ON appr.departemen_id = appr_d.id
     WHERE p.id = ?
     LIMIT 1
 ");
