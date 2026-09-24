@@ -29,11 +29,9 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Fresh Platform Files & Dependencies
+      - name: Install Dependencies
         run: |
           cd flutter_cuti_karyawan
-          rm -rf android ios web
-          flutter create --org com.nakakin.cutikaryawan --project-name flutter_cuti_karyawan --platforms=android,web,ios .
           flutter pub get
 
       - name: Build Android Release APK
@@ -64,19 +62,11 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Setup CocoaPods
-        run: |
-          sudo gem install cocoapods
-
-      - name: Generate Fresh Platform Files & Dependencies
+      - name: Generate iOS Scaffold & Dependencies
         run: |
           cd flutter_cuti_karyawan
-          rm -rf android ios web
-          flutter create --org com.nakakin.cutikaryawan --project-name flutter_cuti_karyawan --platforms=android,web,ios .
+          flutter create --platforms=ios .
           flutter pub get
-          cd ios
-          pod install --repo-update || true
-          cd ..
 
       - name: Build iOS No-Codesign
         run: |
