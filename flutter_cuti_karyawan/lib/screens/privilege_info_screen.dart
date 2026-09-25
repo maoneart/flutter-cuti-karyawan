@@ -6,7 +6,8 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
 class PrivilegeInfoScreen extends StatefulWidget {
-  const PrivilegeInfoScreen({super.key});
+  final int initialTabIndex;
+  const PrivilegeInfoScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<PrivilegeInfoScreen> createState() => _PrivilegeInfoScreenState();
@@ -38,12 +39,18 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
     {'key': 'superadmin', 'label': 'Super Admin', 'level': 'Level 8', 'desc': 'Akses penuh seluruh konfigurasi sistem'},
   ];
 
+  bool get _isSuperUser {
+    final user = AuthService.currentUser;
+    if (user == null) return false;
+    return user.isSuperAdmin;
+  }
+
   @override
   void initState() {
     super.initState();
-    final user = AuthService.currentUser;
-    _canManage = user?.isSuperAdmin == true;
-    _tabController = TabController(length: _canManage ? 2 : 1, vsync: this);
+    _canManage = _isSuperUser;
+    final tabIndex = (widget.initialTabIndex == 1 && _canManage) ? 1 : 0;
+    _tabController = TabController(length: _canManage ? 2 : 1, initialIndex: tabIndex, vsync: this);
     _fetchPermissions();
   }
 
@@ -66,10 +73,10 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
     if (res.success && res.data != null) {
       final data = res.data!;
       final serverRole = data['current_user_role']?.toString();
-      final bool serverIsSuperAdmin = data['is_superadmin'] == true;
+      final matrixData = (data['matrix'] as Map<String, dynamic>?) ?? {};
 
       // Sync role dynamically if changed on webbase backend
-      if (serverRole != null && AuthService.currentUser != null && AuthService.currentUser!.role != serverRole) {
+      if (serverRole != null && AuthService.currentUser != null && AuthService.currentUser!.role.toLowerCase() != serverRole.toLowerCase()) {
         final updatedUser = AuthService.currentUser!.copyWith(
           role: serverRole,
           levelHierarki: int.tryParse(data['current_user_level']?.toString() ?? '') ?? AuthService.currentUser!.levelHierarki,
@@ -77,18 +84,20 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
         await AuthService.updateUser(updatedUser);
       }
 
-      // Matriks Setting Role strictly limited to Super User (Super Admin / Level 8)
-      final bool newCanManage = (AuthService.currentUser?.isSuperAdmin == true) && serverIsSuperAdmin;
-      if (newCanManage != _canManage) {
-        _tabController.dispose();
-        _canManage = newCanManage;
-        _tabController = TabController(length: _canManage ? 2 : 1, vsync: this);
-      }
+      // Check if user is Super User (via local user model, API flag, or non-empty matrix)
+      final bool serverIsSuperAdmin = (data['is_superadmin'] == true) || matrixData.isNotEmpty;
+      final bool newCanManage = _isSuperUser || serverIsSuperAdmin;
 
       setState(() {
+        if (newCanManage != _canManage) {
+          final oldController = _tabController;
+          _canManage = newCanManage;
+          _tabController = TabController(length: _canManage ? 2 : 1, vsync: this);
+          oldController.dispose();
+        }
         _isLoading = false;
         _myPermissions = (data['my_permissions'] as Map<String, dynamic>?) ?? {};
-        _matrix = (data['matrix'] as Map<String, dynamic>?) ?? {};
+        _matrix = matrixData;
       });
     } else {
       setState(() {

@@ -53,11 +53,11 @@ class UserModel {
   bool get isSupervisor => role == 'supervisor' || role == 'leader' || (levelHierarki >= 3 && levelHierarki <= 4);
   bool get canApprove => isAdmin || isManager || isSupervisor || role == 'atasan';
 
-  /// Webbase Super User: Hanya Super Admin / Admin level >= 8 yang boleh mengelola matriks role
-  bool get isSuperAdmin =>
-      role.toLowerCase() == 'superadmin' ||
-      (role.toLowerCase() == 'admin' && levelHierarki >= 8) ||
-      levelHierarki >= 8;
+  /// Webbase Super User: Super Admin, Admin, atau Hierarki Level >= 8 (Sesuai SettingController.php & settings/index.php)
+  bool get isSuperAdmin {
+    final r = role.toLowerCase().trim();
+    return r == 'superadmin' || r == 'admin' || levelHierarki >= 8;
+  }
 
   UserModel copyWith({
     int? id,

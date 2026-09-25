@@ -256,15 +256,28 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Column(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppTheme.darkPrimary.withOpacity(0.15) : AppTheme.primary.withOpacity(0.08),
+                                  color: Colors.white,
                                   shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
+                                      blurRadius: 16,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                                child: Icon(
-                                  Icons.business_center_rounded,
-                                  size: 48,
-                                  color: primaryAccent,
+                                child: Image.asset(
+                                  'assets/images/Nakakin.png',
+                                  width: 64,
+                                  height: 64,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => Icon(
+                                    Icons.business_center_rounded,
+                                    size: 48,
+                                    color: primaryAccent,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 16),

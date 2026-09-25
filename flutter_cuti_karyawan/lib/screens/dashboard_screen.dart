@@ -123,7 +123,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Image.asset(
+                'assets/images/Nakakin.png',
+                height: 22,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Icon(Icons.business_center, size: 20),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text('Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: textHead)),
+          ],
+        ),
         actions: [
           // 1. Smart Bell Notification with Red Badge
           Stack(

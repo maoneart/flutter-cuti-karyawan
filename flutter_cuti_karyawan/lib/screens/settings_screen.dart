@@ -268,6 +268,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ], isDark: isDark),
                 const SizedBox(height: 20),
 
+                // Group: Super Admin Configuration
+                if (user?.isSuperAdmin == true) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8, bottom: 8),
+                    child: Text('KONFIGURASI SUPER ADMIN', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: textSub)),
+                  ),
+                  _buildIosGroup([
+                    _buildIosTile(
+                      icon: CupertinoIcons.slider_horizontal_3,
+                      iconColor: const Color(0xFF6366F1),
+                      title: 'Matriks Hak Akses & Privilege Role',
+                      subtitle: 'Konfigurasi wewenang 7 role karyawan secara dinamis',
+                      isDark: isDark,
+                      showDivider: false,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const PrivilegeInfoScreen(initialTabIndex: 1)),
+                        );
+                      },
+                    ),
+                  ], isDark: isDark),
+                  const SizedBox(height: 20),
+                ],
+
                 // Group 2: HRD Admin (if admin)
                 if (user?.role == 'admin' || (user?.levelHierarki ?? 0) >= 7) ...[
                   Padding(

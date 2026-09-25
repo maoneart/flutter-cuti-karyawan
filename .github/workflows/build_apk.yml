@@ -33,6 +33,7 @@ jobs:
         run: |
           cd flutter_cuti_karyawan
           flutter create --platforms=android,web,ios .
+          git checkout -- android/app/src/main/res/
           flutter pub get
 
       - name: Build Android Release APK
