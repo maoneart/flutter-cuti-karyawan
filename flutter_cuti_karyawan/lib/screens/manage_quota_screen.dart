@@ -634,7 +634,7 @@ class _ManageQuotaScreenState extends State<ManageQuotaScreen> with SingleTicker
           unselectedLabelColor: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
           tabs: const [
             Tab(icon: Icon(CupertinoIcons.person_3_fill, size: 18), text: 'Daftar Saldo'),
-            Tab(icon: Icon(CupertinoIcons.arrows_2_flat, size: 18), text: 'Alokasi Massal'),
+            Tab(icon: Icon(Icons.layers_outlined, size: 18), text: 'Alokasi Massal'),
             Tab(icon: Icon(CupertinoIcons.time, size: 18), text: 'Riwayat Mutasi'),
           ],
         ),

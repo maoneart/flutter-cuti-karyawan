@@ -300,7 +300,7 @@ class LeaveHistoryScreenState extends State<LeaveHistoryScreen> with SingleTicke
                               const SizedBox(height: 12),
                               Text(_errorMessage!, style: TextStyle(color: textSub)),
                               const SizedBox(height: 12),
-                              ElevatedButton(onPressed: _loadLeaves, child: const Text('Coba Lagi')),
+                              ElevatedButton(onPressed: loadLeaves, child: const Text('Coba Lagi')),
                             ],
                           ),
                         )

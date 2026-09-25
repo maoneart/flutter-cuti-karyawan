@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'leave_detail_screen.dart';
 import 'leave_print_preview_screen.dart';
+import '../services/leave_print_service.dart';
 
 class ManageLeavesScreen extends StatefulWidget {
   const ManageLeavesScreen({super.key});
@@ -549,7 +550,7 @@ class _ManageLeavesScreenState extends State<ManageLeavesScreen> with SingleTick
                                           if (canDirectApprove) ...[
                                             const SizedBox(width: 8),
                                             IconButton.filled(
-                                              style: IconButton.filledStyleFrom(
+                                              style: IconButton.styleFrom(
                                                 backgroundColor: AppTheme.statusApproved,
                                               ),
                                               icon: const Icon(Icons.check, size: 18, color: Colors.white),
@@ -558,7 +559,7 @@ class _ManageLeavesScreenState extends State<ManageLeavesScreen> with SingleTick
                                             ),
                                             const SizedBox(width: 4),
                                             IconButton.filled(
-                                              style: IconButton.filledStyleFrom(
+                                              style: IconButton.styleFrom(
                                                 backgroundColor: AppTheme.statusRejected,
                                               ),
                                               icon: const Icon(Icons.close, size: 18, color: Colors.white),

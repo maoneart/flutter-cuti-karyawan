@@ -416,6 +416,19 @@ class ApiService {
     }
   }
 
+  /// Alias for processApprovalAction
+  static Future<ApiResponse<void>> processApproval({
+    required int leaveId,
+    required String action,
+    String? notes,
+    String? rejectionReason,
+  }) => processApprovalAction(
+    leaveId: leaveId,
+    action: action,
+    notes: notes ?? '',
+    rejectionReason: rejectionReason ?? '',
+  );
+
   /// 13. Get Public Board
   static Future<ApiResponse<Map<String, dynamic>>> getPublicBoard({int? deptId}) async {
     try {
