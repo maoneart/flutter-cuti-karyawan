@@ -795,5 +795,75 @@ class ApiService {
       return ApiResponse(success: false, message: 'Gagal memuat riwayat mutasi kuota');
     }
   }
+
+  /// 26. Get Permissions Matrix (Roles & Hak Akses)
+  static Future<ApiResponse<Map<String, dynamic>>> getPermissionsMatrix() async {
+    try {
+      final response = await http
+          .get(
+            Uri.parse(ApiConfig.permissionsList),
+            headers: _getHeaders(),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && (body['success'] == true)) {
+        return ApiResponse(
+          success: true,
+          message: body['message'] ?? 'Data hak akses berhasil dimuat',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      }
+      return ApiResponse(
+        success: false,
+        message: body['message'] ?? 'Gagal memuat matriks hak akses',
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'Koneksi gagal saat memuat hak akses: $e',
+      );
+    }
+  }
+
+  /// 27. Update / Toggle Permission for a Role
+  static Future<ApiResponse<Map<String, dynamic>>> updatePermission({
+    required String role,
+    required String permissionKey,
+    required bool isGranted,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.permissionsUpdate),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'role': role,
+              'permission_key': permissionKey,
+              'is_granted': isGranted ? 1 : 0,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && (body['success'] == true)) {
+        return ApiResponse(
+          success: true,
+          message: body['message'] ?? 'Hak akses berhasil diperbarui',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      }
+      return ApiResponse(
+        success: false,
+        message: body['message'] ?? 'Gagal memperbarui hak akses',
+      );
+    } catch (e) {
+      return ApiResponse(
+        success: false,
+        message: 'Koneksi gagal saat memperbarui hak akses: $e',
+      );
+    }
+  }
 }
+
 

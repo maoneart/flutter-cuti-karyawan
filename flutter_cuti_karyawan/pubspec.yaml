@@ -1,7 +1,7 @@
 name: flutter_cuti_karyawan
 description: "Aplikasi Manajemen Cuti Karyawan PT. Nakakin Indonesia (Android, iOS & Web)"
 publish_to: 'none'
-version: 1.0.0+5
+version: 1.0.0+6
 
 environment:
   sdk: '>=3.0.0 <4.0.0'

@@ -244,6 +244,18 @@ class _ServerSettingScreenState extends State<ServerSettingScreen> {
                         contentPadding: EdgeInsets.zero,
                         leading: const CircleAvatar(
                           radius: 16,
+                          backgroundColor: Color(0xFF6366F1),
+                          child: Icon(Icons.cloud_done_rounded, size: 16, color: Colors.white),
+                        ),
+                        title: const Text('Cloud Hosting (maoneart.my.id)', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.bold)),
+                        subtitle: const Text('https://maoneart.my.id/api', style: TextStyle(fontSize: 11)),
+                        onTap: () => _setPreset('https://maoneart.my.id/api'),
+                      ),
+                      const Divider(height: 16),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const CircleAvatar(
+                          radius: 16,
                           backgroundColor: Color(0xFF0284C7),
                           child: Icon(Icons.wifi, size: 16, color: Colors.white),
                         ),

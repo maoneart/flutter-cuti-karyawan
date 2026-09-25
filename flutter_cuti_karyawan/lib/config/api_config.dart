@@ -53,4 +53,7 @@ class ApiConfig {
   static String get quotaAdjust => '$baseUrl/quotas/adjust.php';
   static String get quotaBulk => '$baseUrl/quotas/bulk.php';
   static String get quotaLogs => '$baseUrl/quotas/logs.php';
+
+  static String get permissionsList => '$baseUrl/permissions/list.php';
+  static String get permissionsUpdate => '$baseUrl/permissions/update.php';
 }
