@@ -14,6 +14,7 @@ class PrivilegeInfoScreen extends StatefulWidget {
 
 class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  bool _canManage = false;
   bool _isLoading = true;
   String? _errorMessage;
 
@@ -41,8 +42,8 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
   void initState() {
     super.initState();
     final user = AuthService.currentUser;
-    final canManage = user != null && (user.role == 'superadmin' || user.role == 'hrd' || user.role == 'admin' || user.levelHierarki >= 7);
-    _tabController = TabController(length: canManage ? 2 : 1, vsync: this);
+    _canManage = user?.isSuperAdmin == true;
+    _tabController = TabController(length: _canManage ? 2 : 1, vsync: this);
     _fetchPermissions();
   }
 
@@ -63,9 +64,29 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
     if (!mounted) return;
 
     if (res.success && res.data != null) {
+      final data = res.data!;
+      final serverRole = data['current_user_role']?.toString();
+      final bool serverIsSuperAdmin = data['is_superadmin'] == true;
+
+      // Sync role dynamically if changed on webbase backend
+      if (serverRole != null && AuthService.currentUser != null && AuthService.currentUser!.role != serverRole) {
+        final updatedUser = AuthService.currentUser!.copyWith(
+          role: serverRole,
+          levelHierarki: int.tryParse(data['current_user_level']?.toString() ?? '') ?? AuthService.currentUser!.levelHierarki,
+        );
+        await AuthService.updateUser(updatedUser);
+      }
+
+      // Matriks Setting Role strictly limited to Super User (Super Admin / Level 8)
+      final bool newCanManage = (AuthService.currentUser?.isSuperAdmin == true) && serverIsSuperAdmin;
+      if (newCanManage != _canManage) {
+        _tabController.dispose();
+        _canManage = newCanManage;
+        _tabController = TabController(length: _canManage ? 2 : 1, vsync: this);
+      }
+
       setState(() {
         _isLoading = false;
-        final data = res.data!;
         _myPermissions = (data['my_permissions'] as Map<String, dynamic>?) ?? {};
         _matrix = (data['matrix'] as Map<String, dynamic>?) ?? {};
       });
@@ -207,7 +228,7 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final user = AuthService.currentUser;
-    final canManage = user != null && (user.role == 'superadmin' || user.role == 'hrd' || user.role == 'admin' || user.levelHierarki >= 7);
+    final canManage = _canManage;
 
     final bgCol = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;

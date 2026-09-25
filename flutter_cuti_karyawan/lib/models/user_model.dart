@@ -53,6 +53,62 @@ class UserModel {
   bool get isSupervisor => role == 'supervisor' || role == 'leader' || (levelHierarki >= 3 && levelHierarki <= 4);
   bool get canApprove => isAdmin || isManager || isSupervisor || role == 'atasan';
 
+  /// Webbase Super User: Hanya Super Admin / Admin level >= 8 yang boleh mengelola matriks role
+  bool get isSuperAdmin =>
+      role.toLowerCase() == 'superadmin' ||
+      (role.toLowerCase() == 'admin' && levelHierarki >= 8) ||
+      levelHierarki >= 8;
+
+  UserModel copyWith({
+    int? id,
+    String? nik,
+    String? namaLengkap,
+    String? email,
+    String? role,
+    int? departemenId,
+    String? namaDept,
+    String? kodeDept,
+    int? jabatanId,
+    String? namaJabatan,
+    int? levelHierarki,
+    String? tanggalMasuk,
+    int? kuotaCuti,
+    int? cutiTerpakai,
+    int? sisaCuti,
+    String? jenisKelamin,
+    String? agama,
+    String? statusPernikahan,
+    String? noHp,
+    String? alamat,
+    String? statusAktif,
+    String? foto,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      nik: nik ?? this.nik,
+      namaLengkap: namaLengkap ?? this.namaLengkap,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      departemenId: departemenId ?? this.departemenId,
+      namaDept: namaDept ?? this.namaDept,
+      kodeDept: kodeDept ?? this.kodeDept,
+      jabatanId: jabatanId ?? this.jabatanId,
+      namaJabatan: namaJabatan ?? this.namaJabatan,
+      levelHierarki: levelHierarki ?? this.levelHierarki,
+      tanggalMasuk: tanggalMasuk ?? this.tanggalMasuk,
+      kuotaCuti: kuotaCuti ?? this.kuotaCuti,
+      cutiTerpakai: cutiTerpakai ?? this.cutiTerpakai,
+      sisaCuti: sisaCuti ?? this.sisaCuti,
+      jenisKelamin: jenisKelamin ?? this.jenisKelamin,
+      agama: agama ?? this.agama,
+      statusPernikahan: statusPernikahan ?? this.statusPernikahan,
+      noHp: noHp ?? this.noHp,
+      alamat: alamat ?? this.alamat,
+      statusAktif: statusAktif ?? this.statusAktif,
+      foto: foto ?? this.foto,
+    );
+  }
+
   /// Kalkulasi masa/lama bekerja dari tanggal masuk
   String get lamaBekerja {
     if (tanggalMasuk == null || tanggalMasuk!.isEmpty) {

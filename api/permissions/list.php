@@ -10,17 +10,23 @@ require_once __DIR__ . '/../helpers/permission_helper.php';
 $user = authenticateApiUser();
 $pdo = getDbConnection();
 
-$role = $user['role'] ?? 'operator';
+$role = strtolower($user['role'] ?? 'operator');
+$hierarki = (int)($user['level_hierarki'] ?? 1);
 $userPerms = Permission::getByRole($role, $pdo);
+
+// Strict Super User check matching webbase (SettingController.php & views/settings/index.php)
+$isSuperAdmin = in_array($role, ['superadmin', 'admin'], true) || $hierarki >= 8;
 
 $response = [
     'current_user_role' => $role,
+    'current_user_level' => $hierarki,
+    'is_superadmin' => $isSuperAdmin,
     'my_permissions' => $userPerms['map'],
     'my_permissions_list' => $userPerms['list']
 ];
 
-// If user is HRD, Manager, or Admin, include full matrix
-if (in_array($role, ['hrd', 'superadmin', 'admin', 'manager'])) {
+// Matrix is strictly restricted to Super User only (just like webbase SettingController / settings/index.php)
+if ($isSuperAdmin) {
     $matrix = Permission::getAllMatrix($pdo);
     $grouped = [];
     foreach ($matrix as $row) {

@@ -196,10 +196,27 @@ class ApiService {
           )
           .timeout(timeoutDuration);
 
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-
       if (response.statusCode == 200 && body['success'] == true) {
-        final stats = DashboardStatsModel.fromJson(body['data'] as Map<String, dynamic>);
+        final data = body['data'] as Map<String, dynamic>;
+
+        // Sync user role, level, department & leave balance fresh from webbase!
+        if (data['user'] is Map<String, dynamic> && AuthService.currentUser != null) {
+          final u = data['user'] as Map<String, dynamic>;
+          final curr = AuthService.currentUser!;
+          final updated = curr.copyWith(
+            role: u['role']?.toString() ?? curr.role,
+            namaLengkap: u['nama_lengkap']?.toString() ?? curr.namaLengkap,
+            namaDept: u['nama_dept']?.toString() ?? curr.namaDept,
+            namaJabatan: u['nama_jabatan']?.toString() ?? curr.namaJabatan,
+            levelHierarki: int.tryParse(u['level_hierarki']?.toString() ?? '') ?? curr.levelHierarki,
+            kuotaCuti: int.tryParse(u['kuota_cuti']?.toString() ?? '') ?? curr.kuotaCuti,
+            cutiTerpakai: int.tryParse(u['cuti_terpakai']?.toString() ?? '') ?? curr.cutiTerpakai,
+            sisaCuti: int.tryParse(u['sisa_cuti']?.toString() ?? '') ?? curr.sisaCuti,
+          );
+          await AuthService.updateUser(updated);
+        }
+
+        final stats = DashboardStatsModel.fromJson(data);
         return ApiResponse(success: true, message: body['message'] ?? 'Sukses', data: stats);
       } else {
         return ApiResponse(success: false, message: body['message'] ?? 'Gagal memuat statistik');

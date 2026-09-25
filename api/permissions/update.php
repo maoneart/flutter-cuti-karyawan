@@ -8,9 +8,14 @@ require_once __DIR__ . '/../middleware/auth_middleware.php';
 require_once __DIR__ . '/../helpers/permission_helper.php';
 
 $user = authenticateApiUser();
+$roleUser = strtolower($user['role'] ?? '');
+$hierarkiUser = (int)($user['level_hierarki'] ?? 1);
 
-if (!in_array($user['role'], ['hrd', 'superadmin', 'admin'])) {
-    jsonResponse(false, 'Akses ditolak. Hanya HRD atau Super Admin yang dapat mengubah hak akses.', null, 403);
+// Strictly Super User only (same as webbase SettingController.php)
+$isSuperAdmin = in_array($roleUser, ['superadmin', 'admin'], true) || $hierarkiUser >= 8;
+
+if (!$isSuperAdmin) {
+    jsonResponse(false, 'Akses ditolak. Pengaturan Hak Akses & Matriks Role hanya dapat diubah oleh Super Admin.', null, 403);
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
