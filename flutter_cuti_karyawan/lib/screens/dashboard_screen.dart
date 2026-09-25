@@ -382,11 +382,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 ],
                               ),
-                              child: const Row(
+                              child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Icon(CupertinoIcons.slider_horizontal_3, color: Colors.white, size: 22),
-                                  SizedBox(width: 12),
+                                  const Icon(CupertinoIcons.slider_horizontal_3, color: Colors.white, size: 22),
+                                  const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -394,7 +394,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       children: [
                                         Row(
                                           children: [
-                                            Text(
+                                            const Text(
                                               'Matriks Setting Role',
                                               style: TextStyle(
                                                 color: Colors.white,
@@ -402,14 +402,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                 fontSize: 13.5,
                                               ),
                                             ),
-                                            SizedBox(width: 8),
+                                            const SizedBox(width: 8),
                                             Container(
-                                              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                                              decoration: BoxDecoration(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                              decoration: const BoxDecoration(
                                                 color: Colors.white24,
                                                 borderRadius: BorderRadius.all(Radius.circular(6)),
                                               ),
-                                              child: Text(
+                                              child: const Text(
                                                 'SUPER ADMIN',
                                                 style: TextStyle(
                                                   color: Colors.white,
@@ -421,8 +421,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                             ),
                                           ],
                                         ),
-                                        SizedBox(height: 2),
-                                        Text(
+                                        const SizedBox(height: 2),
+                                        const Text(
                                           'Konfigurasi wewenang 7 role karyawan secara dinamis',
                                           style: TextStyle(color: Colors.white70, fontSize: 11),
                                           maxLines: 1,
@@ -431,7 +431,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ],
                                     ),
                                   ),
-                                  Icon(CupertinoIcons.chevron_right, color: Colors.white70, size: 16),
+                                  const Icon(CupertinoIcons.chevron_right, color: Colors.white70, size: 16),
                                 ],
                               ),
                             ),
