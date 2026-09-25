@@ -41,7 +41,19 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
         </div>
     </div>
 
-    <!-- Main Settings Form -->
+    <!-- Navigation Tabs -->
+    <div class="flex items-center gap-2 border-b border-slate-200/80 pb-px">
+        <button type="button" onclick="switchSettingTab('general')" id="tabBtnGeneral" class="px-5 py-3 rounded-2xl text-xs font-black transition-all duration-200 flex items-center gap-2 bg-blue-600 text-white shadow-md shadow-blue-500/20">
+            <i class="fa-solid fa-building"></i> Identitas & Kop Surat
+        </button>
+        <button type="button" onclick="switchSettingTab('privileges')" id="tabBtnPrivileges" class="px-5 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved"></i> Matriks Hak Akses & Privilege Role
+            <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black">Baru</span>
+        </button>
+    </div>
+
+    <!-- TAB 1: Main Settings Form -->
+    <div id="tabContentGeneral">
     <form action="<?= BASE_URL ?>/index.php?page=settings-update" method="POST" enctype="multipart/form-data" id="formSettings" class="space-y-6">
         
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -396,10 +408,212 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
         </div>
 
     </form>
+    </div>
+    <!-- END TAB 1 -->
+
+    <!-- TAB 2: Role Permissions & Privilege Matrix -->
+    <div id="tabContentPrivileges" class="hidden space-y-6">
+        
+        <!-- Info Banner -->
+        <div class="bg-gradient-to-r from-indigo-900/90 via-slate-900 to-slate-950 rounded-3xl p-6 text-white border border-indigo-500/20 shadow-soft flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <h3 class="text-base font-black tracking-tight">Matriks Hak Akses & Privilege Role (Multi-Tier Architecture)</h3>
+                </div>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Atur wewenang dan batasan akses setiap peran (*role*) dalam sistem E-Cuti secara dinamis. Perubahan langsung tersinkronisasi ke Webbase & Aplikasi Mobile Android.
+                </p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <button type="submit" form="formPermissionsMatrix" class="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Semua Hak Akses
+                </button>
+            </div>
+        </div>
+
+        <!-- Matrix Form -->
+        <form action="<?= BASE_URL ?>/index.php?page=settings-permissions-update" method="POST" id="formPermissionsMatrix">
+            
+            <?php
+            // Prepare Matrix Data
+            require_once __DIR__ . '/../../models/Permission.php';
+            $matrixRows = Permission::getAllMatrix($pdo);
+
+            // Group by category and key
+            $permsByKey = [];
+            foreach ($matrixRows as $m) {
+                $permsByKey[$m['permission_key']]['name'] = $m['permission_name'];
+                $permsByKey[$m['permission_key']]['category'] = $m['category'];
+                $permsByKey[$m['permission_key']]['desc'] = $m['description'];
+                $permsByKey[$m['permission_key']]['roles'][$m['role']] = (int)$m['is_granted'] === 1;
+            }
+
+            $categories = [
+                'Cuti & Kehadiran' => ['icon' => 'fa-calendar-days', 'color' => 'text-blue-500', 'bg' => 'bg-blue-50'],
+                'Persetujuan (Approval)' => ['icon' => 'fa-stamp', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50'],
+                'Manajemen HRD' => ['icon' => 'fa-users-gear', 'color' => 'text-violet-500', 'bg' => 'bg-violet-50'],
+                'Laporan & Dokumen' => ['icon' => 'fa-file-lines', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50'],
+                'Sistem & Konfigurasi' => ['icon' => 'fa-sliders', 'color' => 'text-rose-500', 'bg' => 'bg-rose-50']
+            ];
+
+            $rolesList = [
+                'operator' => ['label' => 'Operator', 'sub' => 'Level 1', 'badge' => 'bg-slate-100 text-slate-700'],
+                'staff' => ['label' => 'Staff', 'sub' => 'Level 2', 'badge' => 'bg-slate-100 text-slate-700'],
+                'leader' => ['label' => 'Leader', 'sub' => 'Level 3', 'badge' => 'bg-sky-100 text-sky-800'],
+                'supervisor' => ['label' => 'Supervisor', 'sub' => 'Level 4', 'badge' => 'bg-blue-100 text-blue-800'],
+                'manager' => ['label' => 'Plant Mgr', 'sub' => 'Level 6', 'badge' => 'bg-purple-100 text-purple-800'],
+                'hrd' => ['label' => 'HRD', 'sub' => 'Level 7', 'badge' => 'bg-emerald-100 text-emerald-800'],
+                'superadmin' => ['label' => 'Super Admin', 'sub' => 'Level 8', 'badge' => 'bg-rose-100 text-rose-800'],
+            ];
+            ?>
+
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-soft overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-600">
+                                <th class="p-4 sm:p-5 min-w-[280px]">Fitur & Modul Hak Akses</th>
+                                <?php foreach ($rolesList as $rKey => $rInfo): ?>
+                                    <th class="p-3 text-center min-w-[95px]">
+                                        <div class="flex flex-col items-center">
+                                            <span class="px-2 py-0.5 rounded-lg <?= $rInfo['badge'] ?> text-[10px] font-black">
+                                                <?= $rInfo['label'] ?>
+                                            </span>
+                                            <span class="text-[9px] text-slate-400 font-mono mt-0.5"><?= $rInfo['sub'] ?></span>
+                                        </div>
+                                    </th>
+                                <?php endforeach; ?>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            <?php foreach ($categories as $catName => $catMeta): ?>
+                                <!-- Category Section Header -->
+                                <tr class="bg-slate-50/40">
+                                    <td colspan="8" class="px-5 py-3 border-y border-slate-200/60">
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-lg <?= $catMeta['bg'] ?> <?= $catMeta['color'] ?> flex items-center justify-center text-xs">
+                                                <i class="fa-solid <?= $catMeta['icon'] ?>"></i>
+                                            </div>
+                                            <span class="font-extrabold text-slate-800 tracking-tight text-xs uppercase"><?= $catName ?></span>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <?php foreach ($permsByKey as $pKey => $pData): ?>
+                                    <?php if ($pData['category'] !== $catName) continue; ?>
+                                    <tr class="hover:bg-indigo-50/30 transition-colors group">
+                                        <td class="p-4 sm:p-5">
+                                            <div class="font-bold text-slate-800 group-hover:text-indigo-600 transition text-xs">
+                                                <?= htmlspecialchars($pData['name']) ?>
+                                            </div>
+                                            <div class="text-[10.5px] text-slate-400 mt-0.5 leading-relaxed">
+                                                <?= htmlspecialchars($pData['desc']) ?>
+                                            </div>
+                                        </td>
+                                        
+                                        <?php foreach ($rolesList as $rKey => $rInfo): ?>
+                                            <?php 
+                                            $isGranted = !empty($pData['roles'][$rKey]);
+                                            $isLocked = ($rKey === 'superadmin');
+                                            ?>
+                                            <td class="p-3 text-center align-middle">
+                                                <div class="flex items-center justify-center">
+                                                    <label class="relative inline-flex items-center cursor-pointer <?= $isLocked ? 'opacity-80 cursor-not-allowed' : '' ?>">
+                                                        <input type="checkbox" 
+                                                               name="matrix[<?= $rKey ?>][<?= $pKey ?>]" 
+                                                               value="1" 
+                                                               <?= $isGranted ? 'checked' : '' ?> 
+                                                               <?= $isLocked ? 'disabled' : '' ?>
+                                                               onchange="togglePermAjax('<?= $rKey ?>', '<?= $pKey ?>', this.checked)"
+                                                               class="sr-only peer">
+                                                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                                                    </label>
+                                                    <?php if ($isLocked): ?>
+                                                        <input type="hidden" name="matrix[superadmin][<?= $pKey ?>]" value="1">
+                                                    <?php endif; ?>
+                                                </div>
+                                            </td>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer Action Bar -->
+                <div class="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="text-xs text-slate-500 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                        <span>Toggle switch otomatis tersimpan secara instan (Live AJAX). Anda juga bisa klik tombol simpan di kanan.</span>
+                    </div>
+                    <button type="submit" class="px-6 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Matriks Hak Akses
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+    </div>
+    <!-- END TAB 2 -->
 
 </div>
 
 <script>
+function switchSettingTab(tab) {
+    const tabGeneral = document.getElementById('tabContentGeneral');
+    const tabPrivileges = document.getElementById('tabContentPrivileges');
+    const btnGeneral = document.getElementById('tabBtnGeneral');
+    const btnPrivileges = document.getElementById('tabBtnPrivileges');
+
+    if (tab === 'privileges') {
+        tabGeneral.classList.add('hidden');
+        tabPrivileges.classList.remove('hidden');
+
+        btnPrivileges.className = "px-5 py-3 rounded-2xl text-xs font-black transition-all duration-200 flex items-center gap-2 bg-indigo-600 text-white shadow-md shadow-indigo-500/20";
+        btnGeneral.className = "px-5 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 flex items-center gap-2";
+        window.location.hash = 'tab-privileges';
+    } else {
+        tabPrivileges.classList.add('hidden');
+        tabGeneral.classList.remove('hidden');
+
+        btnGeneral.className = "px-5 py-3 rounded-2xl text-xs font-black transition-all duration-200 flex items-center gap-2 bg-blue-600 text-white shadow-md shadow-blue-500/20";
+        btnPrivileges.className = "px-5 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 flex items-center gap-2";
+        window.location.hash = 'tab-general';
+    }
+}
+
+// Auto open tab if URL hash is tab-privileges
+if (window.location.hash === '#tab-privileges') {
+    switchSettingTab('privileges');
+}
+
+function togglePermAjax(role, permKey, isChecked) {
+    const formData = new FormData();
+    formData.append('ajax', '1');
+    formData.append('role', role);
+    formData.append('permission_key', permKey);
+    formData.append('is_granted', isChecked ? '1' : '0');
+
+    fetch('<?= BASE_URL ?>/index.php?page=settings-permissions-update', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            console.log(`[Permission Synced] ${role} -> ${permKey}: ${isChecked}`);
+        } else {
+            alert(data.message || 'Gagal mengubah hak akses');
+        }
+    })
+    .catch(err => {
+        console.error('AJAX Error:', err);
+    });
+}
+
 function updateLivePreview() {
     const namaPerusahaan = document.getElementById('inNamaPerusahaan').value || 'PT. Nama Perusahaan';
     const singkatanPerusahaan = document.getElementById('inSingkatanPerusahaan').value || 'BRAND';

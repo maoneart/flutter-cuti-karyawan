@@ -34,8 +34,13 @@ $stmtCount = $pdo->prepare("
 $stmtCount->execute([$user['id']]);
 $summary = $stmtCount->fetch();
 
+require_once __DIR__ . '/../../models/Permission.php';
+$userPerms = Permission::getByRole($user['role'] ?? 'operator', $pdo);
+
 jsonResponse(true, 'Data profil berhasil diambil', [
     'user' => $user,
+    'permissions' => $userPerms['map'],
+    'permissions_list' => $userPerms['list'],
     'quota_history' => $quotaHistory,
     'summary' => [
         'total_pengajuan' => (int)($summary['total_pengajuan'] ?? 0),

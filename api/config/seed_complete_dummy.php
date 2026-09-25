@@ -108,8 +108,8 @@ $stmtEmp->execute([
 // 4.2 HRD Official (1 account) -> starts clean with 0 used
 $hrdId = $empId++;
 $stmtEmp->execute([
-    $hrdId, 'NAK-001', 'Hermawan (HRD)', 'hermawan@nakakin.co.id', $defaultPass, 'hrd',
-    8, 6, '2020-03-01', 12, 0, 12, 'Laki-laki', '081234567890', 'Kawasan Industri KIIC, Karawang Barat'
+    $hrdId, 'NAK-001', 'Risma (HRD)', 'hrd@nakakin.co.id', $defaultPass, 'hrd',
+    8, 6, '2020-03-01', 12, 0, 12, 'Perempuan', '081234567890', 'Kawasan Industri KIIC, Karawang Barat'
 ]);
 
 // 4.3 General Affairs / GA (1 account)
@@ -246,7 +246,7 @@ $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 echo "=== SEEDER SUCCESSFUL ===\n";
 echo "Total Departemen: 15\n";
 echo "1 Super Admin (admin@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
-echo "1 HRD (hermawan@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
+echo "1 HRD (hrd@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
 echo "1 GA (ga@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
 echo "1 Manager (manager@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";
 echo "15 Supervisor (spv.<kode>@nakakin.co.id) [Kuota: 12, Terpakai: 0, Sisa: 12]\n";

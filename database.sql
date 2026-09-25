@@ -137,7 +137,7 @@ CREATE TABLE `karyawan` (
 
 INSERT INTO `karyawan` (`id`, `nik`, `nama_lengkap`, `email`, `password`, `role`, `departemen_id`, `jabatan_id`, `tanggal_masuk`, `kuota_cuti`, `cuti_terpakai`, `sisa_cuti`, `jenis_kelamin`, `agama`, `status_pernikahan`, `no_hp`, `alamat`, `foto`, `status_aktif`, `created_at`, `updated_at`) VALUES
 ('1', 'ADM-001', 'Master Super Admin', 'admin@nakakin.co.id', '$2y$10$0LpiNefCcpbSzBBjUsa65eHSx9LrWK3twmdsVjKwndsJZOfZAA/du', 'superadmin', '8', '7', '2020-01-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '081100000001', 'Kantor Pusat PT. Nakakin Indonesia', NULL, 'Aktif', '2026-09-23 11:50:10', '2026-09-23 11:50:10'),
-('2', 'NAK-001', 'Hermawan (HRD)', 'hermawan@nakakin.co.id', '$2y$10$0LpiNefCcpbSzBBjUsa65eHSx9LrWK3twmdsVjKwndsJZOfZAA/du', 'hrd', '8', '6', '2020-03-01', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '081234567890', 'Kawasan Industri KIIC, Karawang Barat', NULL, 'Aktif', '2026-09-23 11:50:10', '2026-09-23 11:50:10'),
+('2', 'NAK-001', 'Risma (HRD)', 'hrd@nakakin.co.id', '$2y$10$0LpiNefCcpbSzBBjUsa65eHSx9LrWK3twmdsVjKwndsJZOfZAA/du', 'hrd', '8', '6', '2020-03-01', '12', '0', '12', 'Perempuan', 'Islam', 'Menikah', '081234567890', 'Kawasan Industri KIIC, Karawang Barat', NULL, 'Aktif', '2026-09-23 11:50:10', '2026-09-23 11:50:10'),
 ('3', 'NAK-002', 'Bambang Setyo (GA)', 'ga@nakakin.co.id', '$2y$10$0LpiNefCcpbSzBBjUsa65eHSx9LrWK3twmdsVjKwndsJZOfZAA/du', 'staff', '7', '2', '2021-02-15', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '081234567891', 'Perum Resinda, Karawang Barat', NULL, 'Aktif', '2026-09-23 11:50:10', '2026-09-23 11:50:10'),
 ('4', 'MGR-001', 'Ir. Hendra Wijaya (Manager)', 'manager@nakakin.co.id', '$2y$10$0LpiNefCcpbSzBBjUsa65eHSx9LrWK3twmdsVjKwndsJZOfZAA/du', 'manager', '5', '5', '2018-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '081399990001', 'Grand Taruma, Karawang Barat', NULL, 'Aktif', '2026-09-23 11:50:10', '2026-09-23 11:50:10'),
 ('5', 'SPV-ACC', 'Spv Accounting', 'spv.acc@nakakin.co.id', '$2y$10$0LpiNefCcpbSzBBjUsa65eHSx9LrWK3twmdsVjKwndsJZOfZAA/du', 'supervisor', '1', '4', '2021-01-10', '12', '0', '12', 'Laki-laki', 'Islam', 'Menikah', '08140000001', 'Telukjambe Timur, Karawang', NULL, 'Aktif', '2026-09-23 11:50:10', '2026-09-23 11:50:10'),
@@ -327,4 +327,89 @@ CREATE TABLE `pengaturan_aplikasi` (
 INSERT INTO `pengaturan_aplikasi` (`id`, `nama_aplikasi`, `singkatan_aplikasi`, `tagline`, `nama_perusahaan`, `singkatan_perusahaan`, `sub_singkatan_perusahaan`, `alamat_perusahaan`, `telepon`, `email_perusahaan`, `website`, `logo`, `favicon`, `prefix_nomor_surat`, `default_kuota_cuti`, `nama_kepala_hrd`, `jabatan_kepala_hrd`, `lokasi_surat`, `footer_text`, `updated_at`) VALUES
 ('1', 'Sistem Informasi Cuti Karyawan', 'FORM CUTI ONLINE', 'Manufacturing', 'PT. NAKAKIN INDONESIA', 'NAKAKIn', 'INDONESIA', 'EJIP INDUSTRIAL PARK PLOT 5L-4 CIKARANG SELATAN, BEKASI 17550', '(0267) 845-1234', 'hrd@nakakin.co.id', 'www.nakakin.co.id', 'Nakakin.png', 'Nakakin.png', 'CUTI/NAK', '10', 'Hermawan', 'HRD GA Manager', 'Bekasi', 'Sistem Informasi Manajemen Cuti Karyawan', '2026-09-23 07:51:18');
 
+-- --------------------------------------------------------
+-- Table structure for table `role_permissions`
+-- --------------------------------------------------------
+
+DROP TABLE IF EXISTS `role_permissions`;
+CREATE TABLE `role_permissions` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `role` varchar(50) NOT NULL,
+  `permission_key` varchar(100) NOT NULL,
+  `permission_name` varchar(150) NOT NULL,
+  `category` varchar(50) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `is_granted` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_role_perm` (`role`,`permission_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `role_permissions` (`role`, `permission_key`, `permission_name`, `category`, `description`, `is_granted`) VALUES
+('operator', 'leave_request', 'Pengajuan Cuti Pribadi', 'Cuti & Kehadiran', 'Mengajukan cuti mandiri, upload surat sakit/lampiran & cek sisa kuota', 1),
+('operator', 'view_public_board', 'Papan Informasi & Kalender Bersama', 'Cuti & Kehadiran', 'Melihat jadwal cuti rekan kerja, kalender pabrik, dan statistik umum', 1),
+('operator', 'approval_tier1', 'Persetujuan Tier 1 (Leader / Supervisor)', 'Persetujuan (Approval)', 'Verifikasi dan review pengajuan cuti operator/staff di departemen sendiri', 0),
+('operator', 'approval_tier2', 'Persetujuan Tier 2 (Plant Manager)', 'Persetujuan (Approval)', 'Persetujuan operasional tingkat manajerial lintas seluruh 15 departemen', 0),
+('operator', 'approval_tier3', 'Persetujuan Tier 3 / Final (HRD)', 'Persetujuan (Approval)', 'Persetujuan akhir resmi dan eksekusi otomatis pemotongan kuota cuti tahunan', 0),
+('operator', 'manage_employees', 'Kelola Master Data Karyawan', 'Manajemen HRD', 'Tambah, ubah, hapus, reset password, dan import massal Excel data karyawan', 0),
+('operator', 'manage_quotas', 'Penyesuaian & Alokasi Kuota Cuti', 'Manajemen HRD', 'Penyesuaian sisa kuota cuti individual maupun alokasi kuota massal (Bulk)', 0),
+('operator', 'view_reports', 'Rekap Laporan & Cetak Surat Cuti', 'Laporan & Dokumen', 'Melihat filter analitik rekapitulasi cuti dan cetak surat resmi format PDF/A4', 0),
+('operator', 'manage_settings', 'Pengaturan Sistem, Kop Surat & Privilege', 'Sistem & Konfigurasi', 'Mengatur nama instansi, logo perusahaan, nomor surat, dan matriks hak akses', 0),
+('staff', 'leave_request', 'Pengajuan Cuti Pribadi', 'Cuti & Kehadiran', 'Mengajukan cuti mandiri, upload surat sakit/lampiran & cek sisa kuota', 1),
+('staff', 'view_public_board', 'Papan Informasi & Kalender Bersama', 'Cuti & Kehadiran', 'Melihat jadwal cuti rekan kerja, kalender pabrik, dan statistik umum', 1),
+('staff', 'approval_tier1', 'Persetujuan Tier 1 (Leader / Supervisor)', 'Persetujuan (Approval)', 'Verifikasi dan review pengajuan cuti operator/staff di departemen sendiri', 0),
+('staff', 'approval_tier2', 'Persetujuan Tier 2 (Plant Manager)', 'Persetujuan (Approval)', 'Persetujuan operasional tingkat manajerial lintas seluruh 15 departemen', 0),
+('staff', 'approval_tier3', 'Persetujuan Tier 3 / Final (HRD)', 'Persetujuan (Approval)', 'Persetujuan akhir resmi dan eksekusi otomatis pemotongan kuota cuti tahunan', 0),
+('staff', 'manage_employees', 'Kelola Master Data Karyawan', 'Manajemen HRD', 'Tambah, ubah, hapus, reset password, dan import massal Excel data karyawan', 0),
+('staff', 'manage_quotas', 'Penyesuaian & Alokasi Kuota Cuti', 'Manajemen HRD', 'Penyesuaian sisa kuota cuti individual maupun alokasi kuota massal (Bulk)', 0),
+('staff', 'view_reports', 'Rekap Laporan & Cetak Surat Cuti', 'Laporan & Dokumen', 'Melihat filter analitik rekapitulasi cuti dan cetak surat resmi format PDF/A4', 0),
+('staff', 'manage_settings', 'Pengaturan Sistem, Kop Surat & Privilege', 'Sistem & Konfigurasi', 'Mengatur nama instansi, logo perusahaan, nomor surat, dan matriks hak akses', 0),
+('leader', 'leave_request', 'Pengajuan Cuti Pribadi', 'Cuti & Kehadiran', 'Mengajukan cuti mandiri, upload surat sakit/lampiran & cek sisa kuota', 1),
+('leader', 'view_public_board', 'Papan Informasi & Kalender Bersama', 'Cuti & Kehadiran', 'Melihat jadwal cuti rekan kerja, kalender pabrik, dan statistik umum', 1),
+('leader', 'approval_tier1', 'Persetujuan Tier 1 (Leader / Supervisor)', 'Persetujuan (Approval)', 'Verifikasi dan review pengajuan cuti operator/staff di departemen sendiri', 1),
+('leader', 'approval_tier2', 'Persetujuan Tier 2 (Plant Manager)', 'Persetujuan (Approval)', 'Persetujuan operasional tingkat manajerial lintas seluruh 15 departemen', 0),
+('leader', 'approval_tier3', 'Persetujuan Tier 3 / Final (HRD)', 'Persetujuan (Approval)', 'Persetujuan akhir resmi dan eksekusi otomatis pemotongan kuota cuti tahunan', 0),
+('leader', 'manage_employees', 'Kelola Master Data Karyawan', 'Manajemen HRD', 'Tambah, ubah, hapus, reset password, dan import massal Excel data karyawan', 0),
+('leader', 'manage_quotas', 'Penyesuaian & Alokasi Kuota Cuti', 'Manajemen HRD', 'Penyesuaian sisa kuota cuti individual maupun alokasi kuota massal (Bulk)', 0),
+('leader', 'view_reports', 'Rekap Laporan & Cetak Surat Cuti', 'Laporan & Dokumen', 'Melihat filter analitik rekapitulasi cuti dan cetak surat resmi format PDF/A4', 1),
+('leader', 'manage_settings', 'Pengaturan Sistem, Kop Surat & Privilege', 'Sistem & Konfigurasi', 'Mengatur nama instansi, logo perusahaan, nomor surat, dan matriks hak akses', 0),
+('supervisor', 'leave_request', 'Pengajuan Cuti Pribadi', 'Cuti & Kehadiran', 'Mengajukan cuti mandiri, upload surat sakit/lampiran & cek sisa kuota', 1),
+('supervisor', 'view_public_board', 'Papan Informasi & Kalender Bersama', 'Cuti & Kehadiran', 'Melihat jadwal cuti rekan kerja, kalender pabrik, dan statistik umum', 1),
+('supervisor', 'approval_tier1', 'Persetujuan Tier 1 (Leader / Supervisor)', 'Persetujuan (Approval)', 'Verifikasi dan review pengajuan cuti operator/staff di departemen sendiri', 1),
+('supervisor', 'approval_tier2', 'Persetujuan Tier 2 (Plant Manager)', 'Persetujuan (Approval)', 'Persetujuan operasional tingkat manajerial lintas seluruh 15 departemen', 0),
+('supervisor', 'approval_tier3', 'Persetujuan Tier 3 / Final (HRD)', 'Persetujuan (Approval)', 'Persetujuan akhir resmi dan eksekusi otomatis pemotongan kuota cuti tahunan', 0),
+('supervisor', 'manage_employees', 'Kelola Master Data Karyawan', 'Manajemen HRD', 'Tambah, ubah, hapus, reset password, dan import massal Excel data karyawan', 0),
+('supervisor', 'manage_quotas', 'Penyesuaian & Alokasi Kuota Cuti', 'Manajemen HRD', 'Penyesuaian sisa kuota cuti individual maupun alokasi kuota massal (Bulk)', 0),
+('supervisor', 'view_reports', 'Rekap Laporan & Cetak Surat Cuti', 'Laporan & Dokumen', 'Melihat filter analitik rekapitulasi cuti dan cetak surat resmi format PDF/A4', 1),
+('supervisor', 'manage_settings', 'Pengaturan Sistem, Kop Surat & Privilege', 'Sistem & Konfigurasi', 'Mengatur nama instansi, logo perusahaan, nomor surat, dan matriks hak akses', 0),
+('manager', 'leave_request', 'Pengajuan Cuti Pribadi', 'Cuti & Kehadiran', 'Mengajukan cuti mandiri, upload surat sakit/lampiran & cek sisa kuota', 1),
+('manager', 'view_public_board', 'Papan Informasi & Kalender Bersama', 'Cuti & Kehadiran', 'Melihat jadwal cuti rekan kerja, kalender pabrik, dan statistik umum', 1),
+('manager', 'approval_tier1', 'Persetujuan Tier 1 (Leader / Supervisor)', 'Persetujuan (Approval)', 'Verifikasi dan review pengajuan cuti operator/staff di departemen sendiri', 0),
+('manager', 'approval_tier2', 'Persetujuan Tier 2 (Plant Manager)', 'Persetujuan (Approval)', 'Persetujuan operasional tingkat manajerial lintas seluruh 15 departemen', 1),
+('manager', 'approval_tier3', 'Persetujuan Tier 3 / Final (HRD)', 'Persetujuan (Approval)', 'Persetujuan akhir resmi dan eksekusi otomatis pemotongan kuota cuti tahunan', 0),
+('manager', 'manage_employees', 'Kelola Master Data Karyawan', 'Manajemen HRD', 'Tambah, ubah, hapus, reset password, dan import massal Excel data karyawan', 0),
+('manager', 'manage_quotas', 'Penyesuaian & Alokasi Kuota Cuti', 'Manajemen HRD', 'Penyesuaian sisa kuota cuti individual maupun alokasi kuota massal (Bulk)', 0),
+('manager', 'view_reports', 'Rekap Laporan & Cetak Surat Cuti', 'Laporan & Dokumen', 'Melihat filter analitik rekapitulasi cuti dan cetak surat resmi format PDF/A4', 1),
+('manager', 'manage_settings', 'Pengaturan Sistem, Kop Surat & Privilege', 'Sistem & Konfigurasi', 'Mengatur nama instansi, logo perusahaan, nomor surat, dan matriks hak akses', 0),
+('hrd', 'leave_request', 'Pengajuan Cuti Pribadi', 'Cuti & Kehadiran', 'Mengajukan cuti mandiri, upload surat sakit/lampiran & cek sisa kuota', 1),
+('hrd', 'view_public_board', 'Papan Informasi & Kalender Bersama', 'Cuti & Kehadiran', 'Melihat jadwal cuti rekan kerja, kalender pabrik, dan statistik umum', 1),
+('hrd', 'approval_tier1', 'Persetujuan Tier 1 (Leader / Supervisor)', 'Persetujuan (Approval)', 'Verifikasi dan review pengajuan cuti operator/staff di departemen sendiri', 0),
+('hrd', 'approval_tier2', 'Persetujuan Tier 2 (Plant Manager)', 'Persetujuan (Approval)', 'Persetujuan operasional tingkat manajerial lintas seluruh 15 departemen', 0),
+('hrd', 'approval_tier3', 'Persetujuan Tier 3 / Final (HRD)', 'Persetujuan (Approval)', 'Persetujuan akhir resmi dan eksekusi otomatis pemotongan kuota cuti tahunan', 1),
+('hrd', 'manage_employees', 'Kelola Master Data Karyawan', 'Manajemen HRD', 'Tambah, ubah, hapus, reset password, dan import massal Excel data karyawan', 1),
+('hrd', 'manage_quotas', 'Penyesuaian & Alokasi Kuota Cuti', 'Manajemen HRD', 'Penyesuaian sisa kuota cuti individual maupun alokasi kuota massal (Bulk)', 1),
+('hrd', 'view_reports', 'Rekap Laporan & Cetak Surat Cuti', 'Laporan & Dokumen', 'Melihat filter analitik rekapitulasi cuti dan cetak surat resmi format PDF/A4', 1),
+('hrd', 'manage_settings', 'Pengaturan Sistem, Kop Surat & Privilege', 'Sistem & Konfigurasi', 'Mengatur nama instansi, logo perusahaan, nomor surat, dan matriks hak akses', 1),
+('superadmin', 'leave_request', 'Pengajuan Cuti Pribadi', 'Cuti & Kehadiran', 'Mengajukan cuti mandiri, upload surat sakit/lampiran & cek sisa kuota', 1),
+('superadmin', 'view_public_board', 'Papan Informasi & Kalender Bersama', 'Cuti & Kehadiran', 'Melihat jadwal cuti rekan kerja, kalender pabrik, dan statistik umum', 1),
+('superadmin', 'approval_tier1', 'Persetujuan Tier 1 (Leader / Supervisor)', 'Persetujuan (Approval)', 'Verifikasi dan review pengajuan cuti operator/staff di departemen sendiri', 1),
+('superadmin', 'approval_tier2', 'Persetujuan Tier 2 (Plant Manager)', 'Persetujuan (Approval)', 'Persetujuan operasional tingkat manajerial lintas seluruh 15 departemen', 1),
+('superadmin', 'approval_tier3', 'Persetujuan Tier 3 / Final (HRD)', 'Persetujuan (Approval)', 'Persetujuan akhir resmi dan eksekusi otomatis pemotongan kuota cuti tahunan', 1),
+('superadmin', 'manage_employees', 'Kelola Master Data Karyawan', 'Manajemen HRD', 'Tambah, ubah, hapus, reset password, dan import massal Excel data karyawan', 1),
+('superadmin', 'manage_quotas', 'Penyesuaian & Alokasi Kuota Cuti', 'Manajemen HRD', 'Penyesuaian sisa kuota cuti individual maupun alokasi kuota massal (Bulk)', 1),
+('superadmin', 'view_reports', 'Rekap Laporan & Cetak Surat Cuti', 'Laporan & Dokumen', 'Melihat filter analitik rekapitulasi cuti dan cetak surat resmi format PDF/A4', 1),
+('superadmin', 'manage_settings', 'Pengaturan Sistem, Kop Surat & Privilege', 'Sistem & Konfigurasi', 'Mengatur nama instansi, logo perusahaan, nomor surat, dan matriks hak akses', 1);
+
 SET FOREIGN_KEY_CHECKS = 1;
+

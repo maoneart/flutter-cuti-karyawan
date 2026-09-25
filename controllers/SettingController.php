@@ -21,9 +21,58 @@ class SettingController {
         
         $pdo = getDbConnection();
         $settings = getAppSettings($pdo);
+        
+        require_once __DIR__ . '/../models/Permission.php';
+        $permissionsMatrix = Permission::getAllMatrix($pdo);
+        
         $pageTitle = "Pengaturan Aplikasi & Perusahaan";
 
         require __DIR__ . '/../views/settings/index.php';
+    }
+
+    /**
+     * Process Role Permissions Matrix Update
+     */
+    public function updatePermissions() {
+        requireRole('admin');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/index.php?page=settings#tab-privileges');
+            exit;
+        }
+
+        $pdo = getDbConnection();
+        require_once __DIR__ . '/../models/Permission.php';
+
+        // Check if AJAX toggle
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json');
+            $role = cleanInput($_POST['role'] ?? '');
+            $permKey = cleanInput($_POST['permission_key'] ?? '');
+            $isGranted = (isset($_POST['is_granted']) && ($_POST['is_granted'] === '1' || $_POST['is_granted'] === 'true' || $_POST['is_granted'] === 1)) ? 1 : 0;
+
+            if ($role === 'superadmin') {
+                echo json_encode(['success' => false, 'message' => 'Hak akses Super Admin tidak dapat dinonaktifkan.']);
+                exit;
+            }
+
+            $success = Permission::toggle($role, $permKey, $isGranted, $pdo);
+            echo json_encode(['success' => (bool)$success, 'message' => $success ? 'Hak akses berhasil diperbarui' : 'Gagal menyimpan ke database']);
+            exit;
+        }
+
+        // Full matrix post
+        $matrix = $_POST['matrix'] ?? [];
+        $success = Permission::updateMatrix($matrix, $pdo);
+
+        if ($success) {
+            setFlash('success', 'Matriks Hak Akses & Privilege Role berhasil disimpan!');
+        } else {
+            setFlash('error', 'Gagal memperbarui matriks hak akses.');
+        }
+
+        header('Location: ' . BASE_URL . '/index.php?page=settings#tab-privileges');
+        exit;
     }
 
     /**

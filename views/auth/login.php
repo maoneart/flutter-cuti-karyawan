@@ -124,68 +124,65 @@ $loginFavUrl = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
                 </span>
             </div>
             
-            <div class="grid grid-cols-2 gap-2">
-                <!-- 1. Super Admin HRD -->
-                <button type="button" class="quick-login col-span-2 p-2.5 rounded-xl bg-gradient-to-r from-rose-50 to-red-50 hover:from-rose-100 hover:to-red-100 border border-rose-200 text-rose-800 text-xs font-bold transition flex items-center justify-between shadow-2xs group" 
-                        data-user="admin" data-pass="password123">
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-lg bg-rose-600 text-white flex items-center justify-center text-[10px] shadow-2xs">
+            <div class="grid grid-cols-2 gap-2.5">
+                <!-- 1. Akun HRD -->
+                <button type="button" class="quick-login p-2.5 rounded-2xl bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 text-xs font-bold transition flex items-center justify-between shadow-2xs group" 
+                        data-user="hrd@nakakin.co.id" data-pass="password123">
+                    <div class="flex items-center gap-2 text-left truncate">
+                        <div class="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xs flex-shrink-0 shadow-2xs">
                             <i class="fa-solid fa-user-shield"></i>
                         </div>
-                        <div class="text-left">
-                            <div class="text-xs font-extrabold text-slate-900">Super Admin / HRD</div>
-                            <div class="text-[10px] text-rose-600 font-mono">User: <strong>admin</strong> / <strong>NAK-001</strong> &bull; Pass: <strong>password123</strong></div>
+                        <div class="truncate">
+                            <div class="text-xs font-black text-slate-900 truncate">Risma (HRD)</div>
+                            <div class="text-[10px] text-emerald-700 font-mono truncate">hrd@nakakin.co.id</div>
                         </div>
                     </div>
-                    <span class="text-[10px] bg-rose-600 text-white px-2 py-0.5 rounded-md font-bold group-hover:scale-105 transition">Pilih</span>
+                    <span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-md font-bold group-hover:scale-105 transition flex-shrink-0 ml-1">Pilih</span>
                 </button>
 
-                <!-- 2. Atasan QC -->
-                <button type="button" class="quick-login p-2 rounded-xl bg-blue-50/80 hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-bold transition flex items-center justify-between shadow-2xs" 
-                        data-user="NAK-010" data-pass="password123">
-                    <div class="flex items-center gap-1.5 text-left truncate">
-                        <i class="fa-solid fa-user-tie text-blue-600 text-xs flex-shrink-0"></i>
+                <!-- 2. Akun Manager -->
+                <button type="button" class="quick-login p-2.5 rounded-2xl bg-purple-50/90 hover:bg-purple-100 border border-purple-200 text-purple-900 text-xs font-bold transition flex items-center justify-between shadow-2xs group" 
+                        data-user="manager@nakakin.co.id" data-pass="password123">
+                    <div class="flex items-center gap-2 text-left truncate">
+                        <div class="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs flex-shrink-0 shadow-2xs">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
                         <div class="truncate">
-                            <div class="text-[11px] font-extrabold text-slate-900 truncate">Atasan QC</div>
-                            <div class="text-[9.5px] text-slate-500 font-mono truncate">NAK-010</div>
+                            <div class="text-xs font-black text-slate-900 truncate">Akun Manager</div>
+                            <div class="text-[10px] text-purple-700 font-mono truncate">manager@nakakin.co.id</div>
                         </div>
                     </div>
+                    <span class="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded-md font-bold group-hover:scale-105 transition flex-shrink-0 ml-1">Pilih</span>
                 </button>
 
-                <!-- 3. Atasan Machining -->
-                <button type="button" class="quick-login p-2 rounded-xl bg-indigo-50/80 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-bold transition flex items-center justify-between shadow-2xs" 
-                        data-user="NAK-020" data-pass="password123">
-                    <div class="flex items-center gap-1.5 text-left truncate">
-                        <i class="fa-solid fa-user-tie text-indigo-600 text-xs flex-shrink-0"></i>
+                <!-- 3. Akun Leader Core -->
+                <button type="button" class="quick-login p-2.5 rounded-2xl bg-sky-50/90 hover:bg-sky-100 border border-sky-200 text-sky-900 text-xs font-bold transition flex items-center justify-between shadow-2xs group" 
+                        data-user="ldr.core@nakakin.co.id" data-pass="password123">
+                    <div class="flex items-center gap-2 text-left truncate">
+                        <div class="w-7 h-7 rounded-xl bg-sky-600 text-white flex items-center justify-center text-xs flex-shrink-0 shadow-2xs">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
                         <div class="truncate">
-                            <div class="text-[11px] font-extrabold text-slate-900 truncate">Atasan Machining</div>
-                            <div class="text-[9.5px] text-slate-500 font-mono truncate">NAK-020</div>
+                            <div class="text-xs font-black text-slate-900 truncate">Akun Leader Core</div>
+                            <div class="text-[10px] text-sky-700 font-mono truncate">ldr.core@nakakin.co.id</div>
                         </div>
                     </div>
+                    <span class="text-[10px] bg-sky-600 text-white px-2 py-0.5 rounded-md font-bold group-hover:scale-105 transition flex-shrink-0 ml-1">Pilih</span>
                 </button>
 
-                <!-- 4. Operator QC -->
-                <button type="button" class="quick-login p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold transition flex items-center justify-between shadow-2xs" 
-                        data-user="NAK-011" data-pass="password123">
-                    <div class="flex items-center gap-1.5 text-left truncate">
-                        <i class="fa-solid fa-helmet-safety text-slate-600 text-xs flex-shrink-0"></i>
+                <!-- 4. Akun Operator 1 Core -->
+                <button type="button" class="quick-login p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200/90 border border-slate-200 text-slate-800 text-xs font-bold transition flex items-center justify-between shadow-2xs group" 
+                        data-user="op1.core@nakakin.co.id" data-pass="password123">
+                    <div class="flex items-center gap-2 text-left truncate">
+                        <div class="w-7 h-7 rounded-xl bg-slate-700 text-white flex items-center justify-center text-xs flex-shrink-0 shadow-2xs">
+                            <i class="fa-solid fa-helmet-safety"></i>
+                        </div>
                         <div class="truncate">
-                            <div class="text-[11px] font-extrabold text-slate-900 truncate">Operator (Budi)</div>
-                            <div class="text-[9.5px] text-slate-500 font-mono truncate">NAK-011</div>
+                            <div class="text-xs font-black text-slate-900 truncate">Operator 1 Core</div>
+                            <div class="text-[10px] text-slate-600 font-mono truncate">op1.core@nakakin.co.id</div>
                         </div>
                     </div>
-                </button>
-
-                <!-- 5. Staff Maintenance -->
-                <button type="button" class="quick-login p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 text-xs font-bold transition flex items-center justify-between shadow-2xs" 
-                        data-user="NAK-041" data-pass="password123">
-                    <div class="flex items-center gap-1.5 text-left truncate">
-                        <i class="fa-solid fa-user-gear text-slate-600 text-xs flex-shrink-0"></i>
-                        <div class="truncate">
-                            <div class="text-[11px] font-extrabold text-slate-900 truncate">Staff (Eko)</div>
-                            <div class="text-[9.5px] text-slate-500 font-mono truncate">NAK-041</div>
-                        </div>
-                    </div>
+                    <span class="text-[10px] bg-slate-700 text-white px-2 py-0.5 rounded-md font-bold group-hover:scale-105 transition flex-shrink-0 ml-1">Pilih</span>
                 </button>
             </div>
         </div>

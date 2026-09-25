@@ -183,6 +183,10 @@ switch ($page) {
         (new SettingController())->update();
         break;
 
+    case 'settings-permissions-update':
+        (new SettingController())->updatePermissions();
+        break;
+
     default:
         require __DIR__ . '/views/public/board.php';
         break;

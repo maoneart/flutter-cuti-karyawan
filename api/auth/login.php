@@ -65,6 +65,10 @@ unset($user['password']);
 $stmtSettings = $pdo->query("SELECT nama_aplikasi, singkatan_aplikasi, nama_perusahaan, singkatan_perusahaan, logo FROM pengaturan_aplikasi LIMIT 1");
 $settings = $stmtSettings->fetch() ?: [];
 
+// Get Permissions
+require_once __DIR__ . '/../../models/Permission.php';
+$userPerms = Permission::getByRole($user['role'] ?? 'operator', $pdo);
+
 jsonResponse(true, 'Login berhasil! Selamat datang, ' . $user['nama_lengkap'], [
     'token' => $token,
     'token_type' => 'Bearer',
@@ -90,5 +94,7 @@ jsonResponse(true, 'Login berhasil! Selamat datang, ' . $user['nama_lengkap'], [
         'alamat' => $user['alamat'],
         'foto' => $user['foto']
     ],
+    'permissions' => $userPerms['map'],
+    'permissions_list' => $userPerms['list'],
     'company' => $settings
 ]);

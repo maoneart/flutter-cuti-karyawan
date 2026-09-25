@@ -11,6 +11,7 @@ import 'add_employee_screen.dart';
 import 'employee_list_screen.dart';
 import 'about_screen.dart';
 import 'user_guide_screen.dart';
+import 'privilege_info_screen.dart';
 import 'login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -243,11 +244,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title: 'Ganti Password',
                     subtitle: 'Ubah kata sandi akun Anda',
                     isDark: isDark,
-                    showDivider: false,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+                      );
+                    },
+                  ),
+                  _buildIosTile(
+                    icon: CupertinoIcons.shield_lefthalf_fill,
+                    iconColor: const Color(0xFF6366F1),
+                    title: 'Hak Akses & Privilege',
+                    subtitle: 'Wewenang akun & modul sistem (${user?.role.toUpperCase() ?? "STAFF"})',
+                    isDark: isDark,
+                    showDivider: false,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const PrivilegeInfoScreen()),
                       );
                     },
                   ),
