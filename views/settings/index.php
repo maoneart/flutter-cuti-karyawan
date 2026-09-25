@@ -41,15 +41,21 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
         </div>
     </div>
 
+    <?php 
+    $isSuperAdmin = ($currentUser && ($currentUser['role'] === 'superadmin' || $currentUser['role'] === 'admin' || (int)($currentUser['level_hierarki'] ?? 0) >= 8));
+    ?>
+
     <!-- Navigation Tabs -->
     <div class="flex items-center gap-2 border-b border-slate-200/80 pb-px">
         <button type="button" onclick="switchSettingTab('general')" id="tabBtnGeneral" class="px-5 py-3 rounded-2xl text-xs font-black transition-all duration-200 flex items-center gap-2 bg-blue-600 text-white shadow-md shadow-blue-500/20">
             <i class="fa-solid fa-building"></i> Identitas & Kop Surat
         </button>
+        <?php if ($isSuperAdmin): ?>
         <button type="button" onclick="switchSettingTab('privileges')" id="tabBtnPrivileges" class="px-5 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 flex items-center gap-2">
-            <i class="fa-solid fa-shield-halved"></i> Matriks Hak Akses & Privilege Role
-            <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black">Baru</span>
+            <i class="fa-solid fa-shield-halved"></i> Matriks Hak Akses & Privilege (Super Admin)
+            <span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[10px] font-black">Super Admin</span>
         </button>
+        <?php endif; ?>
     </div>
 
     <!-- TAB 1: Main Settings Form -->
@@ -411,7 +417,8 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
     </div>
     <!-- END TAB 1 -->
 
-    <!-- TAB 2: Role Permissions & Privilege Matrix -->
+    <?php if ($isSuperAdmin): ?>
+    <!-- TAB 2: Role Permissions & Privilege Matrix (Super Admin Only) -->
     <div id="tabContentPrivileges" class="hidden space-y-6">
         
         <!-- Info Banner -->
@@ -558,6 +565,7 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
 
     </div>
     <!-- END TAB 2 -->
+    <?php endif; ?>
 
 </div>
 

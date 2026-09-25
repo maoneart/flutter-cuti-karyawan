@@ -34,7 +34,21 @@ class SettingController {
      * Process Role Permissions Matrix Update
      */
     public function updatePermissions() {
-        requireRole('admin');
+        requireLogin();
+
+        $currUser = getCurrentUser();
+        $isSuperAdmin = ($currUser && ($currUser['role'] === 'superadmin' || $currUser['role'] === 'admin' || (int)($currUser['level_hierarki'] ?? 0) >= 8));
+
+        if (!$isSuperAdmin) {
+            if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Akses ditolak. Pengaturan Hak Akses hanya dapat diubah oleh Super Admin.']);
+                exit;
+            }
+            setFlash('error', 'Akses ditolak! Pengaturan Hak Akses & Privilege hanya dapat diubah oleh Super Admin.');
+            header('Location: ' . BASE_URL . '/index.php?page=settings');
+            exit;
+        }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASE_URL . '/index.php?page=settings#tab-privileges');
