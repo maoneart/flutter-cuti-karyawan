@@ -196,6 +196,8 @@ class ApiService {
           )
           .timeout(timeoutDuration);
 
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+
       if (response.statusCode == 200 && body['success'] == true) {
         final data = body['data'] as Map<String, dynamic>;
 
