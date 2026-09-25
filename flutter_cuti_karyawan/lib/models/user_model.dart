@@ -53,9 +53,10 @@ class UserModel {
   bool get isSupervisor => role == 'supervisor' || role == 'leader' || (levelHierarki >= 3 && levelHierarki <= 4);
   bool get canApprove => isAdmin || isManager || isSupervisor || role == 'atasan';
 
-  /// Webbase Super User: Super Admin, Admin, atau Hierarki Level >= 8 (Sesuai SettingController.php & settings/index.php)
+  /// Super Admin: Hanya superadmin atau level >= 8 (HRD role 'hrd' level 7 BUKAN superadmin)
   bool get isSuperAdmin {
     final r = role.toLowerCase().trim();
+    if (r == 'hrd') return false;
     return r == 'superadmin' || r == 'admin' || levelHierarki >= 8;
   }
 

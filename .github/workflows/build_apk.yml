@@ -33,8 +33,9 @@ jobs:
         run: |
           cd flutter_cuti_karyawan
           flutter create --platforms=android,web,ios .
-          git checkout -- android/app/src/main/res/
           flutter pub get
+          dart run flutter_launcher_icons
+          rm -f android/app/src/main/res/drawable/ic_launcher.xml
 
       - name: Build Android Release APK
         run: |

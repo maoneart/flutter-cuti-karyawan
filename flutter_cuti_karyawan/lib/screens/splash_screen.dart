@@ -73,27 +73,29 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               children: [
                 // Logo Icon Box
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  width: 88,
+                  height: 88,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(22),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.25),
-                        blurRadius: 20,
+                        blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),
                     ],
                   ),
-                  child: Image.asset(
-                    'assets/images/Nakakin.png',
-                    width: 72,
-                    height: 72,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.badge_outlined,
-                      size: 64,
-                      color: Color(0xFF0F172A),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(22),
+                    child: Image.asset(
+                      'assets/images/Icon.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.badge_outlined,
+                        size: 54,
+                        color: AppTheme.primaryDark,
+                      ),
                     ),
                   ),
                 ),

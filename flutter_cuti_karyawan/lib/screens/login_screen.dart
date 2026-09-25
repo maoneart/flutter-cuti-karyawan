@@ -256,27 +256,29 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Column(
                             children: [
                               Container(
-                                padding: const EdgeInsets.all(14),
+                                width: 72,
+                                height: 72,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  shape: BoxShape.circle,
+                                  borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
-                                      blurRadius: 16,
+                                      blurRadius: 14,
                                       offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
-                                child: Image.asset(
-                                  'assets/images/Nakakin.png',
-                                  width: 64,
-                                  height: 64,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => Icon(
-                                    Icons.business_center_rounded,
-                                    size: 48,
-                                    color: primaryAccent,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(18),
+                                  child: Image.asset(
+                                    'assets/images/Icon.png',
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Icon(
+                                      Icons.business_center_rounded,
+                                      size: 40,
+                                      color: primaryAccent,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -467,6 +469,13 @@ class _LoginScreenState extends State<LoginScreen> {
                                 spacing: 8,
                                 runSpacing: 8,
                                 children: [
+                                  ActionChip(
+                                    backgroundColor: isDark ? const Color(0xFF831843) : const Color(0xFFFCE7F3),
+                                    side: BorderSide(color: borderCol),
+                                    label: Text('Super Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFFF472B6) : const Color(0xFFBE185D))),
+                                    avatar: const CircleAvatar(backgroundColor: Color(0xFFDB2777), child: Text('S', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold))),
+                                    onPressed: () => _setDemoAccount('admin@nakakin.co.id', 'password123'),
+                                  ),
                                   ActionChip(
                                     backgroundColor: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
                                     side: BorderSide(color: borderCol),

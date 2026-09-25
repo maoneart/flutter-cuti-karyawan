@@ -42,7 +42,7 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
     </div>
 
     <?php 
-    $isSuperAdmin = ($currentUser && ($currentUser['role'] === 'superadmin' || $currentUser['role'] === 'admin' || (int)($currentUser['level_hierarki'] ?? 0) >= 8));
+    $isSuperAdmin = ($currentUser && ($currentUser['role'] ?? '') !== 'hrd' && (($currentUser['role'] ?? '') === 'superadmin' || ($currentUser['role'] ?? '') === 'admin' || (int)($currentUser['level_hierarki'] ?? 0) >= 8));
     ?>
 
     <!-- Navigation Tabs -->

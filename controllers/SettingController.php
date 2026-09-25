@@ -37,7 +37,7 @@ class SettingController {
         requireLogin();
 
         $currUser = getCurrentUser();
-        $isSuperAdmin = ($currUser && ($currUser['role'] === 'superadmin' || $currUser['role'] === 'admin' || (int)($currUser['level_hierarki'] ?? 0) >= 8));
+        $isSuperAdmin = ($currUser && ($currUser['role'] ?? '') !== 'hrd' && (($currUser['role'] ?? '') === 'superadmin' || ($currUser['role'] ?? '') === 'admin' || (int)($currUser['level_hierarki'] ?? 0) >= 8));
 
         if (!$isSuperAdmin) {
             if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {

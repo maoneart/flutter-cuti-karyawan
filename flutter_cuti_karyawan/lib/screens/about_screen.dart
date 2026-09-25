@@ -6,7 +6,7 @@ class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   static const String appVersion = '1.0.0';
-  static const String appName = 'Employee Leave';
+  static const String appName = 'E-Cuti Nakakin';
   static const String developer = 'MaoneArt';
   static const String copyright = '© 2026 MaoneArt';
 
@@ -35,7 +35,7 @@ class AboutScreen extends StatelessWidget {
             CupertinoIcons.chevron_back,
             color: isDark ? Colors.white : AppTheme.primaryDark,
           ),
-          onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.pop(context),
         ),
         centerTitle: false,
       ),
@@ -54,27 +54,28 @@ class AboutScreen extends StatelessWidget {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isDark
-                            ? [const Color(0xFF0284C7), const Color(0xFF0369A1)]
-                            : [AppTheme.primary, const Color(0xFF1E40AF)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: (isDark ? const Color(0xFF0284C7) : AppTheme.primary).withOpacity(0.3),
+                          color: (isDark ? const Color(0xFF0284C7) : AppTheme.primary).withOpacity(0.25),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.business_center_rounded,
-                        size: 52,
-                        color: Colors.white,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.asset(
+                        'assets/images/Icon.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Center(
+                          child: Icon(
+                            Icons.business_center_rounded,
+                            size: 52,
+                            color: AppTheme.primary,
+                          ),
+                        ),
                       ),
                     ),
                   ),

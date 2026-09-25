@@ -84,9 +84,9 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
         await AuthService.updateUser(updatedUser);
       }
 
-      // Check if user is Super User (via local user model, API flag, or non-empty matrix)
-      final bool serverIsSuperAdmin = (data['is_superadmin'] == true) || matrixData.isNotEmpty;
-      final bool newCanManage = _isSuperUser || serverIsSuperAdmin;
+      // Check if user is Super User (strictly exclude HRD)
+      final bool serverIsSuperAdmin = (data['is_superadmin'] == true) && (serverRole?.toLowerCase() != 'hrd');
+      final bool newCanManage = _isSuperUser && (serverRole?.toLowerCase() != 'hrd');
 
       setState(() {
         if (newCanManage != _canManage) {

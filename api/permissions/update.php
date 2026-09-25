@@ -11,8 +11,8 @@ $user = authenticateApiUser();
 $roleUser = strtolower($user['role'] ?? '');
 $hierarkiUser = (int)($user['level_hierarki'] ?? 1);
 
-// Strictly Super User only (same as webbase SettingController.php)
-$isSuperAdmin = in_array($roleUser, ['superadmin', 'admin'], true) || $hierarkiUser >= 8;
+// Strictly Super User only (Super Admin only, HRD explicitly excluded)
+$isSuperAdmin = ($roleUser !== 'hrd') && (in_array($roleUser, ['superadmin', 'admin'], true) || $hierarkiUser >= 8);
 
 if (!$isSuperAdmin) {
     jsonResponse(false, 'Akses ditolak. Pengaturan Hak Akses & Matriks Role hanya dapat diubah oleh Super Admin.', null, 403);

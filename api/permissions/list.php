@@ -14,8 +14,8 @@ $role = strtolower($user['role'] ?? 'operator');
 $hierarki = (int)($user['level_hierarki'] ?? 1);
 $userPerms = Permission::getByRole($role, $pdo);
 
-// Strict Super User check matching webbase (SettingController.php & views/settings/index.php)
-$isSuperAdmin = in_array($role, ['superadmin', 'admin'], true) || $hierarki >= 8;
+// Strict Super User check (Super Admin only, HRD role explicitly excluded)
+$isSuperAdmin = ($role !== 'hrd') && (in_array($role, ['superadmin', 'admin'], true) || $hierarki >= 8);
 
 $response = [
     'current_user_role' => $role,
