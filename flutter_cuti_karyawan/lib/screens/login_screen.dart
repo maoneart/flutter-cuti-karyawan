@@ -457,7 +457,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ActionChip(
                                     backgroundColor: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
                                     side: BorderSide(color: borderCol),
-                                    label: Text('Risma (HRD)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.emerald : const Color(0xFF065F46))),
+                                    label: Text('Risma (HRD)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFF10B981) : const Color(0xFF065F46))),
                                     avatar: const CircleAvatar(backgroundColor: Color(0xFF059669), child: Text('H', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold))),
                                     onPressed: () => _setDemoAccount('hrd@nakakin.co.id', 'password123'),
                                   ),

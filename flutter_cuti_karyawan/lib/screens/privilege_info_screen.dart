@@ -118,7 +118,7 @@ class PrivilegeInfoScreen extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
-                BoxGradientShadow(
+                BoxShadow(
                   color: Colors.black.withOpacity(0.15),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
@@ -281,13 +281,4 @@ class PrivilegeInfoScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-class BoxGradientShadow extends BoxShadow {
-  const BoxGradientShadow({
-    super.color = const Color(0xFF000000),
-    super.offset = Offset.zero,
-    super.blurRadius = 0.0,
-    super.spreadRadius = 0.0,
-  });
 }

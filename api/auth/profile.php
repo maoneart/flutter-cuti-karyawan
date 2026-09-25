@@ -34,7 +34,7 @@ $stmtCount = $pdo->prepare("
 $stmtCount->execute([$user['id']]);
 $summary = $stmtCount->fetch();
 
-require_once __DIR__ . '/../../models/Permission.php';
+require_once __DIR__ . '/../helpers/permission_helper.php';
 $userPerms = Permission::getByRole($user['role'] ?? 'operator', $pdo);
 
 jsonResponse(true, 'Data profil berhasil diambil', [

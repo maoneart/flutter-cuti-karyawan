@@ -5,7 +5,7 @@
  */
 
 require_once __DIR__ . '/../middleware/auth_middleware.php';
-require_once __DIR__ . '/../../models/Permission.php';
+require_once __DIR__ . '/../helpers/permission_helper.php';
 
 $user = authenticateApiUser();
 
