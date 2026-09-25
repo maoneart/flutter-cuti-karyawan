@@ -236,11 +236,11 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
                 labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 tabs: const [
                   Tab(
-                    icon: Icon(CupertinoIcons.person_badge_shield_checkmark_fill, size: 18),
+                    icon: Icon(CupertinoIcons.person_crop_circle_fill_badge_checkmark, size: 18),
                     text: 'Wewenang Saya',
                   ),
                   Tab(
-                    icon: Icon(CupertinoIcons.slider_horizontal_below_rectangle, size: 18),
+                    icon: Icon(CupertinoIcons.slider_horizontal_3, size: 18),
                     text: 'Matriks & Setting Role',
                   ),
                 ],
@@ -265,7 +265,7 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(CupertinoIcons.exclamationmark_triangle_fill, color: Colors.orange, size: 48),
+                        const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 48),
                         const SizedBox(height: 16),
                         Text('Gagal Memuat Data', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: textHead)),
                         const SizedBox(height: 8),
@@ -273,7 +273,7 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
                         const SizedBox(height: 16),
                         ElevatedButton.icon(
                           onPressed: _fetchPermissions,
-                          icon: const Icon(CupertinoIcons.refresh, size: 16),
+                          icon: const Icon(CupertinoIcons.arrow_clockwise, size: 16),
                           label: const Text('Coba Lagi'),
                         ),
                       ],
