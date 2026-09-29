@@ -427,7 +427,7 @@ class _TeamAttendanceScreenState extends State<TeamAttendanceScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppTheme.borderLight, style: BorderStyle.solid),
+                        border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                         borderRadius: BorderRadius.circular(12),
                         color: attachmentName != null ? Colors.green.withOpacity(0.08) : Colors.transparent,
                       ),
