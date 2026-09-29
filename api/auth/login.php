@@ -92,7 +92,8 @@ jsonResponse(true, 'Login berhasil! Selamat datang, ' . $user['nama_lengkap'], [
         'jenis_kelamin' => $user['jenis_kelamin'],
         'no_hp' => $user['no_hp'],
         'alamat' => $user['alamat'],
-        'foto' => $user['foto']
+        'foto' => $user['foto'],
+        'current_shift' => $user['current_shift'] ?? 'Shift 1'
     ],
     'permissions' => $userPerms['map'],
     'permissions_list' => $userPerms['list'],

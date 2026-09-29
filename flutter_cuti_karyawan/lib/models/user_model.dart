@@ -21,6 +21,7 @@ class UserModel {
   final String? alamat;
   final String? statusAktif;
   final String? foto;
+  final String currentShift;
 
   UserModel({
     required this.id,
@@ -45,6 +46,7 @@ class UserModel {
     this.alamat,
     this.statusAktif,
     this.foto,
+    this.currentShift = 'Shift 1',
   });
 
   int get deptId => departemenId;
@@ -52,6 +54,7 @@ class UserModel {
   bool get isManager => role == 'manager' || (levelHierarki >= 5 && levelHierarki <= 6);
   bool get isSupervisor => role == 'supervisor' || role == 'leader' || (levelHierarki >= 3 && levelHierarki <= 4);
   bool get canApprove => isAdmin || isManager || isSupervisor || role == 'atasan';
+  bool get canManageTeam => isAdmin || isManager || isSupervisor || canApprove || levelHierarki >= 3;
 
   /// Super Admin: Hanya superadmin atau level >= 8 (HRD role 'hrd' level 7 BUKAN superadmin)
   bool get isSuperAdmin {
@@ -83,6 +86,7 @@ class UserModel {
     String? alamat,
     String? statusAktif,
     String? foto,
+    String? currentShift,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -107,6 +111,7 @@ class UserModel {
       alamat: alamat ?? this.alamat,
       statusAktif: statusAktif ?? this.statusAktif,
       foto: foto ?? this.foto,
+      currentShift: currentShift ?? this.currentShift,
     );
   }
 
@@ -172,6 +177,7 @@ class UserModel {
       alamat: json['alamat']?.toString(),
       statusAktif: json['status_aktif']?.toString() ?? 'Aktif',
       foto: json['foto']?.toString(),
+      currentShift: json['current_shift']?.toString() ?? 'Shift 1',
     );
   }
 
@@ -199,6 +205,7 @@ class UserModel {
       'alamat': alamat,
       'status_aktif': statusAktif,
       'foto': foto,
+      'current_shift': currentShift,
     };
   }
 }

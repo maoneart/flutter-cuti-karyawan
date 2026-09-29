@@ -116,6 +116,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final user = AuthService.currentUser;
     final bellCount = _stats?.bellNotificationCount ?? 0;
     final isAdmin = user?.role == 'admin' || (user?.levelHierarki ?? 0) >= 7;
+    final canManageTeam = (user?.canManageTeam ?? false) || isAdmin;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
@@ -348,6 +349,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         ),
                                       ],
                                     ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          (user?.currentShift ?? '').contains('Shift 2') ? Icons.nightlight_round : Icons.wb_sunny_rounded,
+                                          color: (user?.currentShift ?? '').contains('Shift 2') ? const Color(0xFFC084FC) : const Color(0xFFFDE047),
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            'Jadwal Shift: ${user?.currentShift ?? 'Shift 1'} ${(user?.currentShift ?? '').contains('Shift 2') ? '(Maju - Masuk Minggu Malam)' : '(Normal)'}',
+                                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
@@ -440,7 +460,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const SizedBox(height: 12),
                         ],
 
-                        // 2. Feature Action Cards (HRD / Admin & General Users)
+                        // 2. Feature Action Cards
+                        // A. Khusus HRD & Admin (Kelola Jatah Cuti & List Karyawan)
                         if (isAdmin) ...[
                           Row(
                             children: [
@@ -572,6 +593,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
+                        ],
+
+                        // B. Khusus Leader, Supervisor, Manager, & Admin: Tim & Absensi Shift
+                        if (canManageTeam) ...[
                           InkWell(
                             onTap: () {
                               Navigator.push(
@@ -581,7 +606,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             },
                             borderRadius: BorderRadius.circular(16),
                             child: Container(
-                              height: 60,
+                              height: 68,
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
@@ -592,7 +617,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFF8B5CF6).withOpacity(0.2),
+                                    color: const Color(0xFF8B5CF6).withOpacity(0.25),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -601,7 +626,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: const Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.badge_outlined, color: Colors.white, size: 22),
+                                  Icon(Icons.badge_outlined, color: Colors.white, size: 26),
                                   SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
@@ -613,14 +638,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 13.5,
+                                            fontSize: 14,
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         SizedBox(height: 2),
                                         Text(
-                                          'Kelola Shift 1/2 Maju & Catat Mangkir',
+                                          'Kelola Shift 1/2 Maju, Rolling & Catat Mangkir',
                                           style: TextStyle(color: Colors.white70, fontSize: 11),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -634,130 +659,136 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const PublicBoardScreen()),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              height: 60,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF0284C7), Color(0xFF0EA5E9)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF0284C7).withOpacity(0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
+
+                          // Khusus Leader / Supervisor non-admin: tombol Lihat List Karyawan Tim
+                          if (!isAdmin) ...[
+                            InkWell(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const EmployeeListScreen()),
+                                ).then((_) => _loadStats());
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                height: 60,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFE11D48), Color(0xFFF43F5E)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                ],
-                              ),
-                              child: const Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Icon(CupertinoIcons.tv, color: Colors.white, size: 22),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Papan Live Kehadiran',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13.5,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Status Cuti Tim & Departemen Realtime',
-                                          style: TextStyle(color: Colors.white70, fontSize: 11),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFE11D48).withOpacity(0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
                                     ),
-                                  ),
-                                  Icon(CupertinoIcons.chevron_right, color: Colors.white70, size: 16),
-                                ],
+                                  ],
+                                ),
+                                child: const Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(CupertinoIcons.person_3_fill, color: Colors.white, size: 22),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'List Karyawan Bagian',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13.5,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          SizedBox(height: 2),
+                                          Text(
+                                            'Daftar Anggota Departemen',
+                                            style: TextStyle(color: Colors.white70, fontSize: 11),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(CupertinoIcons.chevron_right, color: Colors.white70, size: 16),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ] else ...[
-                          InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const PublicBoardScreen()),
-                              );
-                            },
-                            borderRadius: BorderRadius.circular(16),
-                            child: Container(
-                              height: 68,
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFF0284C7), Color(0xFF0EA5E9)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF0284C7).withOpacity(0.2),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: const Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Icon(CupertinoIcons.tv, color: Colors.white, size: 22),
-                                  SizedBox(width: 10),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Papan Live',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13.5,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: 2),
-                                        Text(
-                                          'Status Cuti Tim',
-                                          style: TextStyle(color: Colors.white70, fontSize: 11),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Icon(CupertinoIcons.chevron_right, color: Colors.white70, size: 16),
-                                ],
-                              ),
-                            ),
-                          ),
+                            const SizedBox(height: 12),
+                          ],
                         ],
+
+                        // C. Papan Live Kehadiran (Semua Role)
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const PublicBoardScreen()),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            height: 60,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF0284C7), Color(0xFF0EA5E9)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF0284C7).withOpacity(0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Icon(CupertinoIcons.tv, color: Colors.white, size: 22),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Papan Live Kehadiran',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13.5,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      SizedBox(height: 2),
+                                      Text(
+                                        'Status Cuti Tim & Departemen Realtime',
+                                        style: TextStyle(color: Colors.white70, fontSize: 11),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(CupertinoIcons.chevron_right, color: Colors.white70, size: 16),
+                              ],
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 12),
 
                         // Quick Tutorial & PDF Guide Banner (Role-Specific Native Page)
