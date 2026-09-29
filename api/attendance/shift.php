@@ -27,8 +27,10 @@ $input = getApiRequestData();
 $employeeId = (int)($input['employee_id'] ?? 0);
 $newShift = trim($input['shift'] ?? 'Shift 1');
 
-if (!in_array($newShift, ['Shift 1', 'Shift 2 (Maju)'])) {
-    $newShift = 'Shift 1';
+if (stripos($newShift, 'Shift 2') !== false) {
+    $newShift = 'Shift 2 (Malam)';
+} else {
+    $newShift = 'Shift 1 (Pagi)';
 }
 
 if ($employeeId <= 0) {

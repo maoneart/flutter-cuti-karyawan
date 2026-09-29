@@ -360,7 +360,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
-                                            'Jadwal Shift: ${user?.currentShift ?? 'Shift 1'} ${(user?.currentShift ?? '').contains('Shift 2') ? '(Maju - Masuk Minggu Malam)' : '(Normal)'}',
+                                            'Jadwal Shift: ${(user?.currentShift ?? '').contains('Shift 2') ? 'Shift 2 (Malam)' : 'Shift 1 (Pagi)'}',
                                             style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -645,7 +645,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         ),
                                         SizedBox(height: 2),
                                         Text(
-                                          'Kelola Shift 1/2 Maju, Rolling & Catat Mangkir',
+                                          'Kelola Shift 1 (Pagi) & Shift 2 (Malam), Rolling & Mangkir',
                                           style: TextStyle(color: Colors.white70, fontSize: 11),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,

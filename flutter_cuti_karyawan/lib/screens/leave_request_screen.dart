@@ -23,7 +23,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   List<LeaveTypeModel> _leaveTypes = [];
   LeaveTypeModel? _selectedType;
   
-  String _selectedShift = 'Shift 1';
+  String _selectedShift = 'Shift 1 (Pagi)';
   DateTime? _startDate;
   DateTime? _endDate;
   double _calculatedDays = 0.0;
@@ -457,35 +457,35 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                 children: [
                                   Expanded(
                                     child: InkWell(
-                                      onTap: () => setState(() => _selectedShift = 'Shift 1'),
+                                      onTap: () => setState(() => _selectedShift = 'Shift 1 (Pagi)'),
                                       borderRadius: BorderRadius.circular(12),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                                         decoration: BoxDecoration(
-                                          color: _selectedShift == 'Shift 1'
+                                          color: _selectedShift.contains('Shift 1')
                                               ? (isDark ? const Color(0xFF0369A1).withOpacity(0.4) : const Color(0xFFEFF6FF))
                                               : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
                                           borderRadius: BorderRadius.circular(12),
                                           border: Border.all(
-                                            color: _selectedShift == 'Shift 1' ? const Color(0xFF2563EB) : borderCol,
-                                            width: _selectedShift == 'Shift 1' ? 2 : 1,
+                                            color: _selectedShift.contains('Shift 1') ? const Color(0xFF2563EB) : borderCol,
+                                            width: _selectedShift.contains('Shift 1') ? 2 : 1,
                                           ),
                                         ),
                                         child: Column(
                                           children: [
                                             Text(
-                                              'Shift 1',
+                                              'Shift 1 (Pagi)',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 13,
-                                                color: _selectedShift == 'Shift 1'
+                                                color: _selectedShift.contains('Shift 1')
                                                     ? (isDark ? Colors.white : const Color(0xFF1D4ED8))
                                                     : textHead,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              'Pagi (Senin-Jumat/Sabtu)',
+                                              'Shift Pagi Pabrik',
                                               style: TextStyle(fontSize: 10, color: textSub),
                                             ),
                                           ],
@@ -496,35 +496,35 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: InkWell(
-                                      onTap: () => setState(() => _selectedShift = 'Shift 2 (Maju)'),
+                                      onTap: () => setState(() => _selectedShift = 'Shift 2 (Malam)'),
                                       borderRadius: BorderRadius.circular(12),
                                       child: Container(
                                         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                                         decoration: BoxDecoration(
-                                          color: _selectedShift == 'Shift 2 (Maju)'
+                                          color: _selectedShift.contains('Shift 2')
                                               ? (isDark ? const Color(0xFF831843).withOpacity(0.4) : const Color(0xFFFFF1F2))
                                               : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
                                           borderRadius: BorderRadius.circular(12),
                                           border: Border.all(
-                                            color: _selectedShift == 'Shift 2 (Maju)' ? const Color(0xFFE11D48) : borderCol,
-                                            width: _selectedShift == 'Shift 2 (Maju)' ? 2 : 1,
+                                            color: _selectedShift.contains('Shift 2') ? const Color(0xFFE11D48) : borderCol,
+                                            width: _selectedShift.contains('Shift 2') ? 2 : 1,
                                           ),
                                         ),
                                         child: Column(
                                           children: [
                                             Text(
-                                              'Shift 2 (Maju)',
+                                              'Shift 2 (Malam)',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 13,
-                                                color: _selectedShift == 'Shift 2 (Maju)'
+                                                color: _selectedShift.contains('Shift 2')
                                                     ? (isDark ? Colors.white : const Color(0xFFBE123C))
                                                     : textHead,
                                               ),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              'Malam Senin - Jumat Pagi',
+                                              'Shift Malam Pabrik',
                                               style: TextStyle(fontSize: 10, color: textSub),
                                             ),
                                           ],

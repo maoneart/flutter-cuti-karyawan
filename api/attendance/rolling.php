@@ -30,8 +30,8 @@ try {
     $stmt = $pdo->prepare("
         UPDATE karyawan 
         SET current_shift = CASE 
-            WHEN current_shift = 'Shift 1' THEN 'Shift 2 (Maju)'
-            ELSE 'Shift 1'
+            WHEN current_shift LIKE '%Shift 1%' THEN 'Shift 2 (Malam)'
+            ELSE 'Shift 1 (Pagi)'
         END
         WHERE departemen_id = ?
     ");

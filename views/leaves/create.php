@@ -267,17 +267,17 @@ $usedPercent = $currentUser['kuota_cuti'] > 0 ? round(($currentUser['cuti_terpak
                 </label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <label class="relative flex items-center gap-3 p-3.5 rounded-2xl border-2 border-slate-200/80 bg-white hover:border-blue-400 cursor-pointer transition has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/40">
-                        <input type="radio" name="shift" value="Shift 1" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <input type="radio" name="shift" value="Shift 1 (Pagi)" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
                         <div>
-                            <span class="font-extrabold text-xs text-slate-900 block">☀️ Shift 1 (Pagi / Siang)</span>
-                            <span class="text-[11px] text-slate-500">Jadwal normal hari kerja pabrik</span>
+                            <span class="font-extrabold text-xs text-slate-900 block">☀️ Shift 1 (Pagi)</span>
+                            <span class="text-[11px] text-slate-500">Jadwal kerja shift pagi pabrik</span>
                         </div>
                     </label>
                     <label class="relative flex items-center gap-3 p-3.5 rounded-2xl border-2 border-slate-200/80 bg-white hover:border-indigo-400 cursor-pointer transition has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/40">
-                        <input type="radio" name="shift" value="Shift 2 (Maju)" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                        <input type="radio" name="shift" value="Shift 2 (Malam)" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
                         <div>
-                            <span class="font-extrabold text-xs text-slate-900 block">🌙 Shift 2 (Maju - Malam Senin)</span>
-                            <span class="text-[11px] text-slate-500">Jadwal malam, hari Senin dimulai Minggu malam</span>
+                            <span class="font-extrabold text-xs text-slate-900 block">🌙 Shift 2 (Malam)</span>
+                            <span class="text-[11px] text-slate-500">Jadwal kerja shift malam pabrik</span>
                         </div>
                     </label>
                 </div>

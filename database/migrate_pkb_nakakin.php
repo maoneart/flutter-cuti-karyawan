@@ -26,7 +26,9 @@ ALTER TABLE karyawan
 MODIFY COLUMN kuota_cuti DECIMAL(4,1) NOT NULL DEFAULT 12.0,
 MODIFY COLUMN cuti_terpakai DECIMAL(4,1) NOT NULL DEFAULT 0.0,
 MODIFY COLUMN sisa_cuti DECIMAL(4,1) NOT NULL DEFAULT 12.0,
-ADD COLUMN IF NOT EXISTS current_shift ENUM('Shift 1', 'Shift 2 (Maju)') NOT NULL DEFAULT 'Shift 1' AFTER jabatan_id;
+MODIFY COLUMN current_shift ENUM('Shift 1', 'Shift 1 (Pagi)', 'Shift 2 (Malam)', 'Shift 2 (Maju)') NOT NULL DEFAULT 'Shift 1 (Pagi)';
+UPDATE karyawan SET current_shift = 'Shift 2 (Malam)' WHERE current_shift LIKE '%Shift 2%';
+UPDATE karyawan SET current_shift = 'Shift 1 (Pagi)' WHERE current_shift LIKE '%Shift 1%';
 ");
 echo "2. karyawan columns updated.\n";
 
@@ -34,9 +36,9 @@ echo "2. karyawan columns updated.\n";
 $pdo->exec("
 ALTER TABLE pengajuan_cuti 
 MODIFY COLUMN total_hari DECIMAL(4,1) NOT NULL DEFAULT 1.0,
-ADD COLUMN IF NOT EXISTS shift ENUM('Shift 1', 'Shift 2 (Maju)', 'Non-Shift') NOT NULL DEFAULT 'Shift 1' AFTER leave_type_id,
-ADD COLUMN IF NOT EXISTS jam_mulai TIME NULL AFTER tanggal_selesai,
-ADD COLUMN IF NOT EXISTS jam_selesai TIME NULL AFTER jam_mulai;
+MODIFY COLUMN shift ENUM('Shift 1', 'Shift 1 (Pagi)', 'Shift 2 (Malam)', 'Shift 2 (Maju)', 'Non-Shift') NOT NULL DEFAULT 'Shift 1 (Pagi)';
+UPDATE pengajuan_cuti SET shift = 'Shift 2 (Malam)' WHERE shift LIKE '%Shift 2%';
+UPDATE pengajuan_cuti SET shift = 'Shift 1 (Pagi)' WHERE shift LIKE '%Shift 1%';
 ");
 echo "3. pengajuan_cuti columns updated.\n";
 
@@ -47,7 +49,7 @@ CREATE TABLE IF NOT EXISTS absensi_shift (
   employee_id INT NOT NULL,
   leader_id INT NOT NULL,
   tanggal DATE NOT NULL,
-  shift ENUM('Shift 1', 'Shift 2 (Maju)') NOT NULL DEFAULT 'Shift 1',
+  shift ENUM('Shift 1', 'Shift 1 (Pagi)', 'Shift 2 (Malam)', 'Shift 2 (Maju)') NOT NULL DEFAULT 'Shift 1 (Pagi)',
   status VARCHAR(30) NOT NULL DEFAULT 'mangkir',
   keterangan_mangkir TEXT NULL,
   status_revisi ENUM('original', 'revised') NOT NULL DEFAULT 'original',
@@ -59,15 +61,15 @@ CREATE TABLE IF NOT EXISTS absensi_shift (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uk_emp_tgl_shift (employee_id, tanggal, shift),
   KEY idx_emp (employee_id),
   KEY idx_leader (leader_id),
-  KEY idx_tgl (tanggal),
-  CONSTRAINT fk_abs_emp FOREIGN KEY (employee_id) REFERENCES karyawan (id) ON DELETE CASCADE,
-  CONSTRAINT fk_abs_leader FOREIGN KEY (leader_id) REFERENCES karyawan (id) ON DELETE CASCADE
+  KEY idx_tgl (tanggal)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ALTER TABLE absensi_shift MODIFY COLUMN shift ENUM('Shift 1', 'Shift 1 (Pagi)', 'Shift 2 (Malam)', 'Shift 2 (Maju)') NOT NULL DEFAULT 'Shift 1 (Pagi)';
+UPDATE absensi_shift SET shift = 'Shift 2 (Malam)' WHERE shift LIKE '%Shift 2%';
+UPDATE absensi_shift SET shift = 'Shift 1 (Pagi)' WHERE shift LIKE '%Shift 1%';
 ");
-echo "4. absensi_shift table created.\n";
+echo "4. absensi_shift table updated.\n";
 
 // 5. Sync 25 Jenis Cuti
 $pdo->exec("SET FOREIGN_KEY_CHECKS = 0;");

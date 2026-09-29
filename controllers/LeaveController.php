@@ -47,8 +47,12 @@ class LeaveController {
 
         $leaveTypeId = (int)($_POST['leave_type_id'] ?? 0);
         $shift = cleanInput($_POST['shift'] ?? 'Shift 1');
-        if (!in_array($shift, ['Shift 1', 'Shift 2 (Maju)', 'Non-Shift'])) {
-            $shift = 'Shift 1';
+        if (stripos($shift, 'Shift 2') !== false) {
+            $shift = 'Shift 2 (Malam)';
+        } elseif (stripos($shift, 'Non-Shift') !== false) {
+            $shift = 'Non-Shift';
+        } else {
+            $shift = 'Shift 1 (Pagi)';
         }
         $startDate = cleanInput($_POST['tanggal_mulai'] ?? '');
         $endDate = cleanInput($_POST['tanggal_selesai'] ?? '');

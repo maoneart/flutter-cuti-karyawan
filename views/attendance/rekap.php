@@ -115,9 +115,12 @@ require_once __DIR__ . '/../layouts/header.php';
                                 <td class="py-3 px-3 text-center text-slate-400 font-semibold"><?= $no++ ?></td>
                                 
                                 <td class="py-3 px-3 whitespace-nowrap">
-                                    <div class="font-bold text-slate-900"><?= formatTanggalIndo($r['tanggal']) ?></div>
-                                    <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[9.5px] font-extrabold <?= $r['shift'] === 'Shift 2 (Maju)' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-amber-50 text-amber-700 border border-amber-200' ?>">
-                                        <?= htmlspecialchars($r['shift']) ?>
+                                    <?php 
+                                    $isShiftMalam = stripos($r['shift'] ?? '', 'Shift 2') !== false;
+                                    $displayShift = $isShiftMalam ? 'Shift 2 (Malam)' : 'Shift 1 (Pagi)';
+                                    ?>
+                                    <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[9.5px] font-extrabold <?= $isShiftMalam ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-amber-50 text-amber-700 border border-amber-200' ?>">
+                                        <?= htmlspecialchars($displayShift) ?>
                                     </span>
                                 </td>
 

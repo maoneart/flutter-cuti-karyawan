@@ -125,8 +125,10 @@ class AttendanceController {
         $shift = cleanInput($_POST['shift'] ?? 'Shift 1');
         $keterangan = cleanInput($_POST['keterangan_mangkir'] ?? 'Mangkir tanpa kabar saat jam shift masuk.');
 
-        if (!in_array($shift, ['Shift 1', 'Shift 2 (Maju)'])) {
-            $shift = 'Shift 1';
+        if (stripos($shift, 'Shift 2') !== false) {
+            $shift = 'Shift 2 (Malam)';
+        } else {
+            $shift = 'Shift 1 (Pagi)';
         }
 
         // Security check: verify employee exists and belongs to leader's department
@@ -317,8 +319,10 @@ class AttendanceController {
         $newShift = cleanInput($_POST['shift'] ?? 'Shift 1');
         $tanggal = cleanInput($_POST['tanggal'] ?? date('Y-m-d'));
 
-        if (!in_array($newShift, ['Shift 1', 'Shift 2 (Maju)'])) {
-            $newShift = 'Shift 1';
+        if (stripos($newShift, 'Shift 2') !== false) {
+            $newShift = 'Shift 2 (Malam)';
+        } else {
+            $newShift = 'Shift 1 (Pagi)';
         }
 
         $stmt = $pdo->prepare("UPDATE karyawan SET current_shift = ? WHERE id = ?");
@@ -329,7 +333,7 @@ class AttendanceController {
         exit;
     }
 
-    // Weekly Rolling Shift for Department (Shift 1 <-> Shift 2 Maju)
+    // Weekly Rolling Shift for Department (Shift 1 <-> Shift 2)
     public function rollingShift() {
         requireLogin();
         $currentUser = getCurrentUser();
@@ -346,8 +350,8 @@ class AttendanceController {
         $stmt = $pdo->prepare("
             UPDATE karyawan 
             SET current_shift = CASE 
-                WHEN current_shift = 'Shift 1' THEN 'Shift 2 (Maju)' 
-                ELSE 'Shift 1' 
+                WHEN current_shift LIKE '%Shift 1%' THEN 'Shift 2 (Malam)' 
+                ELSE 'Shift 1 (Pagi)' 
             END 
             WHERE departemen_id = ? AND role IN ('operator', 'staff')
         ");

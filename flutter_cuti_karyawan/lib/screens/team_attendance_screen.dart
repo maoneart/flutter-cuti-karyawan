@@ -75,7 +75,7 @@ class _TeamAttendanceScreenState extends State<TeamAttendanceScreen> {
   }
 
   Future<void> _toggleShift(int employeeId, String currentShift, String empName) async {
-    final newShift = currentShift == 'Shift 1' ? 'Shift 2 (Maju)' : 'Shift 1';
+    final newShift = currentShift.contains('Shift 1') ? 'Shift 2 (Malam)' : 'Shift 1 (Pagi)';
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -223,20 +223,20 @@ class _TeamAttendanceScreenState extends State<TeamAttendanceScreen> {
                     children: [
                       Expanded(
                         child: ChoiceChip(
-                          label: const Center(child: Text('Shift 1')),
-                          selected: currentShift == 'Shift 1',
+                          label: const Center(child: Text('Shift 1 (Pagi)')),
+                          selected: currentShift.contains('Shift 1'),
                           onSelected: (val) {
-                            if (val) setSheetState(() => currentShift = 'Shift 1');
+                            if (val) setSheetState(() => currentShift = 'Shift 1 (Pagi)');
                           },
                         ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: ChoiceChip(
-                          label: const Center(child: Text('Shift 2 (Maju)')),
+                          label: const Center(child: Text('Shift 2 (Malam)')),
                           selected: currentShift.contains('Shift 2'),
                           onSelected: (val) {
-                            if (val) setSheetState(() => currentShift = 'Shift 2 (Maju)');
+                            if (val) setSheetState(() => currentShift = 'Shift 2 (Malam)');
                           },
                         ),
                       ),
@@ -618,11 +618,11 @@ class _TeamAttendanceScreenState extends State<TeamAttendanceScreen> {
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: _buildStatCard('Shift 1', '$shift1Count', Icons.wb_sunny_rounded, Colors.indigo, cardBg, borderCol, textHead, textSub),
+                            child: _buildStatCard('Shift 1 (Pagi)', '$shift1Count', Icons.wb_sunny_rounded, Colors.indigo, cardBg, borderCol, textHead, textSub),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: _buildStatCard('Shift 2 Maju', '$shift2Count', Icons.nightlight_round, Colors.purple, cardBg, borderCol, textHead, textSub),
+                            child: _buildStatCard('Shift 2 (Malam)', '$shift2Count', Icons.nightlight_round, Colors.purple, cardBg, borderCol, textHead, textSub),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
@@ -763,7 +763,7 @@ class _TeamAttendanceScreenState extends State<TeamAttendanceScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        currentShift,
+                        currentShift.contains('Shift 2') ? 'Shift 2 (Malam)' : 'Shift 1 (Pagi)',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,

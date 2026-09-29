@@ -27,12 +27,12 @@ require_once __DIR__ . '/../layouts/header.php';
                             <?= htmlspecialchars($department['kode_dept'] ?? '-') ?>
                         </span>
                         <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-                            <i class="fa-solid fa-repeat text-[9px] mr-1"></i> 2 Shift (Shift Maju)
+                            <i class="fa-solid fa-repeat text-[9px] mr-1"></i> 2 Shift (Pagi & Malam)
                         </span>
                     </div>
                     <p class="text-xs text-slate-300 mt-1 flex items-center gap-1.5 flex-wrap">
                         <i class="fa-solid fa-circle-info text-blue-400"></i>
-                        <span>Mekanisme <strong>Shift 2 Maju</strong>: Jadwal kerja Senin dimulai <strong>Minggu Malam</strong> (Malam Senin).</span>
+                        <span>Mekanisme <strong>Shift 2 (Malam)</strong>: Jadwal kerja Senin dimulai <strong>Minggu Malam</strong> (Malam Senin).</span>
                     </p>
                 </div>
             </div>
@@ -103,7 +103,7 @@ require_once __DIR__ . '/../layouts/header.php';
             $countMangkir = 0;
             $countCuti = 0;
             foreach ($teamMembers as $tm) {
-                if (($tm['current_shift'] ?? 'Shift 1') === 'Shift 2 (Maju)') $countShift2++;
+                if (stripos($tm['current_shift'] ?? '', 'Shift 2') !== false) $countShift2++;
                 else $countShift1++;
 
                 if (isset($absensiMap[$tm['id']]) && $absensiMap[$tm['id']]['status'] === 'mangkir') $countMangkir++;
@@ -112,10 +112,10 @@ require_once __DIR__ . '/../layouts/header.php';
             ?>
             <div class="flex items-center gap-2 flex-wrap text-[11px] font-bold">
                 <span class="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/70">
-                    <i class="fa-solid fa-sun mr-1"></i> Shift 1: <?= $countShift1 ?>
+                    <i class="fa-solid fa-sun mr-1"></i> Shift 1 (Pagi): <?= $countShift1 ?>
                 </span>
                 <span class="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/70">
-                    <i class="fa-solid fa-moon mr-1"></i> Shift 2: <?= $countShift2 ?>
+                    <i class="fa-solid fa-moon mr-1"></i> Shift 2 (Malam): <?= $countShift2 ?>
                 </span>
                 <?php if ($countMangkir > 0): ?>
                     <span class="px-2.5 py-1 rounded-xl bg-rose-50 text-rose-700 border border-rose-200/70 animate-pulse">
@@ -195,9 +195,9 @@ require_once __DIR__ . '/../layouts/header.php';
                                         <input type="hidden" name="employee_id" value="<?= $empId ?>">
                                         <input type="hidden" name="tanggal" value="<?= htmlspecialchars($tanggal) ?>">
                                         <select name="shift" onchange="this.form.submit()" 
-                                                class="text-[11px] font-extrabold rounded-xl px-2.5 py-1 border transition cursor-pointer shadow-2xs outline-none <?= $currentShift === 'Shift 2 (Maju)' ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-amber-50 border-amber-200 text-amber-700' ?>">
-                                            <option value="Shift 1" <?= $currentShift === 'Shift 1' ? 'selected' : '' ?>>☀️ Shift 1 (Pagi)</option>
-                                            <option value="Shift 2 (Maju)" <?= $currentShift === 'Shift 2 (Maju)' ? 'selected' : '' ?>>🌙 Shift 2 (Maju)</option>
+                                                class="text-[11px] font-extrabold rounded-xl px-2.5 py-1 border transition cursor-pointer shadow-2xs outline-none <?= stripos($currentShift, 'Shift 2') !== false ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-amber-50 border-amber-200 text-amber-700' ?>">
+                                            <option value="Shift 1 (Pagi)" <?= stripos($currentShift, 'Shift 1') !== false ? 'selected' : '' ?>>☀️ Shift 1 (Pagi)</option>
+                                            <option value="Shift 2 (Malam)" <?= stripos($currentShift, 'Shift 2') !== false ? 'selected' : '' ?>>🌙 Shift 2 (Malam)</option>
                                         </select>
                                     </form>
                                 </td>
@@ -300,11 +300,11 @@ require_once __DIR__ . '/../layouts/header.php';
                     Pilih Shift Masuk Kerja <span class="text-rose-500">*</span>
                 </label>
                 <select name="shift" id="modalMangkirShift" class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 text-slate-800 font-semibold text-xs focus:outline-none focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition">
-                    <option value="Shift 1">☀️ Shift 1 (Pagi - Siang)</option>
-                    <option value="Shift 2 (Maju)">🌙 Shift 2 (Maju - Malam Senin)</option>
+                    <option value="Shift 1 (Pagi)">☀️ Shift 1 (Pagi)</option>
+                    <option value="Shift 2 (Malam)">🌙 Shift 2 (Malam)</option>
                 </select>
                 <p class="text-[10.5px] text-slate-400 mt-1">
-                    *Malam Senin terhitung sebagai hari kerja Shift 2 (Maju).
+                    *Pilih shift kerja saat anggota tidak masuk.
                 </p>
             </div>
 
@@ -448,8 +448,8 @@ require_once __DIR__ . '/../layouts/header.php';
                         <p class="text-xs text-slate-600 leading-relaxed">
                             Apakah Anda ingin menukar shift seluruh operator di departemen ini? 
                             <br><br>
-                            <span class="font-bold text-amber-700">&bull; Operator Shift 1 akan beralih ke Shift 2 (Maju).</span><br>
-                            <span class="font-bold text-indigo-700">&bull; Operator Shift 2 (Maju) akan beralih ke Shift 1.</span>
+                            <span class="font-bold text-amber-700">&bull; Operator Shift 1 (Pagi) akan beralih ke Shift 2 (Malam).</span><br>
+                            <span class="font-bold text-indigo-700">&bull; Operator Shift 2 (Malam) akan beralih ke Shift 1 (Pagi).</span>
                         </p>
                     </div>
                 `,

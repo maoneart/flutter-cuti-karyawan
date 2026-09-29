@@ -33,8 +33,10 @@ if (!strtotime($tanggal)) {
     $tanggal = date('Y-m-d');
 }
 
-if (!in_array($shift, ['Shift 1', 'Shift 2 (Maju)'])) {
-    $shift = 'Shift 1';
+if (stripos($shift, 'Shift 2') !== false) {
+    $shift = 'Shift 2 (Malam)';
+} else {
+    $shift = 'Shift 1 (Pagi)';
 }
 
 if ($employeeId <= 0) {

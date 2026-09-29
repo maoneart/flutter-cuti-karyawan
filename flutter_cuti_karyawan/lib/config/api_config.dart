@@ -4,13 +4,7 @@ class ApiConfig {
   static const String serverIp = '172.16.0.107';
 
   static String get defaultBaseUrl {
-    if (kIsWeb) {
-      return 'http://localhost/Cuti_Karyawan/api';
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://$serverIp/Cuti_Karyawan/api';
-    } else {
-      return 'http://localhost/Cuti_Karyawan/api';
-    }
+    return 'https://maoneart.my.id/api';
   }
 
   // Active Base URL
