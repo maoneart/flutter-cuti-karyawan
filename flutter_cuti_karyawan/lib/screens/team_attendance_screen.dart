@@ -626,7 +626,7 @@ class _TeamAttendanceScreenState extends State<TeamAttendanceScreen> {
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: _buildStatCard('Mangkir', '$mangkirCount', Icons.person_off_rounded, Colors.rose, cardBg, borderCol, textHead, textSub),
+                            child: _buildStatCard('Mangkir', '$mangkirCount', Icons.person_off_rounded, const Color(0xFFE11D48), cardBg, borderCol, textHead, textSub),
                           ),
                         ],
                       ),
@@ -658,7 +658,7 @@ class _TeamAttendanceScreenState extends State<TeamAttendanceScreen> {
     );
   }
 
-  Widget _buildStatCard(String label, String value, IconData icon, MaterialColor color, Color bg, Color border, Color textHead, Color textSub) {
+  Widget _buildStatCard(String label, String value, IconData icon, Color color, Color bg, Color border, Color textHead, Color textSub) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
