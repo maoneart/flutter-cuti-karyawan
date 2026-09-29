@@ -131,7 +131,7 @@ class _TeamAttendanceScreenState extends State<TeamAttendanceScreen> {
           ],
         ),
         content: const Text(
-          'Tindakan ini akan menukar Shift 1 ke Shift 2 (Maju) dan sebaliknya untuk seluruh operator di departemen ini.\n\nLanjutkan rolling shift mingguan?',
+          'Tindakan ini akan menukar Shift 1 (Pagi) ke Shift 2 (Malam) dan sebaliknya untuk seluruh operator di departemen ini.\n\nLanjutkan rolling shift mingguan?',
           style: TextStyle(fontSize: 13),
         ),
         actions: [

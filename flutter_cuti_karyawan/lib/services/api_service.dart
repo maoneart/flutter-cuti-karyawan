@@ -890,6 +890,14 @@ class ApiService {
 
   // ==================== ATTENDANCE & SHIFT (NAKAKIN MOBILE) ====================
 
+  static dynamic _safeJsonDecode(String source) {
+    try {
+      return jsonDecode(source);
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// 23. Get Team Attendance & Shift Roster
   static Future<ApiResponse<Map<String, dynamic>>> getTeamAttendance({
     String? tanggal,
@@ -903,17 +911,23 @@ class ApiService {
       final uri = Uri.parse(ApiConfig.attendanceTeam).replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
       final response = await http.get(uri, headers: _getHeaders()).timeout(timeoutDuration);
 
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode == 200 && (body['success'] == true)) {
+      final body = _safeJsonDecode(response.body);
+      if (body is Map<String, dynamic>) {
+        if (response.statusCode == 200 && (body['success'] == true)) {
+          return ApiResponse(
+            success: true,
+            message: body['message'] ?? 'Data berhasil dimuat',
+            data: body['data'] as Map<String, dynamic>?,
+          );
+        }
         return ApiResponse(
-          success: true,
-          message: body['message'] ?? 'Data berhasil dimuat',
-          data: body['data'] as Map<String, dynamic>?,
+          success: false,
+          message: body['message'] ?? 'Gagal memuat absensi tim',
         );
       }
       return ApiResponse(
         success: false,
-        message: body['message'] ?? 'Gagal memuat absensi tim',
+        message: 'Respon server tidak valid (${response.statusCode})',
       );
     } catch (e) {
       return ApiResponse(success: false, message: 'Koneksi bermasalah: $e');
@@ -937,11 +951,17 @@ class ApiService {
           )
           .timeout(timeoutDuration);
 
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final body = _safeJsonDecode(response.body);
+      if (body is Map<String, dynamic>) {
+        return ApiResponse(
+          success: body['success'] == true,
+          message: body['message'] ?? 'Shift berhasil diperbarui',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      }
       return ApiResponse(
-        success: body['success'] == true,
-        message: body['message'] ?? 'Shift berhasil diperbarui',
-        data: body['data'] as Map<String, dynamic>?,
+        success: false,
+        message: 'Respon server tidak valid (${response.statusCode})',
       );
     } catch (e) {
       return ApiResponse(success: false, message: 'Gagal memperbarui shift: $e');
@@ -969,11 +989,17 @@ class ApiService {
           )
           .timeout(timeoutDuration);
 
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final body = _safeJsonDecode(response.body);
+      if (body is Map<String, dynamic>) {
+        return ApiResponse(
+          success: body['success'] == true,
+          message: body['message'] ?? 'Status mangkir berhasil dicatat',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      }
       return ApiResponse(
-        success: body['success'] == true,
-        message: body['message'] ?? 'Status mangkir berhasil dicatat',
-        data: body['data'] as Map<String, dynamic>?,
+        success: false,
+        message: 'Respon server tidak valid (${response.statusCode})',
       );
     } catch (e) {
       return ApiResponse(success: false, message: 'Gagal mencatat mangkir: $e');
@@ -1007,11 +1033,17 @@ class ApiService {
           )
           .timeout(timeoutDuration);
 
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final body = _safeJsonDecode(response.body);
+      if (body is Map<String, dynamic>) {
+        return ApiResponse(
+          success: body['success'] == true,
+          message: body['message'] ?? 'Status berhasil direvisi',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      }
       return ApiResponse(
-        success: body['success'] == true,
-        message: body['message'] ?? 'Status berhasil direvisi',
-        data: body['data'] as Map<String, dynamic>?,
+        success: false,
+        message: 'Respon server tidak valid (${response.statusCode})',
       );
     } catch (e) {
       return ApiResponse(success: false, message: 'Gagal merevisi absensi: $e');
@@ -1033,11 +1065,17 @@ class ApiService {
           )
           .timeout(timeoutDuration);
 
-      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      final body = _safeJsonDecode(response.body);
+      if (body is Map<String, dynamic>) {
+        return ApiResponse(
+          success: body['success'] == true,
+          message: body['message'] ?? 'Rolling shift berhasil dilakukan',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      }
       return ApiResponse(
-        success: body['success'] == true,
-        message: body['message'] ?? 'Rolling shift berhasil dilakukan',
-        data: body['data'] as Map<String, dynamic>?,
+        success: false,
+        message: 'Respon server tidak valid (${response.statusCode})',
       );
     } catch (e) {
       return ApiResponse(success: false, message: 'Gagal rolling shift: $e');
