@@ -25,7 +25,7 @@ $loginFavUrl = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login &bull; <?= htmlspecialchars($appSettings['nama_aplikasi'] ?: 'Sistem Informasi Cuti Karyawan') ?> <?= htmlspecialchars($appSettings['nama_perusahaan'] ?: 'PT. Nakakin Indonesia') ?></title>
+    <title>Login &bull; <?= htmlspecialchars($appSettings['nama_aplikasi'] ?: 'Nakakin Mobile') ?> <?= htmlspecialchars($appSettings['nama_perusahaan'] ?: 'PT. Nakakin Indonesia') ?></title>
     
     <link rel="icon" type="image/png" href="<?= $loginFavUrl ?>">
 
@@ -112,7 +112,7 @@ $loginFavUrl = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
             <button type="submit" 
                     class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-sm shadow-lg shadow-rose-600/40 transform hover:-translate-y-0.5 active:translate-y-0 transition duration-200 flex items-center justify-center gap-2">
                 <i class="fa-solid fa-right-to-bracket"></i>
-                <span>Masuk ke Sistem Cuti</span>
+                <span>Masuk ke Nakakin Mobile</span>
             </button>
         </form>
 

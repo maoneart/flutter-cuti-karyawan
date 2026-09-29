@@ -23,9 +23,10 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   List<LeaveTypeModel> _leaveTypes = [];
   LeaveTypeModel? _selectedType;
   
+  String _selectedShift = 'Shift 1';
   DateTime? _startDate;
   DateTime? _endDate;
-  int _calculatedDays = 0;
+  double _calculatedDays = 0.0;
   
   final _alasanController = TextEditingController();
   final _alamatController = TextEditingController();
@@ -74,6 +75,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         }
         _isLoadingTypes = false;
       });
+      _calculateDays();
     } else {
       setState(() {
         _errorMessage = res.message;
@@ -83,16 +85,24 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   }
 
   void _calculateDays() {
+    if (_selectedType?.kode == 'CT-HALF' || _selectedType?.kode == 'PC-PRI' || _selectedType?.kode == 'PC-SKT' || _selectedType?.kode == 'IK-TMP') {
+      setState(() {
+        _calculatedDays = 0.5;
+        if (_startDate != null) _endDate = _startDate;
+      });
+      return;
+    }
+
     if (_startDate == null || _endDate == null) {
       setState(() {
-        _calculatedDays = 0;
+        _calculatedDays = 0.0;
       });
       return;
     }
 
     if (_endDate!.isBefore(_startDate!)) {
       setState(() {
-        _calculatedDays = 0;
+        _calculatedDays = 0.0;
       });
       return;
     }
@@ -107,12 +117,30 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     }
 
     setState(() {
-      _calculatedDays = days == 0 ? 1 : days;
+      _calculatedDays = (days == 0 ? 1 : days).toDouble();
     });
   }
 
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
+
+    if (_selectedType?.kode == 'CT-HALF' || _selectedType?.kode == 'PC-PRI' || _selectedType?.kode == 'PC-SKT' || _selectedType?.kode == 'IK-TMP') {
+      final singlePicked = await showDatePicker(
+        context: context,
+        initialDate: _startDate ?? now,
+        firstDate: now.subtract(const Duration(days: 30)),
+        lastDate: now.add(const Duration(days: 365)),
+      );
+      if (singlePicked != null) {
+        setState(() {
+          _startDate = singlePicked;
+          _endDate = singlePicked;
+          _calculatedDays = 0.5;
+        });
+      }
+      return;
+    }
+
     final picked = await showDateRangePicker(
       context: context,
       firstDate: now.subtract(const Duration(days: 30)),
@@ -213,6 +241,8 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       leaveTypeId: _selectedType!.id,
       tanggalMulai: DateFormat('yyyy-MM-dd').format(_startDate!),
       tanggalSelesai: DateFormat('yyyy-MM-dd').format(_endDate!),
+      shift: _selectedShift,
+      totalHari: _calculatedDays,
       alasan: _alasanController.text.trim(),
       alamatSelamaCuti: _alamatController.text.trim(),
       kontakDarurat: _kontakDaruratController.text.trim(),
@@ -227,6 +257,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
     });
 
     if (res.success) {
+      final daysText = _calculatedDays == 0.5 ? '0.5' : (_calculatedDays.truncateToDouble() == _calculatedDays ? _calculatedDays.toInt().toString() : _calculatedDays.toString());
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -251,7 +282,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Pengajuan cuti $_calculatedDays hari Anda telah tercatat dan masuk ke antrean persetujuan atasan.',
+                'Pengajuan cuti $daysText hari ($_selectedShift) Anda telah tercatat dan masuk ke antrean persetujuan atasan.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
               ),
@@ -405,6 +436,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                   setState(() {
                                     _selectedType = val;
                                   });
+                                  _calculateDays();
                                 },
                               ),
                               if (_selectedType?.deskripsi != null) ...[
@@ -414,6 +446,94 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                   style: TextStyle(fontSize: 12, color: textSub, fontStyle: FontStyle.italic),
                                 ),
                               ],
+                              const SizedBox(height: 18),
+
+                              // 1b. Shift Kerja (PKB 2-Shift Nakakin)
+                              Text('Shift Kerja Karyawan *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textHead)),
+                              const SizedBox(height: 4),
+                              Text('Pilih shift yang dijalani (Shift 2 dimulai malam Senin)', style: TextStyle(fontSize: 11, color: textSub)),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () => setState(() => _selectedShift = 'Shift 1'),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                                        decoration: BoxDecoration(
+                                          color: _selectedShift == 'Shift 1'
+                                              ? (isDark ? const Color(0xFF0369A1).withOpacity(0.4) : const Color(0xFFEFF6FF))
+                                              : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: _selectedShift == 'Shift 1' ? const Color(0xFF2563EB) : borderCol,
+                                            width: _selectedShift == 'Shift 1' ? 2 : 1,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              'Shift 1',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                                color: _selectedShift == 'Shift 1'
+                                                    ? (isDark ? Colors.white : const Color(0xFF1D4ED8))
+                                                    : textHead,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'Pagi (Senin-Jumat/Sabtu)',
+                                              style: TextStyle(fontSize: 10, color: textSub),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () => setState(() => _selectedShift = 'Shift 2 (Maju)'),
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                                        decoration: BoxDecoration(
+                                          color: _selectedShift == 'Shift 2 (Maju)'
+                                              ? (isDark ? const Color(0xFF831843).withOpacity(0.4) : const Color(0xFFFFF1F2))
+                                              : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: _selectedShift == 'Shift 2 (Maju)' ? const Color(0xFFE11D48) : borderCol,
+                                            width: _selectedShift == 'Shift 2 (Maju)' ? 2 : 1,
+                                          ),
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              'Shift 2 (Maju)',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                                color: _selectedShift == 'Shift 2 (Maju)'
+                                                    ? (isDark ? Colors.white : const Color(0xFFBE123C))
+                                                    : textHead,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              'Malam Senin - Jumat Pagi',
+                                              style: TextStyle(fontSize: 10, color: textSub),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                               const SizedBox(height: 18),
 
                               // 2. Tanggal Cuti
@@ -436,7 +556,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                       Expanded(
                                         child: Text(
                                           (_startDate != null && _endDate != null)
-                                              ? '${DateFormat('dd MMM yyyy').format(_startDate!)} s/d ${DateFormat('dd MMM yyyy').format(_endDate!)}'
+                                              ? (_calculatedDays == 0.5 || _startDate == _endDate
+                                                  ? '${DateFormat('dd MMM yyyy').format(_startDate!)} (0.5 Hari / 4 Jam)'
+                                                  : '${DateFormat('dd MMM yyyy').format(_startDate!)} s/d ${DateFormat('dd MMM yyyy').format(_endDate!)}')
                                               : 'Pilih Tanggal Mulai dan Selesai',
                                           style: TextStyle(
                                             fontSize: 14,
@@ -453,7 +575,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
-                                            '$_calculatedDays Hari Kerja',
+                                            _calculatedDays == 0.5 ? '0.5 Hari (4 Jam)' : '${_calculatedDays.truncateToDouble() == _calculatedDays ? _calculatedDays.toInt() : _calculatedDays} Hari Kerja',
                                             style: TextStyle(color: primaryAccent, fontWeight: FontWeight.bold, fontSize: 12),
                                           ),
                                         ),

@@ -4,7 +4,7 @@ class LeaveTypeModel {
   final String kode;
   final String? deskripsi;
   final bool potongKuota;
-  final int maxHariDefault;
+  final double maxHariDefault;
   final bool butuhLampiran;
   final bool eligible;
   final String? eligibilityMessage;
@@ -28,7 +28,7 @@ class LeaveTypeModel {
       kode: json['kode']?.toString() ?? '',
       deskripsi: json['deskripsi']?.toString(),
       potongKuota: (json['potong_kuota']?.toString() == '1' || json['potong_kuota'] == true),
-      maxHariDefault: int.tryParse(json['max_hari_default']?.toString() ?? '12') ?? 12,
+      maxHariDefault: double.tryParse(json['max_hari_default']?.toString() ?? '12') ?? 12.0,
       butuhLampiran: (json['butuh_lampiran']?.toString() == '1' || json['butuh_lampiran'] == true),
       eligible: json['eligible'] != false,
       eligibilityMessage: json['eligibility_message']?.toString(),

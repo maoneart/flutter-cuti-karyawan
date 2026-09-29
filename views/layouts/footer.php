@@ -7,7 +7,7 @@
                 <span>&copy; <?= date('Y') ?></span>
                 <strong class="text-slate-800 font-bold"><?= htmlspecialchars($footerSettings['nama_perusahaan'] ?: 'PT. Nakakin Indonesia') ?></strong>
                 <span class="text-slate-400">&bull;</span>
-                <span><?= htmlspecialchars($footerSettings['footer_text'] ?: 'Sistem Informasi Manajemen Cuti Karyawan') ?></span>
+                <span><?= htmlspecialchars($footerSettings['footer_text'] ?: 'Nakakin Mobile - Sistem Presensi, Shift & Cuti') ?></span>
             </div>
             <div class="flex items-center gap-2 text-slate-400 font-medium">
                 <?php if (!empty($footerSettings['lokasi_surat'])): ?>

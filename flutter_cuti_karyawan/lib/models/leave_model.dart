@@ -5,7 +5,8 @@ class LeaveModel {
   final int leaveTypeId;
   final String tanggalMulai;
   final String tanggalSelesai;
-  final int totalHari;
+  final double totalHari;
+  final String? shift;
   final String alasan;
   final String? alamatSelamaCuti;
   final String? kontakDarurat;
@@ -70,6 +71,7 @@ class LeaveModel {
     required this.tanggalMulai,
     required this.tanggalSelesai,
     required this.totalHari,
+    this.shift,
     required this.alasan,
     this.alamatSelamaCuti,
     this.kontakDarurat,
@@ -151,7 +153,8 @@ class LeaveModel {
       leaveTypeId: int.tryParse(json['leave_type_id']?.toString() ?? '0') ?? 0,
       tanggalMulai: json['tanggal_mulai']?.toString() ?? '',
       tanggalSelesai: json['tanggal_selesai']?.toString() ?? '',
-      totalHari: int.tryParse(json['total_hari']?.toString() ?? '1') ?? 1,
+      totalHari: double.tryParse(json['total_hari']?.toString() ?? '1') ?? 1.0,
+      shift: json['shift']?.toString(),
       alasan: json['alasan']?.toString() ?? '',
       alamatSelamaCuti: json['alamat_selama_cuti']?.toString(),
       kontakDarurat: json['kontak_darurat']?.toString(),

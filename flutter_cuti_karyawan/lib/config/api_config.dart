@@ -56,4 +56,11 @@ class ApiConfig {
 
   static String get permissionsList => '$baseUrl/permissions/list.php';
   static String get permissionsUpdate => '$baseUrl/permissions/update.php';
+
+  // Attendance & Shift Endpoints
+  static String get attendanceTeam => '$baseUrl/attendance/team.php';
+  static String get attendanceShift => '$baseUrl/attendance/shift.php';
+  static String get attendanceMangkir => '$baseUrl/attendance/mangkir.php';
+  static String get attendanceRevisi => '$baseUrl/attendance/revisi.php';
+  static String get attendanceRolling => '$baseUrl/attendance/rolling.php';
 }

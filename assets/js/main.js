@@ -67,6 +67,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const start = new Date(startVal);
             const end = new Date(endVal);
 
+            // Check if current selected leave type is half-day (CT-HALF, PC-PRI, PC-SKT, IK-TMP)
+            const selCard = document.querySelector('.leave-type-card.border-blue-600');
+            const selKode = selCard ? selCard.getAttribute('data-kode') : '';
+            if (selKode === 'CT-HALF' || selKode === 'PC-PRI' || selKode === 'PC-SKT' || selKode === 'IK-TMP') {
+                endDateInput.value = startVal;
+                totalDaysInput.value = 0.5;
+                if (totalDaysDisplay) {
+                    totalDaysDisplay.innerText = '0.5 Hari (4 Jam Kerja)';
+                }
+                return;
+            }
+
             if (end < start) {
                 if (window.Swal) {
                     Swal.fire({

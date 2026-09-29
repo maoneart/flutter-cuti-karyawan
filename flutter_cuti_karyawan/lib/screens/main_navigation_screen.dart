@@ -109,7 +109,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'NAKAKIN',
+                      'NAKAKIN MOBILE',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,

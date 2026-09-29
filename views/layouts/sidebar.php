@@ -140,12 +140,24 @@ $sidebarLogoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . 
                 <i class="fa-solid fa-users-viewfinder text-sm w-5 text-center flex-shrink-0 <?= $currentPage === 'leaves-team' ? 'text-white' : 'text-slate-500 group-hover:text-blue-400' ?>"></i>
                 <span class="sidebar-text">Cuti Departemen</span>
             </a>
+            <a href="<?= BASE_URL ?>/index.php?page=team-attendance" 
+               class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group <?= $currentPage === 'team-attendance' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 font-bold' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' ?>"
+               title="Tim & Absensi Shift">
+                <i class="fa-solid fa-user-clock text-sm w-5 text-center flex-shrink-0 <?= $currentPage === 'team-attendance' ? 'text-white' : 'text-slate-500 group-hover:text-blue-400' ?>"></i>
+                <span class="sidebar-text">Tim & Absensi Shift</span>
+            </a>
         <?php endif; ?>
 
         <!-- Menu for HRD / Superadmin Only -->
         <?php if ($isHRD): ?>
             <div class="sidebar-text px-3 pt-3 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Manajemen HRD</div>
             <div class="sidebar-section-divider hidden border-t border-slate-800 my-2"></div>
+            <a href="<?= BASE_URL ?>/index.php?page=absensi-rekap" 
+               class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group <?= $currentPage === 'absensi-rekap' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 font-bold' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' ?>"
+               title="Rekap Mangkir & Shift">
+                <i class="fa-solid fa-clipboard-user text-sm w-5 text-center flex-shrink-0 <?= $currentPage === 'absensi-rekap' ? 'text-white' : 'text-slate-500 group-hover:text-blue-400' ?>"></i>
+                <span class="sidebar-text">Rekap Mangkir & Shift</span>
+            </a>
             <a href="<?= BASE_URL ?>/index.php?page=quotas" 
                class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group <?= $currentPage === 'quotas' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 font-bold' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' ?>"
                title="Kelola Jatah Cuti">

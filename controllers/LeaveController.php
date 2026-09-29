@@ -46,9 +46,13 @@ class LeaveController {
         }
 
         $leaveTypeId = (int)($_POST['leave_type_id'] ?? 0);
+        $shift = cleanInput($_POST['shift'] ?? 'Shift 1');
+        if (!in_array($shift, ['Shift 1', 'Shift 2 (Maju)', 'Non-Shift'])) {
+            $shift = 'Shift 1';
+        }
         $startDate = cleanInput($_POST['tanggal_mulai'] ?? '');
         $endDate = cleanInput($_POST['tanggal_selesai'] ?? '');
-        $totalDays = (int)($_POST['total_hari'] ?? 0);
+        $totalDays = (float)($_POST['total_hari'] ?? 0);
         $reason = cleanInput($_POST['alasan'] ?? '');
         $addressDuringLeave = cleanInput($_POST['alamat_selama_cuti'] ?? ($targetEmp['alamat'] ?? '-'));
         $emergencyContact = cleanInput($_POST['kontak_darurat'] ?? ($targetEmp['no_hp'] ?? '-'));
@@ -144,19 +148,19 @@ class LeaveController {
                 // Direct Auto-Approval
                 $stmtInsert = $pdo->prepare("
                     INSERT INTO pengajuan_cuti (
-                        nomor_surat, employee_id, leave_type_id, 
+                        nomor_surat, employee_id, leave_type_id, shift,
                         tanggal_mulai, tanggal_selesai, total_hari, 
                         alasan, alamat_selama_cuti, kontak_darurat, 
                         attachment, status, approval_step, approved_by, approved_at, catatan_atasan, created_at
                     ) VALUES (
-                        ?, ?, ?, 
+                        ?, ?, ?, ?,
                         ?, ?, ?, 
                         ?, ?, ?, 
                         ?, 'approved', 'approved', ?, NOW(), 'Disetujui langsung oleh HRD/Sistem', NOW()
                     )
                 ");
                 $stmtInsert->execute([
-                    $nomorSurat, $employeeId, $leaveTypeId,
+                    $nomorSurat, $employeeId, $leaveTypeId, $shift,
                     $startDate, $endDate, $totalDays,
                     $reason, $addressDuringLeave, $emergencyContact,
                     $attachmentName, $currentUser['id']
@@ -164,7 +168,7 @@ class LeaveController {
 
                 // Deduct quota if applicable
                 if ($leaveType['potong_kuota'] == 1) {
-                    $kuotaSebelum = (int)$targetEmp['sisa_cuti'];
+                    $kuotaSebelum = (float)$targetEmp['sisa_cuti'];
                     $kuotaSesudah = max(0, $kuotaSebelum - $totalDays);
 
                     $stmtUpdateQuota = $pdo->prepare("
@@ -199,19 +203,19 @@ class LeaveController {
                 // Regular submission
                 $stmtInsert = $pdo->prepare("
                     INSERT INTO pengajuan_cuti (
-                        nomor_surat, employee_id, leave_type_id, 
+                        nomor_surat, employee_id, leave_type_id, shift,
                         tanggal_mulai, tanggal_selesai, total_hari, 
                         alasan, alamat_selama_cuti, kontak_darurat, 
                         attachment, status, approval_step, created_at
                     ) VALUES (
-                        ?, ?, ?, 
+                        ?, ?, ?, ?,
                         ?, ?, ?, 
                         ?, ?, ?, 
                         ?, 'pending', ?, NOW()
                     )
                 ");
                 $stmtInsert->execute([
-                    $nomorSurat, $employeeId, $leaveTypeId,
+                    $nomorSurat, $employeeId, $leaveTypeId, $shift,
                     $startDate, $endDate, $totalDays,
                     $reason, $addressDuringLeave, $emergencyContact,
                     $attachmentName, $initialStep
@@ -326,9 +330,9 @@ class LeaveController {
 
                 // Deduct Quota on Final HRD Approval
                 if ($leave['potong_kuota'] == 1) {
-                    $kuotaSebelum = (int)$leave['sisa_cuti'];
-                    $perubahan = -(int)$leave['total_hari'];
-                    $kuotaSesudah = max(0, $kuotaSebelum - (int)$leave['total_hari']);
+                    $kuotaSebelum = (float)$leave['sisa_cuti'];
+                    $perubahan = -(float)$leave['total_hari'];
+                    $kuotaSesudah = max(0, $kuotaSebelum - (float)$leave['total_hari']);
 
                     $stmtUpdateEmp = $pdo->prepare("
                         UPDATE karyawan 

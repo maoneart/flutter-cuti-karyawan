@@ -45,7 +45,7 @@ jobs:
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Cuti-Karyawan-Release-APK
+          name: NakakinMobile-APK
           path: flutter_cuti_karyawan/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
 
@@ -74,6 +74,8 @@ jobs:
           flutter create --platforms=android,web,ios .
           flutter pub get
           cd ios
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Nakakin Mobile" Runner/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 'Nakakin Mobile'" Runner/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleName Nakakin Mobile" Runner/Info.plist 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleName string 'Nakakin Mobile'" Runner/Info.plist
           pod install --repo-update || true
           cd ..
 
@@ -87,12 +89,12 @@ jobs:
           cd flutter_cuti_karyawan/build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r -9 CutiKaryawan-iOS.ipa Payload
-          mv CutiKaryawan-iOS.ipa ../../../
+          zip -r -9 NakakinMobile-iOS.ipa Payload
+          mv NakakinMobile-iOS.ipa ../../../
 
       - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Cuti-Karyawan-iOS-IPA
-          path: flutter_cuti_karyawan/CutiKaryawan-iOS.ipa
+          name: NakakinMobile-iOS-IPA
+          path: flutter_cuti_karyawan/NakakinMobile-iOS.ipa
           retention-days: 30

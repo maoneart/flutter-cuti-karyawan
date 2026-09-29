@@ -24,13 +24,31 @@ if ($currentUser['role'] === 'admin') {
 }
 
 $typeIcons = [
-    'SSD'  => 'fa-solid fa-file-medical text-emerald-600 bg-emerald-50',
-    'STSD' => 'fa-solid fa-head-side-cough text-amber-600 bg-amber-50',
-    'CT'   => 'fa-solid fa-umbrella-beach text-blue-600 bg-blue-50',
-    'CH'   => 'fa-solid fa-droplet text-rose-600 bg-rose-50',
-    'CML'  => 'fa-solid fa-baby text-indigo-600 bg-indigo-50',
-    'CKH'  => 'fa-solid fa-ribbon text-slate-700 bg-slate-100',
-    'IJN'  => 'fa-solid fa-calendar-xmark text-purple-600 bg-purple-50',
+    'CT'        => 'fa-solid fa-umbrella-beach text-blue-600 bg-blue-50',
+    'CT-HALF'   => 'fa-solid fa-hourglass-half text-amber-600 bg-amber-50',
+    'PC-PRI'    => 'fa-solid fa-person-walking-arrow-right text-orange-600 bg-orange-50',
+    'PC-SKT'    => 'fa-solid fa-hospital-user text-red-600 bg-red-50',
+    'IK-TMP'    => 'fa-solid fa-door-open text-yellow-600 bg-yellow-50',
+    'T'         => 'fa-solid fa-clock text-amber-700 bg-amber-50',
+    'SD'        => 'fa-solid fa-file-medical text-emerald-600 bg-emerald-50',
+    'ST'        => 'fa-solid fa-head-side-cough text-amber-600 bg-amber-50',
+    'CH'        => 'fa-solid fa-droplet text-rose-600 bg-rose-50',
+    'CML'       => 'fa-solid fa-baby text-indigo-600 bg-indigo-50',
+    'CKG'       => 'fa-solid fa-heart-crack text-pink-600 bg-pink-50',
+    'CK-NIK'    => 'fa-solid fa-ring text-violet-600 bg-violet-50',
+    'CK-ANK'    => 'fa-solid fa-children text-blue-600 bg-blue-50',
+    'CK-KHT'    => 'fa-solid fa-child text-teal-600 bg-teal-50',
+    'CK-IMS'    => 'fa-solid fa-person-pregnant text-pink-600 bg-pink-50',
+    'CK-DK1'    => 'fa-solid fa-ribbon text-slate-700 bg-slate-100',
+    'CK-DK2'    => 'fa-solid fa-house-chimney-crack text-slate-600 bg-slate-100',
+    'CK-HAJ'    => 'fa-solid fa-kaaba text-emerald-700 bg-emerald-50',
+    'DISP-SP'   => 'fa-solid fa-hand-fist text-red-700 bg-red-50',
+    'DISP-DNS'  => 'fa-solid fa-plane-departure text-sky-600 bg-sky-50',
+    'DISP-BNC'  => 'fa-solid fa-house-flood-water text-cyan-700 bg-cyan-50',
+    'DISP-STD'  => 'fa-solid fa-graduation-cap text-indigo-700 bg-indigo-50',
+    'DISP-NGR'  => 'fa-solid fa-landmark text-slate-800 bg-slate-100',
+    'IJN'       => 'fa-solid fa-calendar-xmark text-purple-600 bg-purple-50',
+    'ALPHA'     => 'fa-solid fa-triangle-exclamation text-rose-700 bg-rose-50',
 ];
 
 $usedPercent = $currentUser['kuota_cuti'] > 0 ? round(($currentUser['cuti_terpakai'] / $currentUser['kuota_cuti']) * 100) : 0;
@@ -242,10 +260,33 @@ $usedPercent = $currentUser['kuota_cuti'] > 0 ? round(($currentUser['cuti_terpak
                 </div>
             </div>
 
-            <!-- 2. Periode Tanggal Cuti -->
+            <!-- 2. Pilihan Shift Kerja Terkait -->
+            <div class="pt-4 border-t border-slate-100">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
+                    2. Pilih Jadwal Shift Terkait <span class="text-rose-500">*</span>
+                </label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="relative flex items-center gap-3 p-3.5 rounded-2xl border-2 border-slate-200/80 bg-white hover:border-blue-400 cursor-pointer transition has-[:checked]:border-blue-600 has-[:checked]:bg-blue-50/40">
+                        <input type="radio" name="shift" value="Shift 1" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                        <div>
+                            <span class="font-extrabold text-xs text-slate-900 block">☀️ Shift 1 (Pagi / Siang)</span>
+                            <span class="text-[11px] text-slate-500">Jadwal normal hari kerja pabrik</span>
+                        </div>
+                    </label>
+                    <label class="relative flex items-center gap-3 p-3.5 rounded-2xl border-2 border-slate-200/80 bg-white hover:border-indigo-400 cursor-pointer transition has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50/40">
+                        <input type="radio" name="shift" value="Shift 2 (Maju)" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <span class="font-extrabold text-xs text-slate-900 block">🌙 Shift 2 (Maju - Malam Senin)</span>
+                            <span class="text-[11px] text-slate-500">Jadwal malam, hari Senin dimulai Minggu malam</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 3. Periode Tanggal Cuti -->
             <div class="pt-4 border-t border-slate-100">
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                    2. Periode Tanggal Cuti <span class="text-rose-500">*</span>
+                    3. Periode Tanggal Cuti <span class="text-rose-500">*</span>
                 </label>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -376,7 +417,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const dropIconWrap = document.getElementById('dropIconWrap');
     const quotaWarning = document.getElementById('quotaWarning');
     const totalDaysInput = document.getElementById('total_hari');
-    const userSisaCuti = <?= (int)$currentUser['sisa_cuti'] ?>;
+    const totalDaysDisplay = document.getElementById('total_hari_display');
+    const startDateInput = document.getElementById('tanggal_mulai');
+    const endDateInput = document.getElementById('tanggal_selesai');
+    let userSisaCuti = <?= (float)$currentUser['sisa_cuti'] ?>;
     const leaveForm = document.getElementById('leaveForm');
 
     let currentNeedsAttach = 0;
@@ -411,6 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedCard.classList.add('border-blue-600', 'bg-blue-50/60', 'ring-2', 'ring-blue-600/30');
 
         const id = selectedCard.getAttribute('data-id');
+        const kode = selectedCard.getAttribute('data-kode');
         const desc = selectedCard.getAttribute('data-desc');
         const potong = parseInt(selectedCard.getAttribute('data-potong') || 0);
         const needsAttach = parseInt(selectedCard.getAttribute('data-attachment') || 0);
@@ -423,6 +468,23 @@ document.addEventListener('DOMContentLoaded', function() {
             banner.classList.remove('hidden');
         } else {
             banner.classList.add('hidden');
+        }
+
+        // Half day leave logic
+        if (kode === 'CT-HALF' || kode === 'PC-PRI' || kode === 'PC-SKT' || kode === 'IK-TMP') {
+            if (startDateInput.value) {
+                endDateInput.value = startDateInput.value;
+            }
+            endDateInput.setAttribute('readonly', 'true');
+            totalDaysInput.value = 0.5;
+            if (totalDaysDisplay) {
+                totalDaysDisplay.innerText = '0.5 Hari (Setengah Hari / 4 Jam)';
+            }
+        } else {
+            endDateInput.removeAttribute('readonly');
+            if (startDateInput.value && endDateInput.value) {
+                startDateInput.dispatchEvent(new Event('change'));
+            }
         }
 
         // Handle mandatory medical document requirement
@@ -448,7 +510,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function checkQuota(potong) {
-        const totalHari = parseInt(totalDaysInput.value || 0);
+        const totalHari = parseFloat(totalDaysInput.value || 0);
         if (potong === 1 && totalHari > userSisaCuti) {
             quotaWarning.classList.remove('hidden');
         } else {
@@ -475,8 +537,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'nama' => $e['nama_lengkap'],
             'dept' => $e['nama_dept'],
             'jabatan' => $e['nama_jabatan'],
-            'sisa_cuti' => (int)$e['sisa_cuti'],
-            'kuota_cuti' => (int)$e['kuota_cuti'],
+            'sisa_cuti' => (float)$e['sisa_cuti'],
+            'kuota_cuti' => (float)$e['kuota_cuti'],
             'alamat' => $e['alamat'] ?? '',
             'no_hp' => $e['no_hp'] ?? ''
         ];

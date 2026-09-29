@@ -19,6 +19,7 @@ require_once __DIR__ . '/controllers/EmployeeController.php';
 require_once __DIR__ . '/controllers/QuotaController.php';
 require_once __DIR__ . '/controllers/ReportController.php';
 require_once __DIR__ . '/controllers/SettingController.php';
+require_once __DIR__ . '/controllers/AttendanceController.php';
 
 $page = $_GET['page'] ?? 'home';
 
@@ -80,6 +81,31 @@ switch ($page) {
         requireLogin();
         requireRole(['atasan', 'admin']);
         require __DIR__ . '/views/leaves/team.php';
+        break;
+
+    // Team Attendance & Shift Management (Leader & Supervisor)
+    case 'team-attendance':
+        (new AttendanceController())->teamAttendance();
+        break;
+
+    case 'team-attendance-mangkir':
+        (new AttendanceController())->recordMangkir();
+        break;
+
+    case 'team-attendance-revisi':
+        (new AttendanceController())->reviseAttendance();
+        break;
+
+    case 'team-attendance-shift':
+        (new AttendanceController())->updateShift();
+        break;
+
+    case 'team-attendance-rolling':
+        (new AttendanceController())->rollingShift();
+        break;
+
+    case 'absensi-rekap':
+        (new AttendanceController())->rekapAttendance();
         break;
 
     case 'leave-action':

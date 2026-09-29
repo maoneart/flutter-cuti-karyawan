@@ -58,25 +58,38 @@ if (!$leaveType) {
     jsonResponse(false, 'Jenis cuti yang dipilih tidak ditemukan di sistem.', null, 404);
 }
 
-// Calculate business days
-$dMulai = new DateTime($tanggalMulai);
-$dSelesai = new DateTime($tanggalSelesai);
-$totalHari = 0;
-$period = new DatePeriod($dMulai, new DateInterval('P1D'), (clone $dSelesai)->modify('+1 day'));
-
-foreach ($period as $dt) {
-    $w = (int)$dt->format('w');
-    if ($w !== 0 && $w !== 6) {
-        $totalHari++;
-    }
+// Shift extraction
+$shift = trim($input['shift'] ?? 'Shift 1');
+if (!in_array($shift, ['Shift 1', 'Shift 2 (Maju)', 'Non-Shift'])) {
+    $shift = 'Shift 1';
 }
-if ($totalHari === 0) {
-    $totalHari = 1;
+
+// Calculate business days
+$inputTotalHari = isset($input['total_hari']) ? (float)$input['total_hari'] : 0.0;
+if ($leaveType['kode'] === 'CT-HALF' || in_array($leaveType['kode'], ['PC-PRI', 'PC-SKT', 'IK-TMP'])) {
+    $totalHari = 0.5;
+} elseif ($inputTotalHari > 0) {
+    $totalHari = $inputTotalHari;
+} else {
+    $dMulai = new DateTime($tanggalMulai);
+    $dSelesai = new DateTime($tanggalSelesai);
+    $totalHari = 0.0;
+    $period = new DatePeriod($dMulai, new DateInterval('P1D'), (clone $dSelesai)->modify('+1 day'));
+
+    foreach ($period as $dt) {
+        $w = (int)$dt->format('w');
+        if ($w !== 0) {
+            $totalHari += 1.0;
+        }
+    }
+    if ($totalHari == 0.0) {
+        $totalHari = 1.0;
+    }
 }
 
 // Check Quota
 if ((int)$leaveType['potong_kuota'] === 1) {
-    if ($user['sisa_cuti'] < $totalHari) {
+    if ((float)$user['sisa_cuti'] < $totalHari) {
         jsonResponse(false, "Sisa kuota cuti Anda tidak mencukupi! Sisa: {$user['sisa_cuti']} hari, Dibutuhkan: {$totalHari} hari.", null, 400);
     }
 }
@@ -194,16 +207,17 @@ if ($user['role'] === 'superadmin' || $user['role'] === 'admin' || $user['role']
 try {
     $stmtInsert = $pdo->prepare("
         INSERT INTO pengajuan_cuti (
-            nomor_surat, employee_id, leave_type_id,
+            nomor_surat, employee_id, leave_type_id, shift,
             tanggal_mulai, tanggal_selesai, total_hari,
             alasan, alamat_selama_cuti, kontak_darurat,
             attachment, status, approval_step, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     ");
     $stmtInsert->execute([
         $nomorSurat,
         $user['id'],
         $leaveTypeId,
+        $shift,
         $tanggalMulai,
         $tanggalSelesai,
         $totalHari,

@@ -293,6 +293,8 @@ class ApiService {
     required String tanggalMulai,
     required String tanggalSelesai,
     required String alasan,
+    String shift = 'Shift 1',
+    double? totalHari,
     String? alamatSelamaCuti,
     String? kontakDarurat,
     String? attachmentBase64,
@@ -303,6 +305,8 @@ class ApiService {
         'leave_type_id': leaveTypeId,
         'tanggal_mulai': tanggalMulai,
         'tanggal_selesai': tanggalSelesai,
+        'shift': shift,
+        if (totalHari != null) 'total_hari': totalHari,
         'alasan': alasan,
         'alamat_selama_cuti': alamatSelamaCuti ?? '',
         'kontak_darurat': kontakDarurat ?? '',
@@ -881,6 +885,162 @@ class ApiService {
         success: false,
         message: 'Koneksi gagal saat memperbarui hak akses: $e',
       );
+    }
+  }
+
+  // ==================== ATTENDANCE & SHIFT (NAKAKIN MOBILE) ====================
+
+  /// 23. Get Team Attendance & Shift Roster
+  static Future<ApiResponse<Map<String, dynamic>>> getTeamAttendance({
+    String? tanggal,
+    int? deptId,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (tanggal != null && tanggal.isNotEmpty) queryParams['tanggal'] = tanggal;
+      if (deptId != null && deptId > 0) queryParams['dept_id'] = deptId.toString();
+
+      final uri = Uri.parse(ApiConfig.attendanceTeam).replace(queryParameters: queryParams.isNotEmpty ? queryParams : null);
+      final response = await http.get(uri, headers: _getHeaders()).timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && (body['success'] == true)) {
+        return ApiResponse(
+          success: true,
+          message: body['message'] ?? 'Data berhasil dimuat',
+          data: body['data'] as Map<String, dynamic>?,
+        );
+      }
+      return ApiResponse(
+        success: false,
+        message: body['message'] ?? 'Gagal memuat absensi tim',
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Koneksi bermasalah: $e');
+    }
+  }
+
+  /// 24. Update Individual Employee Shift
+  static Future<ApiResponse<Map<String, dynamic>>> updateEmployeeShift({
+    required int employeeId,
+    required String shift,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.attendanceShift),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'employee_id': employeeId,
+              'shift': shift,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? 'Shift berhasil diperbarui',
+        data: body['data'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal memperbarui shift: $e');
+    }
+  }
+
+  /// 25. Record Mangkir (Alpha / AWOL)
+  static Future<ApiResponse<Map<String, dynamic>>> recordMangkir({
+    required int employeeId,
+    required String tanggal,
+    required String shift,
+    String? keterangan,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.attendanceMangkir),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'employee_id': employeeId,
+              'tanggal': tanggal,
+              'shift': shift,
+              'keterangan_mangkir': keterangan ?? 'Mangkir tanpa kabar saat jam shift masuk.',
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? 'Status mangkir berhasil dicatat',
+        data: body['data'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal mencatat mangkir: $e');
+    }
+  }
+
+  /// 26. Revise Attendance (Doctor Note / Half-day / etc.)
+  static Future<ApiResponse<Map<String, dynamic>>> reviseAttendance({
+    int? absensiId,
+    int? employeeId,
+    String? tanggal,
+    required String direvisiMenjadi,
+    String? alasanRevisi,
+    String? buktiBase64,
+    String? buktiName,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.attendanceRevisi),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              if (absensiId != null && absensiId > 0) 'absensi_id': absensiId,
+              if (employeeId != null && employeeId > 0) 'employee_id': employeeId,
+              if (tanggal != null) 'tanggal': tanggal,
+              'direvisi_menjadi': direvisiMenjadi,
+              'alasan_revisi': alasanRevisi ?? '',
+              if (buktiBase64 != null) 'bukti_base64': buktiBase64,
+              if (buktiName != null) 'bukti_name': buktiName,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? 'Status berhasil direvisi',
+        data: body['data'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal merevisi absensi: $e');
+    }
+  }
+
+  /// 27. Weekly Rolling Shift for Department
+  static Future<ApiResponse<Map<String, dynamic>>> rollDepartmentShift({
+    int? deptId,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.attendanceRolling),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              if (deptId != null && deptId > 0) 'dept_id': deptId,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      return ApiResponse(
+        success: body['success'] == true,
+        message: body['message'] ?? 'Rolling shift berhasil dilakukan',
+        data: body['data'] as Map<String, dynamic>?,
+      );
+    } catch (e) {
+      return ApiResponse(success: false, message: 'Gagal rolling shift: $e');
     }
   }
 }
