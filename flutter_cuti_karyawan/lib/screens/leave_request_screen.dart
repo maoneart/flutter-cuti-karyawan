@@ -22,7 +22,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
   
   List<LeaveTypeModel> _leaveTypes = [];
   LeaveTypeModel? _selectedType;
-  
+  String _selectedCategoryGroup = 'cuti';
   String _selectedShift = 'Shift 1 (Pagi)';
   DateTime? _startDate;
   DateTime? _endDate;
@@ -68,10 +68,15 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       setState(() {
         _leaveTypes = res.data!;
         if (_leaveTypes.isNotEmpty) {
-          _selectedType = _leaveTypes.firstWhere(
-            (t) => t.kode == 'CT' && t.eligible,
-            orElse: () => _leaveTypes.firstWhere((t) => t.eligible, orElse: () => _leaveTypes.first),
-          );
+          final cutiList = _leaveTypes.where((t) => t.isCuti).toList();
+          if (cutiList.isNotEmpty) {
+            _selectedType = cutiList.firstWhere(
+              (t) => t.kode == 'CT' && t.eligible,
+              orElse: () => cutiList.firstWhere((t) => t.eligible, orElse: () => cutiList.first),
+            );
+          } else {
+            _selectedType = _leaveTypes.first;
+          }
         }
         _isLoadingTypes = false;
       });
@@ -393,16 +398,140 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // 1. Jenis Cuti
-                              Text('Jenis Cuti *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textHead)),
+                              // 1. Pilihan Kategori: Cuti vs Izin
+                              Text('1. Pilih Kategori Permohonan *', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textHead)),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedCategoryGroup = 'cuti';
+                                          final cutiList = _leaveTypes.where((t) => t.isCuti).toList();
+                                          if (cutiList.isNotEmpty) {
+                                            _selectedType = cutiList.firstWhere(
+                                              (t) => t.eligible,
+                                              orElse: () => cutiList.first,
+                                            );
+                                          }
+                                        });
+                                        _calculateDays();
+                                      },
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: _selectedCategoryGroup == 'cuti'
+                                              ? (isDark ? const Color(0xFF0369A1).withOpacity(0.35) : const Color(0xFFEFF6FF))
+                                              : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: _selectedCategoryGroup == 'cuti' ? const Color(0xFF0284C7) : borderCol,
+                                            width: _selectedCategoryGroup == 'cuti' ? 2 : 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.beach_access_rounded,
+                                              size: 18,
+                                              color: _selectedCategoryGroup == 'cuti' ? const Color(0xFF0284C7) : textSub,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Kategori Cuti',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                                color: _selectedCategoryGroup == 'cuti'
+                                                    ? (isDark ? Colors.white : const Color(0xFF0369A1))
+                                                    : textHead,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedCategoryGroup = 'izin';
+                                          final izinList = _leaveTypes.where((t) => t.isIzin).toList();
+                                          if (izinList.isNotEmpty) {
+                                            _selectedType = izinList.firstWhere(
+                                              (t) => t.eligible,
+                                              orElse: () => izinList.first,
+                                            );
+                                          }
+                                        });
+                                        _calculateDays();
+                                      },
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: _selectedCategoryGroup == 'izin'
+                                              ? (isDark ? const Color(0xFF6D28D9).withOpacity(0.35) : const Color(0xFFF5F3FF))
+                                              : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC)),
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: _selectedCategoryGroup == 'izin' ? const Color(0xFF7C3AED) : borderCol,
+                                            width: _selectedCategoryGroup == 'izin' ? 2 : 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.assignment_turned_in_rounded,
+                                              size: 18,
+                                              color: _selectedCategoryGroup == 'izin' ? const Color(0xFF7C3AED) : textSub,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'Kategori Izin & Sakit',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                                color: _selectedCategoryGroup == 'izin'
+                                                    ? (isDark ? Colors.white : const Color(0xFF6D28D9))
+                                                    : textHead,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Dropdown Pilihan Jenis Sesuai Kategori
+                              Text(
+                                _selectedCategoryGroup == 'cuti' ? 'Pilih Jenis Cuti *' : 'Pilih Jenis Izin / Sakit *',
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textHead),
+                              ),
                               const SizedBox(height: 8),
                               DropdownButtonFormField<LeaveTypeModel>(
-                                value: _selectedType,
+                                value: (_leaveTypes.where((t) => _selectedCategoryGroup == 'cuti' ? t.isCuti : t.isIzin).contains(_selectedType))
+                                    ? _selectedType
+                                    : null,
                                 isExpanded: true,
-                                decoration: const InputDecoration(
-                                  prefixIcon: Icon(Icons.category_outlined, size: 20),
+                                decoration: InputDecoration(
+                                  prefixIcon: Icon(
+                                    _selectedCategoryGroup == 'cuti' ? Icons.beach_access_outlined : Icons.assignment_outlined,
+                                    size: 20,
+                                  ),
                                 ),
-                                items: _leaveTypes.map((type) {
+                                items: _leaveTypes
+                                    .where((t) => _selectedCategoryGroup == 'cuti' ? t.isCuti : t.isIzin)
+                                    .map((type) {
                                   return DropdownMenuItem(
                                     value: type,
                                     enabled: type.eligible,
@@ -427,6 +556,16 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                               borderRadius: BorderRadius.circular(4),
                                             ),
                                             child: Text('Potong Kuota', style: TextStyle(fontSize: 10, color: isDark ? const Color(0xFFFBBF24) : AppTheme.statusPending, fontWeight: FontWeight.bold)),
+                                          )
+                                        else if (type.butuhLampiran)
+                                          Container(
+                                            margin: const EdgeInsets.only(left: 6),
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: isDark ? const Color(0xFF4C0519) : const Color(0xFFFFE4E6),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: const Text('Wajib Surat', style: TextStyle(fontSize: 10, color: Color(0xFFE11D48), fontWeight: FontWeight.bold)),
                                           ),
                                       ],
                                     ),

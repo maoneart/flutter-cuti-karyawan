@@ -10,7 +10,7 @@ $user = authenticateApiUser();
 $pdo = getDbConnection();
 
 $stmt = $pdo->query("
-    SELECT id, nama_cuti, kode, deskripsi, potong_kuota, max_hari_default, butuh_lampiran
+    SELECT id, nama_cuti, kategori, kode, deskripsi, potong_kuota, max_hari_default, butuh_lampiran
     FROM jenis_cuti
     ORDER BY id ASC
 ");
@@ -22,6 +22,10 @@ foreach ($types as &$t) {
     $t['potong_kuota'] = (int)$t['potong_kuota'];
     $t['max_hari_default'] = (int)$t['max_hari_default'];
     $t['butuh_lampiran'] = (int)$t['butuh_lampiran'];
+    
+    $k = strtoupper($t['kode']);
+    $n = strtolower($t['nama_cuti']);
+    $t['is_cuti'] = (strpos($k, 'CT') === 0 || strpos($k, 'CK') === 0 || in_array($k, ['CH', 'CML', 'DISP-NGR']) || strpos($n, 'cuti') !== false);
     
     // Eligibility notes
     if (($t['kode'] === 'CH' || $t['kode'] === 'CML') && $user['jenis_kelamin'] !== 'Perempuan') {

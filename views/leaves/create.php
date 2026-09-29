@@ -201,24 +201,60 @@ $usedPercent = $currentUser['kuota_cuti'] > 0 ? round(($currentUser['cuti_terpak
                 </div>
             <?php endif; ?>
 
-            <!-- 1. Pilihan Jenis Cuti -->
+            <!-- 1. Pilihan Kategori: Cuti vs Izin -->
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">
-                    1. Pilih Kategori / Jenis Cuti <span class="text-rose-500">*</span>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
+                    1. Pilih Kategori Permohonan <span class="text-rose-500">*</span>
                 </label>
                 
+                <!-- Toggle Group Buttons: Cuti vs Izin -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <button type="button" id="btnGroupCuti" onclick="switchCategoryGroup('cuti')"
+                            class="flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 transition font-extrabold text-xs sm:text-sm cursor-pointer border-blue-600 bg-blue-50/70 text-blue-700 shadow-2xs">
+                        <i class="fa-solid fa-umbrella-beach text-base text-blue-600"></i>
+                        <span>🌴 Kategori Cuti</span>
+                    </button>
+                    <button type="button" id="btnGroupIzin" onclick="switchCategoryGroup('izin')"
+                            class="flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 transition font-extrabold text-xs sm:text-sm cursor-pointer border-slate-200/90 bg-white text-slate-600 hover:border-indigo-400 hover:text-indigo-600 shadow-2xs">
+                        <i class="fa-solid fa-file-signature text-base text-indigo-500"></i>
+                        <span>📋 Kategori Izin & Sakit</span>
+                    </button>
+                </div>
+
+                <!-- Dropdown Jenis Cuti / Izin Sesuai Kategori -->
+                <div class="mb-3">
+                    <label id="dropdownLabel" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                        Pilih Jenis Cuti Terkait <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <select id="leave_type_select" onchange="handleDropdownChange(this.value)"
+                                class="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-slate-50 text-slate-900 font-bold text-xs sm:text-sm focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition appearance-none cursor-pointer">
+                            <!-- Populated dynamically via JS -->
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-4 text-slate-400 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+
                 <input type="hidden" name="leave_type_id" id="leave_type_id" required>
 
+                <!-- Filtered Cards Container -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <?php foreach ($leaveTypes as $type): 
                         $iconClass = $typeIcons[$type['kode']] ?? 'fa-solid fa-calendar-check text-blue-600 bg-blue-50';
+                        $k = strtoupper($type['kode']);
+                        $n = strtolower($type['nama_cuti']);
+                        $isCuti = (strpos($k, 'CT') === 0 || strpos($k, 'CK') === 0 || in_array($k, ['CH', 'CML', 'DISP-NGR']) || strpos($n, 'cuti') !== false);
+                        $group = $isCuti ? 'cuti' : 'izin';
                     ?>
                         <div class="leave-type-card relative flex items-start gap-3 p-4 rounded-2xl border-2 border-slate-200/80 bg-white hover:border-blue-400 hover:bg-blue-50/30 cursor-pointer transition transform active:scale-98"
                              data-id="<?= $type['id'] ?>"
+                             data-group="<?= $group ?>"
                              data-potong="<?= $type['potong_kuota'] ?>"
                              data-attachment="<?= $type['butuh_lampiran'] ?>"
                              data-kode="<?= $type['kode'] ?>"
-                             data-desc="<?= htmlspecialchars($type['deskripsi']) ?>">
+                             data-name="<?= htmlspecialchars($type['nama_cuti']) ?>"
+                             data-max="<?= $type['max_hari_default'] ?>"
+                             data-desc="<?= htmlspecialchars($type['deskripsi'] ?? '') ?>">
                             
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 <?= $iconClass ?>">
                                 <i class="<?= explode(' ', $iconClass)[0] ?> <?= explode(' ', $iconClass)[1] ?>"></i>
@@ -439,11 +475,79 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    const typeSelect = document.getElementById('leave_type_select');
+    const btnCuti = document.getElementById('btnGroupCuti');
+    const btnIzin = document.getElementById('btnGroupIzin');
+    const dropdownLabel = document.getElementById('dropdownLabel');
+    let currentGroup = 'cuti';
+
+    // Populate dropdown based on category
+    function populateDropdown(group) {
+        if (!typeSelect) return;
+        typeSelect.innerHTML = '';
+        cards.forEach(card => {
+            const cardGroup = card.getAttribute('data-group');
+            if (cardGroup === group) {
+                const id = card.getAttribute('data-id');
+                const name = card.getAttribute('data-name');
+                const max = card.getAttribute('data-max');
+                const potong = card.getAttribute('data-potong') === '1' ? ' [Potong Kuota]' : '';
+                const attach = card.getAttribute('data-attachment') === '1' ? ' [Wajib Surat Dokter]' : '';
+                const opt = document.createElement('option');
+                opt.value = id;
+                opt.textContent = name + ' (Max ' + max + ' Hari)' + potong + attach;
+                typeSelect.appendChild(opt);
+            }
+        });
+    }
+
+    // Switch Category Group (Cuti vs Izin)
+    window.switchCategoryGroup = function(group) {
+        currentGroup = group;
+        if (group === 'cuti') {
+            btnCuti.className = 'flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 transition font-extrabold text-xs sm:text-sm cursor-pointer border-blue-600 bg-blue-50/70 text-blue-700 shadow-2xs';
+            btnIzin.className = 'flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 transition font-extrabold text-xs sm:text-sm cursor-pointer border-slate-200/90 bg-white text-slate-600 hover:border-indigo-400 hover:text-indigo-600 shadow-2xs';
+            dropdownLabel.innerText = 'Pilih Jenis Cuti Terkait *';
+        } else {
+            btnIzin.className = 'flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 transition font-extrabold text-xs sm:text-sm cursor-pointer border-indigo-600 bg-indigo-50/70 text-indigo-700 shadow-2xs';
+            btnCuti.className = 'flex items-center justify-center gap-2.5 p-3.5 rounded-2xl border-2 transition font-extrabold text-xs sm:text-sm cursor-pointer border-slate-200/90 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 shadow-2xs';
+            dropdownLabel.innerText = 'Pilih Jenis Izin / Sakit Terkait *';
+        }
+
+        populateDropdown(group);
+
+        // Filter cards display
+        let firstCardInGroup = null;
+        cards.forEach(card => {
+            if (card.getAttribute('data-group') === group) {
+                card.style.display = 'flex';
+                if (!firstCardInGroup) firstCardInGroup = card;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        if (firstCardInGroup) {
+            selectCard(firstCardInGroup);
+            typeSelect.value = firstCardInGroup.getAttribute('data-id');
+        }
+    };
+
+    window.handleDropdownChange = function(cardId) {
+        const targetCard = Array.from(cards).find(c => c.getAttribute('data-id') === cardId);
+        if (targetCard) selectCard(targetCard);
+    };
+
     // Leave Type Cards Interaction
-    cards.forEach((card, idx) => {
-        if (idx === 0) selectCard(card);
-        card.addEventListener('click', () => selectCard(card));
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            selectCard(card);
+            if (typeSelect) typeSelect.value = card.getAttribute('data-id');
+        });
     });
+
+    // Initialize with Cuti group
+    switchCategoryGroup('cuti');
 
     function selectCard(selectedCard) {
         cards.forEach(c => {
