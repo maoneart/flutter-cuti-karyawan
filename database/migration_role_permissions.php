@@ -34,7 +34,7 @@ try {
         'view_public_board' => [
             'name' => 'Papan Informasi & Kalender Bersama',
             'category' => 'Cuti & Kehadiran',
-            'description' => 'Melihat jadwal cuti rekan kerja, kalender pabrik, dan statistik umum'
+            'description' => 'Melihat jadwal cuti rekan kerja, kalender perusahaan, dan statistik umum'
         ],
         'approval_tier1' => [
             'name' => 'Persetujuan Tier 1 (Leader / Supervisor)',

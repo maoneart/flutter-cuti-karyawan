@@ -234,6 +234,7 @@ try {
     ]);
     
     $leaveId = (int)$pdo->lastInsertId();
+    $waData = getLeaveWhatsAppNotificationData($leaveId, $pdo);
     
     // Message context
     $stepMessage = 'Menunggu persetujuan Leader/Supervisor.';
@@ -250,7 +251,8 @@ try {
         'nomor_surat' => $nomorSurat,
         'total_hari' => $totalHari,
         'status' => $initialStatus,
-        'approval_step' => $initialStep
+        'approval_step' => $initialStep,
+        'whatsapp' => $waData
     ], 201);
 } catch (PDOException $e) {
     jsonResponse(false, 'Gagal menyimpan pengajuan cuti ke database.', null, 500);

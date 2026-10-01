@@ -42,11 +42,8 @@ class AuthController {
         $user = $stmt->fetch();
 
         $passwordValid = false;
-        if ($user) {
+        if ($user && !empty($user['password'])) {
             if (password_verify($password, $user['password'])) {
-                $passwordValid = true;
-            } elseif ($password === 'password123' || $password === 'admin123' || $password === 'admin') {
-                // Direct fallback for default development passwords
                 $passwordValid = true;
             }
         }

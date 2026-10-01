@@ -101,7 +101,7 @@ $empId = 1;
 // 4.1 Super Admin (System Controller - 1 account)
 $superAdminId = $empId++;
 $stmtEmp->execute([
-    $superAdminId, 'ADM-001', 'Master Super Admin', 'admin@nakakin.co.id', $defaultPass, 'superadmin',
+    $superAdminId, 'ADM-001', 'Hermawan', 'admin@nakakin.co.id', $defaultPass, 'superadmin',
     8, 7, '2020-01-01', 12, 0, 12, 'Laki-laki', '081100000001', 'Kantor Pusat PT. Nakakin Indonesia'
 ]);
 

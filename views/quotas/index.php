@@ -86,43 +86,110 @@ $quotaLogs = $stmtLogs->fetchAll();
             </div>
 
             <div class="p-4 sm:p-6">
-                <div class="overflow-x-auto">
+                <!-- Mobile Card List (Flutter ManageQuotaScreen Parity) -->
+                <div class="block lg:hidden space-y-3">
+                    <!-- Mobile Search Input -->
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="mobileQuotaSearch" placeholder="Cari nama atau NIK karyawan..." 
+                               oninput="filterMobileQuotas(this.value)"
+                               class="w-full pl-9 pr-3.5 py-2.5 rounded-2xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition">
+                    </div>
+
+                    <div id="mobileQuotaContainer" class="space-y-3 pt-1">
+                        <?php foreach ($employees as $emp): 
+                            $empJson = json_encode([
+                                "id" => $emp["id"],
+                                "nama" => $emp["nama_lengkap"],
+                                "nik" => $emp["nik"],
+                                "dept" => $emp["nama_dept"],
+                                "jabatan" => $emp["nama_jabatan"],
+                                "kuota_cuti" => $emp["kuota_cuti"],
+                                "cuti_terpakai" => $emp["cuti_terpakai"],
+                                "sisa_cuti" => $emp["sisa_cuti"]
+                            ]);
+                        ?>
+                            <div class="quota-mobile-card bg-slate-50/70 p-4 rounded-2xl border border-slate-200/80 space-y-3" 
+                                 data-name="<?= strtolower(htmlspecialchars($emp['nama_lengkap'])) ?>" 
+                                 data-nik="<?= strtolower(htmlspecialchars($emp['nik'])) ?>">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center flex-shrink-0 shadow-2xs">
+                                            <?= strtoupper(substr($emp['nama_lengkap'], 0, 1)) ?>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <h4 class="text-sm font-black text-slate-900 leading-tight truncate"><?= htmlspecialchars($emp['nama_lengkap']) ?></h4>
+                                            <p class="text-[11px] text-slate-400 mt-0.5"><?= htmlspecialchars($emp['nik']) ?> &bull; <?= htmlspecialchars($emp['nama_dept']) ?></p>
+                                        </div>
+                                    </div>
+                                    <span class="px-2.5 py-1 rounded-xl bg-blue-100 text-blue-800 text-[11px] font-black flex-shrink-0">
+                                        Sisa: <?= $emp['sisa_cuti'] ?> Hari
+                                    </span>
+                                </div>
+
+                                <div class="grid grid-cols-3 gap-2 bg-white p-2.5 rounded-xl border border-slate-200/60 text-center">
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-semibold">Total Hak</div>
+                                        <div class="text-xs font-extrabold text-slate-800"><?= $emp['kuota_cuti'] ?> Hari</div>
+                                    </div>
+                                    <div class="border-x border-slate-100">
+                                        <div class="text-[10px] text-slate-400 font-semibold">Terpakai</div>
+                                        <div class="text-xs font-extrabold text-amber-600"><?= $emp['cuti_terpakai'] ?> Hari</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] text-slate-400 font-semibold">Sisa Saldo</div>
+                                        <div class="text-xs font-extrabold text-emerald-600"><?= $emp['sisa_cuti'] ?> Hari</div>
+                                    </div>
+                                </div>
+
+                                <button type="button" 
+                                        onclick='openEditQuotaData(<?= $empJson ?>)' 
+                                        class="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-sliders"></i> Ubah Kuota
+                                </button>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <!-- Desktop DataTable (>= 1024px) -->
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="w-full text-left text-xs datatable">
                         <thead>
                             <tr>
-                                <th class="min-w-[180px]">Karyawan</th>
-                                <th class="min-w-[130px]">Departemen</th>
-                                <th class="min-w-[120px]">Jabatan</th>
-                                <th class="min-w-[90px] text-center">Total Kuota</th>
-                                <th class="min-w-[80px] text-center">Terpakai</th>
-                                <th class="min-w-[100px] text-center">Sisa Saldo</th>
-                                <th class="min-w-[110px] text-left">Aksi</th>
+                                <th>Karyawan</th>
+                                <th>Departemen</th>
+                                <th>Jabatan</th>
+                                <th class="text-center">Total Kuota</th>
+                                <th class="text-center">Terpakai</th>
+                                <th class="text-center">Sisa Saldo</th>
+                                <th class="text-right pr-4">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($employees as $emp): ?>
-                                <tr>
+                                <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition">
                                     <td>
                                         <div class="flex items-center gap-3">
                                             <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
                                                 <?= strtoupper(substr($emp['nama_lengkap'], 0, 1)) ?>
                                             </div>
                                             <div>
-                                                <div class="font-extrabold text-slate-900 text-xs"><?= htmlspecialchars($emp['nama_lengkap']) ?></div>
-                                                <div class="text-[11px] text-slate-400 font-mono">NIK: <strong class="text-slate-700"><?= htmlspecialchars($emp['nik']) ?></strong></div>
+                                                <div class="font-extrabold text-slate-900 dark:text-white text-xs"><?= htmlspecialchars($emp['nama_lengkap']) ?></div>
+                                                <div class="text-[11px] text-slate-400 dark:text-slate-500 font-mono">NIK: <strong class="text-slate-700 dark:text-slate-300"><?= htmlspecialchars($emp['nik']) ?></strong></div>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="font-extrabold text-slate-900 text-xs"><?= htmlspecialchars($emp['nama_dept']) ?></div>
+                                        <div class="font-extrabold text-slate-900 dark:text-white text-xs"><?= htmlspecialchars($emp['nama_dept']) ?></div>
                                     </td>
-                                    <td class="font-semibold text-slate-700">
+                                    <td class="font-semibold text-slate-700 dark:text-slate-300">
                                         <?= htmlspecialchars($emp['nama_jabatan']) ?>
                                     </td>
-                                    <td class="text-center font-black text-slate-800 text-xs"><?= $emp['kuota_cuti'] ?> Hari</td>
-                                    <td class="text-center font-black text-amber-600 text-xs"><?= $emp['cuti_terpakai'] ?> Hari</td>
+                                    <td class="text-center font-black text-slate-800 dark:text-slate-200 text-xs"><?= $emp['kuota_cuti'] ?> Hari</td>
+                                    <td class="text-center font-black text-amber-600 dark:text-amber-400 text-xs"><?= $emp['cuti_terpakai'] ?> Hari</td>
                                     <td class="text-center whitespace-nowrap">
-                                        <span class="px-3 py-1 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200/80 font-black text-xs shadow-2xs"><?= $emp['sisa_cuti'] ?> Hari</span>
+                                        <span class="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900 font-black text-xs shadow-2xs"><?= $emp['sisa_cuti'] ?> Hari</span>
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <button type="button" 
@@ -136,7 +203,7 @@ $quotaLogs = $stmtLogs->fetchAll();
                                                     "cuti_terpakai" => $emp["cuti_terpakai"],
                                                     "sisa_cuti" => $emp["sisa_cuti"]
                                                 ]) ?>)' 
-                                                class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold text-xs transition shadow-2xs flex items-center gap-1.5">
+                                                class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400 font-bold text-xs transition shadow-2xs flex items-center gap-1.5 border border-transparent dark:border-blue-900">
                                             <i class="fa-solid fa-sliders"></i> Ubah Kuota
                                         </button>
                                     </td>
@@ -184,49 +251,49 @@ $quotaLogs = $stmtLogs->fetchAll();
 
 <!-- MODAL 1: Individual Quota Setting (Penetapan Plafon Hak Cuti Tahunan) -->
 <div id="modalAdjustQuota" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm hidden">
-    <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden transform transition-all">
+    <div class="w-full max-w-lg bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden transform transition-all">
         <form action="<?= BASE_URL ?>/index.php?page=quota-adjust" method="POST">
-            <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+            <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-sky-950/60 text-blue-600 dark:text-sky-400 flex items-center justify-center font-bold shadow-2xs">
                         <i class="fa-solid fa-sliders"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-extrabold text-slate-900">Penetapan Hak Jatah Cuti Tahunan</h3>
+                        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Penetapan Hak Jatah Cuti Tahunan</h3>
                         <p class="text-[11px] text-slate-400">Atur plafon resmi hak cuti tahunan (1 tahun sekali)</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeAdjustModal()" class="text-slate-400 hover:text-slate-600">
-                    <i class="fa-solid fa-xmark text-lg"></i>
+                <button type="button" onclick="closeAdjustModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
 
-            <div class="p-6 space-y-4 text-xs">
+            <div class="p-5 sm:p-6 space-y-4 text-xs">
                 
-                <div class="p-3 rounded-2xl bg-amber-50 text-amber-900 border border-amber-200 text-[11px] leading-relaxed">
-                    <i class="fa-solid fa-circle-info text-amber-600 mr-1"></i>
+                <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-900 text-[11.5px] leading-relaxed">
+                    <i class="fa-solid fa-circle-info text-amber-600 dark:text-amber-400 mr-1"></i>
                     <strong>Ketentuan:</strong> Jatah cuti tahunan dialokasikan 1 tahun sekali. Pemotongan saldo cuti hanya berjalan secara otomatis melalui sistem saat pengajuan cuti karyawan telah disetujui atasan.
                 </div>
 
                 <!-- Target Employee Info Card (Active when opened from row) -->
-                <div id="targetEmpCard" class="hidden p-4 rounded-2xl bg-blue-50/60 border border-blue-100 space-y-2">
+                <div id="targetEmpCard" class="hidden p-4 rounded-2xl bg-blue-50/60 dark:bg-slate-900/80 border border-blue-100 dark:border-slate-700 space-y-2">
                     <div class="flex items-center justify-between">
                         <div>
-                            <span class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Karyawan Terpilih</span>
-                            <div id="dispEmpName" class="text-sm font-black text-slate-900"></div>
-                            <div id="dispEmpMeta" class="text-xs text-slate-500 font-medium"></div>
+                            <span class="text-[10px] font-bold text-blue-600 dark:text-sky-400 uppercase tracking-wider">Karyawan Terpilih</span>
+                            <div id="dispEmpName" class="text-sm font-black text-slate-900 dark:text-white"></div>
+                            <div id="dispEmpMeta" class="text-xs text-slate-500 dark:text-slate-400 font-medium"></div>
                         </div>
                         <div class="text-right">
                             <span class="text-[10px] font-bold text-slate-400 uppercase">Sisa Cuti Saat Ini</span>
-                            <div id="dispEmpSisa" class="text-base font-black text-blue-700"></div>
+                            <div id="dispEmpSisa" class="text-base font-black text-blue-700 dark:text-sky-400"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Dropdown Select (Used when opened from manual input button) -->
                 <div id="targetEmpSelectGroup">
-                    <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1.5">Pilih Karyawan <span class="text-rose-500">*</span></label>
-                    <select name="employee_id" id="emp_select" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white font-medium text-xs focus:outline-none focus:ring-4 focus:ring-blue-500/15">
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 text-[11px]">Pilih Karyawan <span class="text-rose-500">*</span></label>
+                    <select name="employee_id" id="emp_select" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-white font-medium text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">-- Cari & Pilih Karyawan --</option>
                         <?php foreach ($employees as $emp): ?>
                             <option value="<?= $emp['id'] ?>"><?= htmlspecialchars($emp['nik']) ?> - <?= htmlspecialchars($emp['nama_lengkap']) ?> (<?= htmlspecialchars($emp['nama_jabatan']) ?> - <?= htmlspecialchars($emp['nama_dept']) ?>) [Sisa: <?= $emp['sisa_cuti'] ?>h]</option>
@@ -236,28 +303,28 @@ $quotaLogs = $stmtLogs->fetchAll();
 
                 <!-- Total Quota Field -->
                 <div>
-                    <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1.5">Total Jatah Hak Cuti Tahunan (Hari) <span class="text-rose-500">*</span></label>
-                    <input type="number" name="total_kuota_baru" id="input_total_kuota_baru" value="12" min="1" max="50" required placeholder="Contoh: 12 (Standar) atau 14 (Manager)" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white font-black text-sm focus:outline-none focus:ring-4 focus:ring-blue-500/15">
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 text-[11px]">Total Jatah Hak Cuti Tahunan (Hari) <span class="text-rose-500">*</span></label>
+                    <input type="number" name="total_kuota_baru" id="input_total_kuota_baru" value="12" min="1" max="50" required placeholder="Contoh: 12 (Standar) atau 14 (Manager)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-white font-black text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <p class="text-[10.5px] text-slate-400 mt-1">Sisa saldo cuti akan disesuaikan otomatis dari (Total Kuota Baru &minus; Cuti yang Sudah Terpakai).</p>
                 </div>
 
                 <div>
-                    <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kategori / Dasar Alokasi <span class="text-rose-500">*</span></label>
-                    <select name="tipe" id="input_tipe" required class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white font-medium text-xs focus:outline-none focus:ring-4 focus:ring-blue-500/15">
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 text-[11px]">Kategori / Dasar Alokasi <span class="text-rose-500">*</span></label>
+                    <select name="tipe" id="input_tipe" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-white font-medium text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="alokasi_tahunan">Alokasi / Penetapan Plafon Cuti Tahunan Resmi</option>
                         <option value="penyesuaian_hrd">Penyesuaian Level Jabatan (Manager / Atasan)</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block font-bold text-slate-700 uppercase tracking-wider mb-1.5">Keterangan / Catatan Audit <span class="text-rose-500">*</span></label>
-                    <textarea name="keterangan" id="input_keterangan" rows="2" required placeholder="Contoh: Penetapan jatah tahunan posisi Manager (14 hari)" class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white font-medium text-xs focus:outline-none focus:ring-4 focus:ring-blue-500/15"></textarea>
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 text-[11px]">Keterangan / Catatan Audit <span class="text-rose-500">*</span></label>
+                    <textarea name="keterangan" id="input_keterangan" rows="2" required placeholder="Contoh: Penetapan jatah tahunan posisi Manager (14 hari)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 text-slate-900 dark:text-white font-medium text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
             </div>
 
-            <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
-                <button type="button" onclick="closeAdjustModal()" class="px-4 py-2 rounded-xl bg-white border border-slate-200 font-bold text-slate-600 text-xs">Batal</button>
-                <button type="submit" class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm">Simpan Penetapan Kuota</button>
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeAdjustModal()" class="px-4 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-300 text-xs hover:bg-slate-50 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-blue-600/30">Simpan Penetapan Kuota</button>
             </div>
         </form>
     </div>
@@ -265,11 +332,11 @@ $quotaLogs = $stmtLogs->fetchAll();
 
 <!-- MODAL 2: BULK ALLOCATION (Alokasi Massal untuk Ratusan Karyawan) -->
 <div id="modalBatchQuota" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm hidden">
-    <div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+    <div class="w-full max-w-lg bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
         <form action="<?= BASE_URL ?>/index.php?page=quota-batch-reset" method="POST">
-            <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                <div class="flex items-center gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold">
+            <div class="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-white/20 text-white flex items-center justify-center font-bold shadow-2xs">
                         <i class="fa-solid fa-arrows-rotate"></i>
                     </div>
                     <div>
@@ -277,14 +344,14 @@ $quotaLogs = $stmtLogs->fetchAll();
                         <p class="text-[11px] text-blue-100">Solusi alokasi cuti serentak untuk 400 - 500+ karyawan</p>
                     </div>
                 </div>
-                <button type="button" onclick="document.getElementById('modalBatchQuota').classList.add('hidden')" class="text-white/80 hover:text-white">
-                    <i class="fa-solid fa-xmark text-lg"></i>
+                <button type="button" onclick="document.getElementById('modalBatchQuota').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
 
-            <div class="p-6 space-y-4 text-xs">
+            <div class="p-5 sm:p-6 space-y-4 text-xs">
                 
-                <div class="p-3.5 rounded-2xl bg-blue-50 text-blue-900 border border-blue-200/80 leading-relaxed">
+                <div class="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-200 border border-blue-200/80 dark:border-blue-900 leading-relaxed text-[11.5px]">
                     <strong class="block font-bold mb-0.5"><i class="fa-solid fa-bolt text-amber-500 mr-1"></i> Proses Instan & Otomatis:</strong>
                     Sistem akan memproses seluruh karyawan yang terpilih secara massal dan mencatat riwayat audit secara otomatis.
                 </div>
@@ -425,6 +492,20 @@ function closeAdjustModal() {
     document.getElementById('modalAdjustQuota').classList.add('hidden');
     const hiddenInput = document.getElementById('hidden_emp_id');
     if (hiddenInput) hiddenInput.remove();
+}
+
+function filterMobileQuotas(q) {
+    const term = q.toLowerCase().trim();
+    const cards = document.querySelectorAll('.quota-mobile-card');
+    cards.forEach(c => {
+        const name = c.getAttribute('data-name') || '';
+        const nik = c.getAttribute('data-nik') || '';
+        if (!term || name.includes(term) || nik.includes(term)) {
+            c.style.display = '';
+        } else {
+            c.style.display = 'none';
+        }
+    });
 }
 </script>
 

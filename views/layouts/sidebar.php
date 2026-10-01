@@ -1,7 +1,7 @@
 <?php
 /**
  * Sidebar Layout (Tailwind CSS Edition with Mini Collapsed Mode)
- * Dynamic White-label Ready Edition
+ * E-Cuti Karyawan Official Navigation
  */
 
 $currentPage = $_GET['page'] ?? 'dashboard';
@@ -9,7 +9,7 @@ $appSettings = getAppSettings();
 $sidebarLogoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . $appSettings['logo'] : BASE_URL . '/assets/images/Nakakin.png';
 ?>
 
-<aside id="mainSidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-[#090e1a] text-slate-300 flex flex-col border-r border-slate-800/80 shadow-2xl transition-all duration-300 transform -translate-x-full lg:translate-x-0 no-print overflow-x-hidden">
+<aside id="mainSidebar" class="hidden lg:flex fixed inset-y-0 left-0 z-50 w-72 bg-[#090e1a] text-slate-300 flex-col border-r border-slate-800/80 shadow-2xl transition-all duration-300 no-print overflow-x-hidden">
     
     <!-- Ultra Modern Brand Header -->
     <div class="sidebar-brand px-4 sm:px-5 py-4 flex items-center justify-between border-b border-slate-800/80 bg-gradient-to-r from-slate-900/95 via-slate-900/60 to-slate-950/95 relative overflow-hidden transition-all">
@@ -88,10 +88,10 @@ $sidebarLogoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . 
             <i class="fa-solid fa-gauge-high text-sm w-5 text-center flex-shrink-0 <?= $currentPage === 'dashboard' ? 'text-white' : 'text-slate-500 group-hover:text-blue-400' ?>"></i>
             <span class="sidebar-text">Dashboard</span>
         </a>
-        <a href="<?= BASE_URL ?>/index.php?page=home" target="_blank"
-           class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group text-slate-400 hover:bg-slate-800/60 hover:text-white"
-           title="Buka Papan Kehadiran Publik (Live Board)">
-            <i class="fa-solid fa-tv text-sm w-5 text-center flex-shrink-0 text-slate-500 group-hover:text-amber-400"></i>
+        <a href="<?= BASE_URL ?>/index.php?page=board" 
+           class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group <?= in_array($currentPage, ['board', 'home', 'public']) ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 font-bold' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' ?>"
+           title="Papan Kehadiran Live">
+            <i class="fa-solid fa-tv text-sm w-5 text-center flex-shrink-0 <?= in_array($currentPage, ['board', 'home', 'public']) ? 'text-white' : 'text-slate-500 group-hover:text-amber-400' ?>"></i>
             <span class="sidebar-text">Papan Kehadiran Live</span>
         </a>
 
@@ -146,6 +146,14 @@ $sidebarLogoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . 
                 <i class="fa-solid fa-user-clock text-sm w-5 text-center flex-shrink-0 <?= $currentPage === 'team-attendance' ? 'text-white' : 'text-slate-500 group-hover:text-blue-400' ?>"></i>
                 <span class="sidebar-text">Tim & Absensi Shift</span>
             </a>
+            <?php if (!$isHRD): ?>
+                <a href="<?= BASE_URL ?>/index.php?page=employees" 
+                   class="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition group <?= in_array($currentPage, ['employees', 'employee-create', 'employee-edit']) ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 font-bold' : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' ?>"
+                   title="Daftar Karyawan Departemen">
+                    <i class="fa-solid fa-id-card-clip text-sm w-5 text-center flex-shrink-0 <?= in_array($currentPage, ['employees', 'employee-create', 'employee-edit']) ? 'text-white' : 'text-slate-500 group-hover:text-blue-400' ?>"></i>
+                    <span class="sidebar-text">Daftar Karyawan</span>
+                </a>
+            <?php endif; ?>
         <?php endif; ?>
 
         <!-- Menu for HRD / Superadmin Only -->

@@ -56,7 +56,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (startDateInput && endDateInput && totalDaysInput) {
         function calculateLeaveDays() {
             const startVal = startDateInput.value;
-            const endVal = endDateInput.value;
+            let endVal = endDateInput.value;
+
+            if (startVal) {
+                endDateInput.min = startVal;
+            }
+
+            // If startVal is present but endVal is empty or earlier than startVal, auto-sync
+            if (startVal && (!endVal || endVal < startVal)) {
+                endDateInput.value = startVal;
+                endVal = startVal;
+            }
 
             if (!startVal || !endVal) {
                 totalDaysInput.value = 0;
@@ -67,10 +77,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const start = new Date(startVal);
             const end = new Date(endVal);
 
-            // Check if current selected leave type is half-day (CT-HALF, PC-PRI, PC-SKT, IK-TMP)
+            // Check if current selected leave type is half-day
             const selCard = document.querySelector('.leave-type-card.border-blue-600');
             const selKode = selCard ? selCard.getAttribute('data-kode') : '';
-            if (selKode === 'CT-HALF' || selKode === 'PC-PRI' || selKode === 'PC-SKT' || selKode === 'IK-TMP') {
+            const halfDayCodes = ['CT-HALF', 'PC-PRI', 'PC-SKT', 'IK-TMP', 'T'];
+            if (halfDayCodes.includes(selKode)) {
                 endDateInput.value = startVal;
                 totalDaysInput.value = 0.5;
                 if (totalDaysDisplay) {
@@ -95,12 +106,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Calculate business days (skip Sundays, or Saturday & Sunday depending on company policy)
+            // Calculate business days (skip Sundays)
             let count = 0;
             let curDate = new Date(start.getTime());
             while (curDate <= end) {
                 const dayOfWeek = curDate.getDay();
-                // 0 is Sunday. If 6 workdays (Mon-Sat), skip only Sunday (0)
                 if (dayOfWeek !== 0) {
                     count++;
                 }
@@ -118,7 +128,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        startDateInput.addEventListener('input', calculateLeaveDays);
         startDateInput.addEventListener('change', calculateLeaveDays);
+        endDateInput.addEventListener('input', calculateLeaveDays);
         endDateInput.addEventListener('change', calculateLeaveDays);
     }
 });
@@ -130,29 +142,23 @@ function confirmDelete(url, message = 'Data yang dihapus tidak dapat dikembalika
             title: '',
             html: `
                 <div class="text-left space-y-3">
-                    <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
-                        <div class="w-10 h-10 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-base font-bold border border-rose-200/60 shadow-2xs flex-shrink-0">
+                    <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-base font-bold border border-rose-200/60 dark:border-rose-900 shadow-2xs flex-shrink-0">
                             <i class="fa-solid fa-trash-can"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm font-black text-slate-900 leading-snug">Konfirmasi Tindakan</h3>
+                            <h3 class="text-sm font-black text-slate-900 dark:text-white leading-snug">Konfirmasi Tindakan</h3>
                             <p class="text-[11px] text-slate-400 font-medium">Tindakan ini memerlukan persetujuan Anda</p>
                         </div>
                     </div>
-                    <p class="text-xs text-slate-600 font-medium leading-relaxed">${message}</p>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">${message}</p>
                 </div>
             `,
             showCancelButton: true,
             confirmButtonColor: '#dc2626',
             confirmButtonText: '<i class="fa-solid fa-trash-can mr-1.5"></i> Ya, Lanjutkan',
             cancelButtonText: 'Batal',
-            customClass: {
-                popup: 'modern-swal-popup',
-                htmlContainer: 'modern-swal-html',
-                actions: 'modern-swal-actions',
-                confirmButton: 'modern-swal-confirm',
-                cancelButton: 'modern-swal-cancel'
-            }
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
                 window.location.href = url;
@@ -173,29 +179,29 @@ function confirmApprove(leaveId, employeeName) {
             html: `
                 <div class="text-left space-y-4">
                     <!-- Header Banner -->
-                    <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
-                        <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg font-bold border border-emerald-200/60 shadow-2xs flex-shrink-0">
+                    <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="w-11 h-11 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg font-bold border border-emerald-200/60 dark:border-emerald-900 shadow-2xs flex-shrink-0">
                             <i class="fa-solid fa-circle-check"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm font-black text-slate-900 leading-snug">Setujui Permohonan Cuti</h3>
-                            <p class="text-[11px] text-slate-400 font-medium">Pemohon: <strong class="text-slate-800">${employeeName}</strong></p>
+                            <h3 class="text-sm font-black text-slate-900 dark:text-white leading-snug">Setujui Permohonan Cuti</h3>
+                            <p class="text-[11px] text-slate-400 font-medium">Pemohon: <strong class="text-slate-800 dark:text-slate-200">${employeeName}</strong></p>
                         </div>
                     </div>
 
-                    <div class="p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 text-[11.5px] text-emerald-800 flex items-start gap-2 leading-relaxed">
-                        <i class="fa-solid fa-circle-info text-emerald-600 mt-0.5 flex-shrink-0"></i>
-                        <span>Apakah Anda menyetujui izin cuti untuk <b>${employeeName}</b>? Kuota cuti karyawan akan otomatis diperbarui.</span>
+                    <div class="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900 text-[11.5px] text-emerald-800 dark:text-emerald-300 flex items-start gap-2 leading-relaxed">
+                        <i class="fa-solid fa-circle-info text-emerald-600 dark:text-emerald-400 mt-0.5 flex-shrink-0"></i>
+                        <span>Apakah Anda menyetujui izin cuti untuk <b>${employeeName}</b>? Kuota cuti karyawan akan otomatis diperbarui saat disetujui HRD.</span>
                     </div>
 
                     <!-- Input Note Group -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                             <span>Catatan / Pesan Atasan</span>
                             <span class="text-[10.5px] text-slate-400 font-normal normal-case">Opsional</span>
                         </label>
                         <textarea id="swalCatatan" rows="2" 
-                            class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/60 text-slate-800 font-medium text-xs focus:outline-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition resize-none placeholder:text-slate-400" 
+                            class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-800 dark:text-white font-medium text-xs focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition resize-none placeholder:text-slate-400" 
                             placeholder="Tuliskan pesan atau catatan tambahan untuk pemohon (opsional)..."></textarea>
                     </div>
                 </div>
@@ -204,13 +210,7 @@ function confirmApprove(leaveId, employeeName) {
             confirmButtonColor: '#059669',
             confirmButtonText: '<i class="fa-solid fa-check mr-1.5"></i> Setujui Cuti',
             cancelButtonText: 'Batal',
-            customClass: {
-                popup: 'modern-swal-popup',
-                htmlContainer: 'modern-swal-html',
-                actions: 'modern-swal-actions',
-                confirmButton: 'modern-swal-confirm',
-                cancelButton: 'modern-swal-cancel'
-            },
+            reverseButtons: true,
             preConfirm: () => {
                 return document.getElementById('swalCatatan')?.value || '';
             }
@@ -235,24 +235,24 @@ function confirmReject(leaveId, employeeName) {
             html: `
                 <div class="text-left space-y-4">
                     <!-- Header Banner -->
-                    <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
-                        <div class="w-11 h-11 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-lg font-bold border border-rose-200/60 shadow-2xs flex-shrink-0">
+                    <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="w-11 h-11 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-lg font-bold border border-rose-200/60 dark:border-rose-900 shadow-2xs flex-shrink-0">
                             <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm font-black text-slate-900 leading-snug">Tolak Permohonan Cuti</h3>
-                            <p class="text-[11px] text-slate-400 font-medium">Pemohon: <strong class="text-slate-800">${employeeName}</strong></p>
+                            <h3 class="text-sm font-black text-slate-900 dark:text-white leading-snug">Tolak Permohonan Cuti</h3>
+                            <p class="text-[11px] text-slate-400 font-medium">Pemohon: <strong class="text-slate-800 dark:text-slate-200">${employeeName}</strong></p>
                         </div>
                     </div>
 
                     <!-- Input Reason Group -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center justify-between">
                             <span>Alasan Penolakan <span class="text-rose-500">*</span></span>
                             <span class="text-[10.5px] text-slate-400 font-normal normal-case">Wajib diisi</span>
                         </label>
                         <textarea id="swalAlasan" rows="3" 
-                            class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 bg-slate-50/60 text-slate-800 font-medium text-xs focus:outline-none focus:bg-white focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition resize-none placeholder:text-slate-400 shadow-2xs" 
+                            class="w-full px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-800 dark:text-white font-medium text-xs focus:outline-none focus:bg-white dark:focus:bg-slate-800 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10 transition resize-none placeholder:text-slate-400 shadow-2xs" 
                             placeholder="Tuliskan alasan penolakan secara jelas (contoh: Jadwal kerja sedang padat, mohon ajukan di tanggal lain)..."></textarea>
                         <p class="text-[10.5px] text-slate-400 mt-1.5 flex items-center gap-1">
                             <i class="fa-solid fa-circle-info text-blue-500"></i> Alasan ini akan tercatat dalam riwayat dan dapat dilihat oleh pemohon.
@@ -264,13 +264,7 @@ function confirmReject(leaveId, employeeName) {
             confirmButtonColor: '#dc2626',
             confirmButtonText: '<i class="fa-solid fa-xmark mr-1.5"></i> Tolak Cuti',
             cancelButtonText: 'Batal',
-            customClass: {
-                popup: 'modern-swal-popup',
-                htmlContainer: 'modern-swal-html',
-                actions: 'modern-swal-actions',
-                confirmButton: 'modern-swal-confirm',
-                cancelButton: 'modern-swal-cancel'
-            },
+            reverseButtons: true,
             preConfirm: () => {
                 const reason = document.getElementById('swalAlasan')?.value.trim();
                 if (!reason) {

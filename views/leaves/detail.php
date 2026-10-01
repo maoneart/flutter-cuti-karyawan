@@ -1,6 +1,6 @@
 <?php
 /**
- * Leave Request Detail View (Tailwind CSS Edition)
+ * Leave Request Detail View (Tailwind CSS Edition - Synced with Flutter Mobile & Desktop)
  * PT. Nakakin Indonesia Leave Management System
  */
 
@@ -11,20 +11,30 @@ $id = (int)($_GET['id'] ?? 0);
 $pdo = getDbConnection();
 
 $stmt = $pdo->prepare("
-    SELECT lr.*, 
-           e.nik, e.nama_lengkap, e.email, e.no_hp, e.tanggal_masuk, e.kuota_cuti, e.sisa_cuti, e.cuti_terpakai, e.departemen_id,
+    SELECT p.*, 
+           k.nik, k.nama_lengkap, k.email, k.no_hp, k.alamat as alamat_karyawan, k.tanggal_masuk, k.sisa_cuti, k.kuota_cuti, k.cuti_terpakai, k.foto as employee_foto, k.departemen_id,
            d.nama_dept, d.kode_dept,
-           p.nama_jabatan,
-           lt.nama_cuti, lt.potong_kuota, lt.deskripsi as deskripsi_cuti,
-           ap.nama_lengkap as nama_atasan, ap.nik as nik_atasan, pos_ap.nama_jabatan as jabatan_atasan
-    FROM pengajuan_cuti lr
-    JOIN karyawan e ON lr.employee_id = e.id
-    JOIN departemen d ON e.departemen_id = d.id
-    JOIN jabatan p ON e.jabatan_id = p.id
-    JOIN jenis_cuti lt ON lr.leave_type_id = lt.id
-    LEFT JOIN karyawan ap ON lr.approved_by = ap.id
-    LEFT JOIN jabatan pos_ap ON ap.jabatan_id = pos_ap.id
-    WHERE lr.id = ?
+           j.nama_jabatan, j.level_hierarki as employee_level,
+           lt.nama_cuti, lt.potong_kuota, lt.deskripsi as deskripsi_cuti, lt.kode as kode_cuti,
+           spv.nama_lengkap as spv_name, spv.nik as spv_nik, spv_j.nama_jabatan as spv_jabatan,
+           mgr.nama_lengkap as manager_name, mgr.nik as manager_nik, mgr_j.nama_jabatan as manager_jabatan,
+           hrd.nama_lengkap as hrd_name, hrd.nik as hrd_nik, hrd_j.nama_jabatan as hrd_jabatan,
+           appr.nama_lengkap as approver_name, appr.nik as approver_nik, appr_j.nama_jabatan as approver_jabatan
+    FROM pengajuan_cuti p
+    JOIN karyawan k ON p.employee_id = k.id
+    JOIN departemen d ON k.departemen_id = d.id
+    JOIN jabatan j ON k.jabatan_id = j.id
+    JOIN jenis_cuti lt ON p.leave_type_id = lt.id
+    LEFT JOIN karyawan spv ON p.spv_id = spv.id
+    LEFT JOIN jabatan spv_j ON spv.jabatan_id = spv_j.id
+    LEFT JOIN karyawan mgr ON p.manager_id = mgr.id
+    LEFT JOIN jabatan mgr_j ON mgr.jabatan_id = mgr_j.id
+    LEFT JOIN karyawan hrd ON p.hrd_id = hrd.id
+    LEFT JOIN jabatan hrd_j ON hrd.jabatan_id = hrd_j.id
+    LEFT JOIN karyawan appr ON p.approved_by = appr.id
+    LEFT JOIN jabatan appr_j ON appr.jabatan_id = appr_j.id
+    WHERE p.id = ?
+    LIMIT 1
 ");
 $stmt->execute([$id]);
 $leave = $stmt->fetch();
@@ -49,199 +59,372 @@ if (!$canView) {
     exit;
 }
 
-$step = $leave['approval_step'] ?? 'pending_spv';
+$step = strtolower($leave['approval_step'] ?? 'pending_spv');
+$status = strtolower($leave['status'] ?? 'pending');
+
+// Strict Multi-Tier Approval eligibility check
 $canApprove = false;
-if ($leave['status'] === 'pending' && $currentUser['id'] != $leave['employee_id']) {
+if ($status === 'pending' && (int)$currentUser['id'] !== (int)$leave['employee_id']) {
     if ($step === 'pending_spv') {
-        $canApprove = $isSpv && ($currentUser['departemen_id'] == $leave['departemen_id']);
+        $canApprove = $isSpv && ((int)$currentUser['departemen_id'] === (int)$leave['departemen_id']);
     } elseif ($step === 'pending_manager') {
         $canApprove = $isManager;
     } elseif ($step === 'pending_hrd') {
         $canApprove = $isHRD;
     }
 }
+
+// Multi-Tier Status Flags
+$employeeLevel = (int)($leave['employee_level'] ?? 1);
+$isRejected = ($status === 'rejected');
+$isApproved = ($status === 'approved');
+
+$spvDone = !empty($leave['spv_id']) || ($employeeLevel >= 3) || $isApproved;
+$spvCurrent = ($step === 'pending_spv' && $status === 'pending');
+$spvRejected = ($isRejected && $step === 'pending_spv');
+
+$mgrDone = !empty($leave['manager_id']) || ($employeeLevel >= 5) || $isApproved;
+$mgrCurrent = ($step === 'pending_manager' && $status === 'pending');
+$mgrRejected = ($isRejected && $step === 'pending_manager');
+
+$hrdDone = $isApproved;
+$hrdCurrent = ($step === 'pending_hrd' && $status === 'pending');
+$hrdRejected = ($isRejected && $step === 'pending_hrd');
+
+$waDetail = getLeaveWhatsAppNotificationData($leave['id'], $pdo);
+
+$tglMulai = date('d M Y', strtotime($leave['tanggal_mulai']));
+$tglSelesai = date('d M Y', strtotime($leave['tanggal_selesai']));
+$periode = ($leave['tanggal_mulai'] === $leave['tanggal_selesai']) ? $tglMulai : "$tglMulai s/d $tglSelesai";
+$durasi = ($leave['total_hari'] == 0.5) ? '0.5 Hari' : $leave['total_hari'] . ' Hari';
+$initial = strtoupper(substr($leave['nama_lengkap'] ?? 'K', 0, 1));
 ?>
 
-<div class="w-full space-y-6">
+<div class="w-full space-y-4 sm:space-y-6 max-w-4xl mx-auto pb-20">
 
-    <!-- Header Actions -->
-    <div class="flex items-center justify-between flex-wrap gap-3">
-        <a href="javascript:history.back()" class="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 shadow-sm transition">
-            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+    <!-- Top Navigation Action Bar -->
+    <div class="flex items-center justify-between flex-wrap gap-2.5">
+        <a href="javascript:history.back()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 shadow-2xs transition flex items-center gap-1.5">
+            <span class="material-symbols-rounded text-sm">arrow_back</span>
+            <span>Kembali</span>
         </a>
+        
         <div class="flex items-center gap-2">
-            <?php if ($leave['status'] === 'approved'): ?>
+            <?php if ($waDetail && $status === 'pending'): ?>
+                <a href="<?= htmlspecialchars($waDetail['wa_url']) ?>" target="_blank" 
+                   class="px-3.5 py-2 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-brands fa-whatsapp text-sm"></i> Kirim WA ke Atasan
+                </a>
+            <?php endif; ?>
+
+            <?php if ($isApproved): ?>
                 <a href="<?= BASE_URL ?>/index.php?page=leave-print&id=<?= $leave['id'] ?>" target="_blank" 
-                   class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 text-white text-xs font-extrabold shadow-md shadow-rose-600/30 transition transform hover:-translate-y-0.5">
-                    <i class="fa-solid fa-print mr-1"></i> Cetak Surat Izin Cuti Resmi
+                   class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+                    <span class="material-symbols-rounded text-sm">print</span>
+                    <span>Cetak Surat Izin</span>
                 </a>
             <?php endif; ?>
         </div>
     </div>
 
-    <!-- Main Detail Card -->
-    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-soft overflow-hidden">
-        
-        <!-- Header Profile Banner -->
-        <div class="p-6 bg-slate-50 border-b border-slate-200/80 flex items-center justify-between flex-wrap gap-4">
-            <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xl flex items-center justify-center shadow-md flex-shrink-0">
-                    <?= strtoupper(substr($leave['nama_lengkap'], 0, 1)) ?>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-base sm:text-lg font-extrabold text-slate-900"><?= htmlspecialchars($leave['nama_lengkap']) ?></h2>
-                        <span class="px-2.5 py-0.5 rounded-full bg-white border border-slate-200 text-slate-700 text-xs font-mono font-bold"><?= htmlspecialchars($leave['nik']) ?></span>
-                    </div>
-                    <div class="text-xs text-slate-500 font-medium mt-0.5">
-                        <?= htmlspecialchars($leave['nama_dept']) ?> &bull; <?= htmlspecialchars($leave['nama_jabatan']) ?>
-                    </div>
-                </div>
-            </div>
+    <!-- 1. Status Indicator Card (Flutter Style) -->
+    <?php if ($isApproved): ?>
+        <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/90 flex items-center gap-3.5 text-emerald-900 shadow-2xs">
+            <span class="material-symbols-rounded text-2xl text-emerald-600 flex-shrink-0">check_circle</span>
             <div>
-                <?= getStatusBadge($leave['status']) ?>
+                <h3 class="text-sm font-bold text-emerald-900">Permohonan Cuti Telah Disetujui</h3>
+                <p class="text-xs text-emerald-700 mt-0.5">Pengajuan telah diverifikasi penuh hingga tahap akhir HRD dan kuota cuti resmi terpotong.</p>
             </div>
         </div>
+    <?php elseif ($isRejected): ?>
+        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200/90 flex items-center gap-3.5 text-rose-900 shadow-2xs">
+            <span class="material-symbols-rounded text-2xl text-rose-600 flex-shrink-0">cancel</span>
+            <div>
+                <h3 class="text-sm font-bold text-rose-900">Permohonan Cuti Ditolak</h3>
+                <p class="text-xs text-rose-700 mt-0.5">Alasan: <?= htmlspecialchars($leave['rejection_reason'] ?: ($leave['catatan_atasan'] ?: 'Permohonan tidak disetujui.')) ?></p>
+            </div>
+        </div>
+    <?php else: ?>
+        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200/90 flex items-center gap-3.5 text-amber-900 shadow-2xs">
+            <span class="material-symbols-rounded text-2xl text-amber-600 flex-shrink-0">hourglass_top</span>
+            <div>
+                <h3 class="text-sm font-bold text-amber-900">
+                    <?= $step === 'pending_spv' ? 'Menunggu Review Supervisor / Leader' : ($step === 'pending_manager' ? 'Menunggu Review Plant Manager' : 'Menunggu Verifikasi Akhir HRD') ?>
+                </h3>
+                <p class="text-xs text-amber-700 mt-0.5">Pengajuan sedang dalam proses peninjauan persetujuan bertingkat.</p>
+            </div>
+        </div>
+    <?php endif; ?>
 
-        <div class="p-6 sm:p-8">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-                
-                <!-- Left: Details (7 Cols) -->
-                <div class="md:col-span-7 space-y-5">
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Rincian Permohonan Cuti</h4>
-                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3 text-xs">
-                            <div class="flex justify-between py-1 border-b border-slate-200/60">
-                                <span class="text-slate-500">Nomor Surat</span>
-                                <span class="font-mono font-bold text-slate-900"><?= htmlspecialchars($leave['nomor_surat']) ?></span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-slate-200/60">
-                                <span class="text-slate-500">Jenis Cuti</span>
-                                <span class="font-bold text-blue-600"><?= htmlspecialchars($leave['nama_cuti']) ?></span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-slate-200/60">
-                                <span class="text-slate-500">Tanggal Pelaksanaan</span>
-                                <span class="font-semibold text-slate-800"><?= formatTanggalIndo($leave['tanggal_mulai']) ?> s/d <?= formatTanggalIndo($leave['tanggal_selesai']) ?></span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-slate-200/60">
-                                <span class="text-slate-500">Total Hari Kerja</span>
-                                <span class="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 font-extrabold"><?= $leave['total_hari'] ?> Hari</span>
-                            </div>
-                            <div class="flex justify-between py-1 border-b border-slate-200/60">
-                                <span class="text-slate-500">Alamat Selama Cuti</span>
-                                <span class="font-medium text-slate-800"><?= htmlspecialchars($leave['alamat_selama_cuti'] ?: '-') ?></span>
-                            </div>
-                            <div class="flex justify-between py-1">
-                                <span class="text-slate-500">Kontak Darurat</span>
-                                <span class="font-medium text-slate-800"><?= htmlspecialchars($leave['kontak_darurat'] ?: '-') ?></span>
-                            </div>
-                        </div>
-                    </div>
+    <!-- 2. Employee Profile Card (Flutter Style) -->
+    <div class="p-4 sm:p-5 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xs flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+            <div class="w-12 h-12 rounded-full bg-blue-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0 shadow-sm">
+                <?= $initial ?>
+            </div>
+            <div class="min-w-0">
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 truncate leading-snug"><?= htmlspecialchars($leave['nama_lengkap']) ?></h3>
+                <p class="text-xs text-slate-500 truncate mt-0.5"><?= htmlspecialchars($leave['nik']) ?> &bull; <?= htmlspecialchars($leave['nama_jabatan']) ?></p>
+            </div>
+        </div>
+        <div class="text-right flex-shrink-0">
+            <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200">
+                <?= htmlspecialchars($leave['nama_dept']) ?>
+            </span>
+            <div class="text-[11px] text-slate-400 mt-1 font-medium">Masa Kerja: <?= hitungMasaKerja($leave['tanggal_masuk']) ?></div>
+        </div>
+    </div>
 
-                    <!-- Alasan Box -->
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Alasan / Keperluan Cuti</h4>
-                        <div class="p-4 rounded-2xl bg-white border border-slate-200 text-xs text-slate-700 leading-relaxed font-medium">
-                            <?= nl2br(htmlspecialchars($leave['alasan'])) ?>
-                        </div>
-                    </div>
+    <!-- 3. Leave Details Bento Grid (Flutter Style) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- Rincian Cuti Card -->
+        <div class="p-5 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xs space-y-3.5">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <span class="material-symbols-rounded text-blue-600 text-base">description</span>
+                <span>Rincian Pengajuan Cuti</span>
+            </h4>
 
-                    <!-- Lampiran File -->
-                    <?php if ($leave['attachment']): ?>
-                        <div>
-                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">Lampiran Dokumen</h4>
-                            <a href="<?= BASE_URL ?>/assets/uploads/attachments/<?= htmlspecialchars($leave['attachment']) ?>" target="_blank" 
-                               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition">
-                                <i class="fa-solid fa-paperclip"></i>
-                                <span>Buka / Unduh Dokumen Lampiran</span>
-                            </a>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($leave['status'] === 'rejected'): ?>
-                        <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-1">
-                            <strong class="font-bold flex items-center gap-1 text-rose-700"><i class="fa-solid fa-circle-xmark"></i> Alasan Penolakan:</strong>
-                            <p><?= nl2br(htmlspecialchars($leave['rejection_reason'] ?: '-')) ?></p>
-                        </div>
-                    <?php endif; ?>
+            <div class="space-y-2.5 text-xs">
+                <div class="flex justify-between py-1 border-b border-slate-100">
+                    <span class="text-slate-400 font-medium">Nomor Surat:</span>
+                    <strong class="font-mono text-blue-600 font-bold"><?= htmlspecialchars($leave['nomor_surat']) ?></strong>
                 </div>
-
-                <!-- Right: Employee Balance & Approval Status (5 Cols) -->
-                <div class="md:col-span-5 space-y-5">
-                    
-                    <!-- Balance Widget -->
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Status Kuota Karyawan</h4>
-                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5 text-xs">
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">Masa Kerja:</span>
-                                <strong class="text-slate-800"><?= hitungMasaKerja($leave['tanggal_masuk']) ?></strong>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">Total Kuota:</span>
-                                <strong class="text-slate-800"><?= $leave['kuota_cuti'] ?> Hari</strong>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">Cuti Terpakai:</span>
-                                <strong class="text-amber-600"><?= $leave['cuti_terpakai'] ?> Hari</strong>
-                            </div>
-                            <div class="flex justify-between pt-2 border-t border-slate-200 font-bold text-sm">
-                                <span class="text-slate-900">Sisa Hak Cuti:</span>
-                                <span class="text-blue-600"><?= $leave['sisa_cuti'] ?> Hari</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Approval Verification Info -->
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Pemeriksaan Atasan</h4>
-                        <?php if ($leave['approved_by']): ?>
-                            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1">
-                                <div class="font-bold text-emerald-700 flex items-center gap-1.5"><i class="fa-solid fa-circle-check"></i> Diverifikasi & Disetujui:</div>
-                                <div class="font-extrabold text-slate-900 text-sm"><?= htmlspecialchars($leave['nama_atasan']) ?></div>
-                                <div class="text-[11px] text-slate-500"><?= htmlspecialchars($leave['jabatan_atasan']) ?> &bull; NIK: <?= htmlspecialchars($leave['nik_atasan']) ?></div>
-                                <div class="text-[11px] text-slate-400 mt-1"><i class="fa-regular fa-clock mr-1"></i> <?= formatDateTimeIndo($leave['approved_at']) ?></div>
-                            </div>
-                        <?php else: ?>
-                            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
-                                <i class="fa-solid fa-hourglass-half text-amber-600 mr-1"></i> Menunggu persetujuan Atasan Departemen <strong><?= htmlspecialchars($leave['nama_dept']) ?></strong>.
-                            </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Approval Action Buttons (If Approver) -->
-                    <?php if ($canApprove): ?>
-                        <div class="pt-4 border-t border-slate-200 space-y-2">
-                            <span class="block text-xs font-bold text-slate-700">Tindakan Persetujuan:</span>
-                            <div class="grid grid-cols-2 gap-2.5">
-                                <button type="button" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5" onclick="confirmApprove(<?= $leave['id'] ?>, '<?= addslashes(htmlspecialchars($leave['nama_lengkap'])) ?>')">
-                                    <i class="fa-solid fa-check"></i> Setujui
-                                </button>
-                                <button type="button" class="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-1.5" onclick="confirmReject(<?= $leave['id'] ?>, '<?= addslashes(htmlspecialchars($leave['nama_lengkap'])) ?>')">
-                                    <i class="fa-solid fa-xmark"></i> Tolak
-                                </button>
-                            </div>
-                        </div>
-                    <?php elseif ($leave['status'] === 'pending' && ($isHRD || $isManager || $isSpv) && $currentUser['id'] != $leave['employee_id']): ?>
-                        <div class="pt-4 border-t border-slate-200 space-y-2">
-                            <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-xs text-amber-900 space-y-1">
-                                <div class="font-extrabold flex items-center gap-1.5 text-amber-800">
-                                    <i class="fa-solid fa-circle-info"></i> Mode Monitoring Pengajuan
-                                </div>
-                                <p class="text-slate-600 text-[11px] leading-relaxed">
-                                    Saat ini pengajuan berada pada <strong><?= $step === 'pending_spv' ? 'Tahap 1 (Leader / Supervisor Departemen ' . htmlspecialchars($leave['nama_dept']) . ')' : ($step === 'pending_manager' ? 'Tahap 2 (Plant Manager)' : 'Tahap 3 (HRD / Super Admin)') ?></strong>.
-                                    Tombol <strong>Setujui</strong> dan <strong>Tolak</strong> akan aktif setelah tahapan persetujuan mencapai giliran Anda.
-                                </p>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
+                <div class="flex justify-between py-1 border-b border-slate-100">
+                    <span class="text-slate-400 font-medium">Jenis Permohonan:</span>
+                    <strong class="text-slate-900 font-bold"><?= htmlspecialchars($leave['nama_cuti']) ?></strong>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-100">
+                    <span class="text-slate-400 font-medium">Periode Cuti:</span>
+                    <strong class="text-slate-800"><?= $periode ?></strong>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-100">
+                    <span class="text-slate-400 font-medium">Total Durasi:</span>
+                    <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-bold"><?= $durasi ?></span>
+                </div>
+                <div class="flex justify-between py-1 border-b border-slate-100">
+                    <span class="text-slate-400 font-medium">Pengaruh Kuota:</span>
+                    <strong class="<?= !empty($leave['potong_kuota']) ? 'text-rose-600' : 'text-emerald-600' ?>">
+                        <?= !empty($leave['potong_kuota']) ? 'Memotong Kuota Tahunan' : 'Bebas Kuota (Izin Khusus)' ?>
+                    </strong>
                 </div>
             </div>
+
+            <!-- Alasan Cuti -->
+            <div class="pt-2">
+                <span class="text-[11px] font-bold text-slate-400 uppercase">Alasan / Keterangan:</span>
+                <div class="p-3 mt-1 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 font-medium leading-relaxed">
+                    <?= nl2br(htmlspecialchars($leave['alasan'])) ?>
+                </div>
+            </div>
+
+            <!-- Lampiran File -->
+            <?php if (!empty($leave['attachment'])): ?>
+                <div class="pt-1">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase">Dokumen Lampiran:</span>
+                    <div class="mt-1">
+                        <a href="<?= BASE_URL ?>/assets/uploads/leaves/<?= htmlspecialchars($leave['attachment']) ?>" target="_blank" 
+                           class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition">
+                            <span class="material-symbols-rounded text-sm">attach_file</span>
+                            <span>Buka / Unduh Lampiran Medis</span>
+                        </a>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Multi-Tier Timeline Card (Flutter Exact Stepper) -->
+        <div class="p-5 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xs space-y-4">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <span class="material-symbols-rounded text-indigo-600 text-base">account_tree</span>
+                <span>Alur Persetujuan Bertingkat</span>
+            </h4>
+
+            <div class="space-y-4 relative pl-1">
+                
+                <!-- Tier 1: Leader / Spv -->
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 <?= $spvDone ? 'bg-emerald-100 text-emerald-600' : ($spvCurrent ? 'bg-amber-100 text-amber-600' : ($spvRejected ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400')) ?>">
+                        <span class="material-symbols-rounded text-base"><?= $spvDone ? 'check' : ($spvCurrent ? 'hourglass_top' : ($spvRejected ? 'close' : 'radio_button_unchecked')) ?></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-bold text-slate-900 leading-tight">1. Leader / Supervisor Departemen</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">
+                            <?php if ($employeeLevel >= 3): ?>
+                                <span class="text-slate-400 italic">Bypass otomatis (Pemohon level Leader/Spv)</span>
+                            <?php elseif ($spvDone): ?>
+                                <span class="text-emerald-600 font-medium">Disetujui oleh <?= htmlspecialchars($leave['spv_name'] ?? 'Leader/Spv') ?> <?= !empty($leave['spv_at']) ? '• ' . date('d/m/y H:i', strtotime($leave['spv_at'])) : '' ?></span>
+                                <?php if (!empty($leave['spv_notes'])): ?>
+                                    <div class="text-[10.5px] text-slate-600 bg-slate-50 p-1.5 rounded-lg mt-1">"<?= htmlspecialchars($leave['spv_notes']) ?>"</div>
+                                <?php endif; ?>
+                            <?php elseif ($spvCurrent): ?>
+                                <span class="text-amber-600 font-medium">Sedang menunggu persetujuan Leader/Spv</span>
+                            <?php elseif ($spvRejected): ?>
+                                <span class="text-rose-600 font-medium">Ditolak di tahap ini</span>
+                            <?php else: ?>
+                                <span class="text-slate-400">Antrean</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tier 2: Plant Manager -->
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 <?= $mgrDone ? 'bg-emerald-100 text-emerald-600' : ($mgrCurrent ? 'bg-blue-100 text-blue-600' : ($mgrRejected ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400')) ?>">
+                        <span class="material-symbols-rounded text-base"><?= $mgrDone ? 'check' : ($mgrCurrent ? 'hourglass_top' : ($mgrRejected ? 'close' : 'radio_button_unchecked')) ?></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-bold text-slate-900 leading-tight">2. Department / Plant Manager</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">
+                            <?php if ($employeeLevel >= 5): ?>
+                                <span class="text-slate-400 italic">Bypass otomatis (Pemohon level Manager)</span>
+                            <?php elseif ($mgrDone): ?>
+                                <span class="text-emerald-600 font-medium">Disetujui oleh <?= htmlspecialchars($leave['manager_name'] ?? 'Plant Manager') ?> <?= !empty($leave['manager_at']) ? '• ' . date('d/m/y H:i', strtotime($leave['manager_at'])) : '' ?></span>
+                                <?php if (!empty($leave['manager_notes'])): ?>
+                                    <div class="text-[10.5px] text-slate-600 bg-slate-50 p-1.5 rounded-lg mt-1">"<?= htmlspecialchars($leave['manager_notes']) ?>"</div>
+                                <?php endif; ?>
+                            <?php elseif ($mgrCurrent): ?>
+                                <span class="text-blue-600 font-medium">Sedang menunggu review Plant Manager</span>
+                            <?php elseif ($mgrRejected): ?>
+                                <span class="text-rose-600 font-medium">Ditolak oleh Plant Manager</span>
+                            <?php else: ?>
+                                <span class="text-slate-400">Menunggu tahap 1</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tier 3: HRD / Super Admin -->
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm flex-shrink-0 <?= $hrdDone ? 'bg-emerald-100 text-emerald-600' : ($hrdCurrent ? 'bg-purple-100 text-purple-600' : ($hrdRejected ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400')) ?>">
+                        <span class="material-symbols-rounded text-base"><?= $hrdDone ? 'check' : ($hrdCurrent ? 'hourglass_top' : ($hrdRejected ? 'close' : 'radio_button_unchecked')) ?></span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs font-bold text-slate-900 leading-tight">3. HRD & Super Admin (Final)</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">
+                            <?php if ($hrdDone): ?>
+                                <span class="text-emerald-600 font-medium">Disetujui final oleh <?= htmlspecialchars($leave['hrd_name'] ?? ($leave['approver_name'] ?? 'HRD Admin')) ?> <?= !empty($leave['approved_at']) ? '• ' . date('d/m/y H:i', strtotime($leave['approved_at'])) : '' ?></span>
+                                <?php if (!empty($leave['catatan_atasan'])): ?>
+                                    <div class="text-[10.5px] text-slate-600 bg-slate-50 p-1.5 rounded-lg mt-1">"<?= htmlspecialchars($leave['catatan_atasan']) ?>"</div>
+                                <?php endif; ?>
+                            <?php elseif ($hrdCurrent): ?>
+                                <span class="text-purple-600 font-medium">Sedang menunggu verifikasi akhir HRD</span>
+                            <?php elseif ($hrdRejected): ?>
+                                <span class="text-rose-600 font-medium">Ditolak oleh HRD</span>
+                            <?php else: ?>
+                                <span class="text-slate-400">Menunggu tahap 2</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Approval Action Box for Approvers -->
+            <?php if ($canApprove): ?>
+                <div class="pt-3 border-t border-slate-100 space-y-2">
+                    <span class="text-xs font-bold text-slate-900 block">Tindakan Giliran Anda:</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" class="py-2.5 rounded-xl border border-rose-400 text-rose-600 hover:bg-rose-50 font-bold text-xs flex items-center justify-center gap-1.5 transition" onclick="openRejectModal(<?= $leave['id'] ?>, '<?= addslashes(htmlspecialchars($leave['nama_lengkap'])) ?>')">
+                            <span class="material-symbols-rounded text-sm">close</span>
+                            <span>Tolak</span>
+                        </button>
+                        <button type="button" class="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition" onclick="openApproveModal(<?= $leave['id'] ?>, '<?= addslashes(htmlspecialchars($leave['nama_lengkap'])) ?>')">
+                            <span class="material-symbols-rounded text-sm">check</span>
+                            <span>Setujui</span>
+                        </button>
+                    </div>
+                </div>
+            <?php endif; ?>
+
         </div>
 
     </div>
 
 </div>
+
+<!-- Interactive Approval & Reject Modal Dialogs -->
+<script>
+function openApproveModal(id, name) {
+    Swal.fire({
+        title: '<div class="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400"><span class="material-symbols-rounded text-2xl">check_circle</span><span class="text-base font-bold text-slate-900 dark:text-white">Setujui Pengajuan</span></div>',
+        html: `
+            <div class="text-left text-xs space-y-3 mt-2">
+                <p class="text-slate-600 dark:text-slate-300">Apakah Anda yakin ingin menyetujui pengajuan cuti untuk <strong>${name}</strong>?</p>
+                <div class="space-y-1 pt-1">
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider">Catatan Tambahan (Opsional)</label>
+                    <textarea id="swalApproveNote" rows="3" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" placeholder="Misal: Disetujui, pekerjaan didelegasikan..."></textarea>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#059669',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fa-solid fa-check mr-1.5"></i> Ya, Setujui',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const noteVal = document.getElementById('swalApproveNote')?.value || '';
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<?= BASE_URL ?>/index.php?page=leave-action&action=approve&id=' + id;
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'note';
+            input.value = noteVal;
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+
+function openRejectModal(id, name) {
+    Swal.fire({
+        title: '<div class="flex items-center justify-center gap-2 text-rose-600 dark:text-rose-400"><span class="material-symbols-rounded text-2xl">highlight_off</span><span class="text-base font-bold text-slate-900 dark:text-white">Tolak Pengajuan</span></div>',
+        html: `
+            <div class="text-left text-xs space-y-3 mt-2">
+                <p class="text-slate-600 dark:text-slate-300">Masukkan alasan penolakan pengajuan untuk <strong>${name}</strong>:</p>
+                <div class="space-y-1 pt-1">
+                    <label class="block font-bold text-slate-700 dark:text-slate-300 text-[11px] uppercase tracking-wider">Alasan Penolakan (Wajib) <span class="text-rose-500">*</span></label>
+                    <textarea id="swalRejectNote" rows="3" class="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500" placeholder="Tuliskan alasan penolakan..."></textarea>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fa-solid fa-xmark mr-1.5"></i> Tolak Cuti',
+        cancelButtonText: 'Batal',
+        reverseButtons: true,
+        preConfirm: () => {
+            const noteVal = document.getElementById('swalRejectNote')?.value.trim();
+            if (!noteVal) {
+                Swal.showValidationMessage('Alasan penolakan wajib diisi!');
+                return false;
+            }
+            return noteVal;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<?= BASE_URL ?>/index.php?page=leave-action&action=reject&id=' + id;
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'catatan_atasan';
+            input.value = result.value;
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>

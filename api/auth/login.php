@@ -37,10 +37,8 @@ $stmt->execute([$username, $username, $isUsernameAdmin ? 1 : 0]);
 $user = $stmt->fetch();
 
 $passwordValid = false;
-if ($user) {
+if ($user && !empty($user['password'])) {
     if (password_verify($password, $user['password'])) {
-        $passwordValid = true;
-    } elseif ($password === 'password123' || $password === 'admin123' || $password === 'admin') {
         $passwordValid = true;
     }
 }

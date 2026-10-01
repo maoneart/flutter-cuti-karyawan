@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/app_theme.dart';
 import '../models/leave_type_model.dart';
 import '../services/api_service.dart';
@@ -263,11 +264,30 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
 
     if (res.success) {
       final daysText = _calculatedDays == 0.5 ? '0.5' : (_calculatedDays.truncateToDouble() == _calculatedDays ? _calculatedDays.toInt().toString() : _calculatedDays.toString());
+      final waData = (res.data is Map<String, dynamic>) ? res.data!['whatsapp'] as Map<String, dynamic>? : null;
+      final waUrl = waData?['wa_url']?.toString();
+      final atasanNama = waData?['atasan_nama']?.toString() ?? 'Atasan';
+
+      void resetForm() {
+        setState(() {
+          _startDate = null;
+          _endDate = null;
+          _calculatedDays = 0;
+          _alasanController.clear();
+          _alamatController.clear();
+          _kontakDaruratController.clear();
+          _attachmentBase64 = null;
+          _attachmentName = null;
+          _attachmentSizeBytes = null;
+        });
+        widget.onLeaveSubmitted?.call();
+      }
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -282,35 +302,82 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               const SizedBox(height: 16),
               const Text(
                 'Pengajuan Berhasil Dikirim!',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                'Pengajuan cuti $daysText hari ($_selectedShift) Anda telah tercatat dan masuk ke antrean persetujuan atasan.',
+                'Pengajuan cuti $daysText hari ($_selectedShift) Anda telah tercatat dan masuk ke antrean persetujuan.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
               ),
+              if (waUrl != null && waUrl.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(CupertinoIcons.chat_bubble_2_fill, color: Color(0xFF16A34A), size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Kirim pesan WhatsApp ke $atasanNama agar segera diproses.',
+                          style: const TextStyle(fontSize: 11.5, color: Color(0xFF15803D), fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           actions: [
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                setState(() {
-                  _startDate = null;
-                  _endDate = null;
-                  _calculatedDays = 0;
-                  _alasanController.clear();
-                  _alamatController.clear();
-                  _kontakDaruratController.clear();
-                  _attachmentBase64 = null;
-                  _attachmentName = null;
-                  _attachmentSizeBytes = null;
-                });
-                widget.onLeaveSubmitted?.call();
-              },
-              child: const Text('Lihat di Riwayat Cuti'),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (waUrl != null && waUrl.isNotEmpty)
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF25D366),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
+                    ),
+                    onPressed: () async {
+                      final uri = Uri.parse(waUrl);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      resetForm();
+                    },
+                    icon: const Icon(CupertinoIcons.bubble_left_bubble_right_fill, size: 18),
+                    label: Text(
+                      'Kirim WA ke $atasanNama',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    resetForm();
+                  },
+                  child: const Text('Lihat di Riwayat Cuti', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                ),
+              ],
             ),
           ],
         ),
@@ -624,7 +691,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              'Shift Pagi Pabrik',
+                                              'Shift Pagi Perusahaan',
                                               style: TextStyle(fontSize: 10, color: textSub),
                                             ),
                                           ],
@@ -663,7 +730,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              'Shift Malam Pabrik',
+                                              'Shift Malam Perusahaan',
                                               style: TextStyle(fontSize: 10, color: textSub),
                                             ),
                                           ],

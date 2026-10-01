@@ -4,6 +4,11 @@
  * PT. Nakakin Indonesia Leave Management System API
  */
 
+// Start Session for Web Clients if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Set Response Type to JSON
 header('Content-Type: application/json; charset=UTF-8');
 

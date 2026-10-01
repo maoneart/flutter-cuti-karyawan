@@ -140,9 +140,9 @@ switch ($page) {
         (new QuotaController())->batchReset();
         break;
 
-    // Employee Management (HRD)
+    // Employee Management & Directory
     case 'employees':
-        requireRole('admin');
+        requireLogin();
         require __DIR__ . '/views/employees/index.php';
         break;
 
@@ -180,10 +180,16 @@ switch ($page) {
         (new EmployeeController())->importCommit();
         break;
 
-    // Profile Management
+    // Profile & Settings Management
     case 'profile':
+    case 'settings-mobile':
         requireLogin();
         require __DIR__ . '/views/employees/profile.php';
+        break;
+
+    case 'profile-detail':
+        requireLogin();
+        require __DIR__ . '/views/employees/profile_detail.php';
         break;
 
     case 'profile-update':

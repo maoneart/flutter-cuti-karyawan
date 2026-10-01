@@ -1,7 +1,7 @@
 <?php
 /**
  * Setting Controller
- * Application & Company Profile Configuration Management (Commercial & White-labeling ready)
+ * Application & Company Profile Configuration Management
  */
 
 if (session_status() === PHP_SESSION_NONE) {

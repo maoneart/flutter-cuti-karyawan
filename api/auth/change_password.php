@@ -41,10 +41,8 @@ $stmt->execute([$user['id']]);
 $userRow = $stmt->fetch();
 
 $passwordValid = false;
-if ($userRow) {
+if ($userRow && !empty($userRow['password'])) {
     if (password_verify($currentPassword, $userRow['password'])) {
-        $passwordValid = true;
-    } elseif ($currentPassword === 'password123' || $currentPassword === 'admin123' || $currentPassword === 'admin') {
         $passwordValid = true;
     }
 }

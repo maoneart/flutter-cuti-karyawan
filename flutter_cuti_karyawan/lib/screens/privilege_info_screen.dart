@@ -34,7 +34,7 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
     {'key': 'staff', 'label': 'Staff', 'level': 'Level 2', 'desc': 'Staff administrasi & operasional'},
     {'key': 'leader', 'label': 'Leader', 'level': 'Level 3', 'desc': 'Leader regu seksi departemen'},
     {'key': 'supervisor', 'label': 'Supervisor', 'level': 'Level 4', 'desc': 'Supervisor pengendali operasional'},
-    {'key': 'manager', 'label': 'Manager', 'level': 'Level 6', 'desc': 'Plant Manager operasional pabrik'},
+    {'key': 'manager', 'label': 'Manager', 'level': 'Level 6', 'desc': 'Plant Manager operasional perusahaan'},
     {'key': 'hrd', 'label': 'HRD & Admin', 'level': 'Level 7', 'desc': 'Pengelola SDM & master data cuti'},
     {'key': 'superadmin', 'label': 'Super Admin', 'level': 'Level 8', 'desc': 'Akses penuh seluruh konfigurasi sistem'},
   ];
@@ -330,7 +330,7 @@ class _PrivilegeInfoScreenState extends State<PrivilegeInfoScreen> with SingleTi
     // Fallback static list if matrix not yet available
     final List<Map<String, dynamic>> defaultPrivs = [
       {'key': 'leave_request', 'name': 'Pengajuan Cuti Pribadi', 'desc': 'Mengajukan cuti mandiri, upload surat sakit/lampiran & cek sisa kuota', 'icon': CupertinoIcons.calendar_badge_plus},
-      {'key': 'view_public_board', 'name': 'Papan Informasi & Kalender Bersama', 'desc': 'Melihat jadwal cuti rekan kerja di departemen dan statistik pabrik', 'icon': CupertinoIcons.calendar},
+      {'key': 'view_public_board', 'name': 'Papan Informasi & Kalender Bersama', 'desc': 'Melihat jadwal cuti rekan kerja di departemen dan statistik perusahaan', 'icon': CupertinoIcons.calendar},
       {'key': 'approval_tier1', 'name': 'Approval Tier 1 (Leader / Spv)', 'desc': 'Verifikasi & tinjauan cuti operator/staff departemen yang sama', 'icon': CupertinoIcons.checkmark_seal_fill},
       {'key': 'approval_tier2', 'name': 'Approval Tier 2 (Plant Manager)', 'desc': 'Persetujuan operasional tingkat manajerial lintas seluruh departemen', 'icon': CupertinoIcons.briefcase_fill},
       {'key': 'approval_tier3', 'name': 'Approval Tier 3 / Final (HRD)', 'desc': 'Persetujuan akhir resmi dan pemotongan otomatis kuota cuti', 'icon': CupertinoIcons.person_crop_circle_badge_checkmark},

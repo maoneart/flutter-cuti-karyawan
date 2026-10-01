@@ -70,56 +70,76 @@ $teamLeaves = $stmt->fetchAll();
             </span>
         </div>
 
-        <div class="p-4 sm:p-6">
+        <div class="p-3 sm:p-5">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs datatable">
                     <thead>
                         <tr>
-                            <th class="text-center w-12">No</th>
-                            <th class="min-w-[170px]">Karyawan</th>
-                            <th class="min-w-[130px]">Jabatan</th>
-                            <th class="min-w-[200px]">Jenis Cuti</th>
-                            <th class="min-w-[140px]">Mulai</th>
-                            <th class="min-w-[140px]">Selesai</th>
-                            <th class="min-w-[90px] text-center">Hari</th>
-                            <th class="min-w-[120px] text-center">Status</th>
-                            <th class="min-w-[80px] text-left">Aksi</th>
+                            <th class="text-center w-8">No</th>
+                            <th>Karyawan & Jabatan</th>
+                            <th>Permohonan & Periode Cuti</th>
+                            <th class="text-center">Total Durasi</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-right pr-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $no = 1; foreach ($teamLeaves as $leave): ?>
-                            <tr>
-                                <td class="text-center">
-                                    <span class="w-6 h-6 rounded-lg bg-slate-100 inline-flex items-center justify-center text-[11px] text-slate-600 font-black">
+                        <?php $no = 1; foreach ($teamLeaves as $leave): 
+                            $tglMulaiFormatted = date('d M Y', strtotime($leave['tanggal_mulai']));
+                            $tglSelesaiFormatted = date('d M Y', strtotime($leave['tanggal_selesai']));
+                            $periodeText = ($leave['tanggal_mulai'] === $leave['tanggal_selesai']) ? $tglMulaiFormatted : "$tglMulaiFormatted - $tglSelesaiFormatted";
+                            $durasiText = ($leave['total_hari'] == 0.5) ? '0.5 Hari' : $leave['total_hari'] . ' Hari';
+                        ?>
+                            <tr class="hover:bg-slate-50/60 transition">
+                                <td class="text-center py-2.5">
+                                    <span class="w-5 h-5 rounded-md bg-slate-100 inline-flex items-center justify-center text-[10.5px] text-slate-500 font-bold">
                                         <?= $no++ ?>
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
+                                <td class="py-2.5">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
                                             <?= strtoupper(substr($leave['nama_lengkap'], 0, 1)) ?>
                                         </div>
-                                        <div>
-                                            <div class="font-extrabold text-slate-900 text-xs"><?= htmlspecialchars($leave['nama_lengkap']) ?></div>
-                                            <div class="text-[11px] text-slate-400 font-mono">NIK: <strong class="text-slate-700"><?= htmlspecialchars($leave['nik']) ?></strong></div>
+                                        <div class="min-w-0">
+                                            <div class="font-extrabold text-slate-900 text-xs truncate max-w-[170px]"><?= htmlspecialchars($leave['nama_lengkap']) ?></div>
+                                            <div class="text-[10.5px] text-slate-500 font-medium">
+                                                NIK: <strong class="text-slate-700"><?= htmlspecialchars($leave['nik']) ?></strong> &bull; <?= htmlspecialchars($leave['nama_jabatan']) ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="font-bold text-slate-800 text-xs"><?= htmlspecialchars($leave['nama_jabatan']) ?></div>
+                                <td class="py-2.5">
+                                    <div class="space-y-0.5">
+                                        <div class="font-bold text-slate-800 text-xs"><?= htmlspecialchars($leave['nama_cuti']) ?></div>
+                                        <div class="text-[10.5px] text-slate-500 flex items-center gap-1">
+                                            <i class="fa-regular fa-calendar text-[10px] text-slate-400"></i>
+                                            <span><?= $periodeText ?></span>
+                                            <?php if (!empty($leave['shift'])): ?>
+                                                <span class="text-slate-400">&bull;</span>
+                                                <span class="text-slate-600 font-medium"><?= htmlspecialchars($leave['shift']) ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="whitespace-nowrap"><?= renderLeaveTypeDisplay($leave['nama_cuti'], $leave['potong_kuota'] ?? null) ?></td>
-                                <td class="whitespace-nowrap font-bold text-slate-800"><?= formatTanggalIndo($leave['tanggal_mulai']) ?></td>
-                                <td class="whitespace-nowrap font-bold text-slate-800"><?= formatTanggalIndo($leave['tanggal_selesai']) ?></td>
-                                <td class="text-center whitespace-nowrap">
-                                    <span class="px-3 py-1 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200/80 font-black text-xs shadow-2xs"><?= $leave['total_hari'] ?> Hari</span>
+                                <td class="text-center py-2.5 whitespace-nowrap">
+                                    <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 font-black text-[11px] border border-blue-200/60">
+                                        <?= $durasiText ?>
+                                    </span>
                                 </td>
-                                <td class="text-center whitespace-nowrap"><?= getStatusBadge($leave['status']) ?></td>
-                                <td class="whitespace-nowrap">
-                                    <div class="flex items-center gap-1.5">
-                                        <a href="<?= BASE_URL ?>/index.php?page=leave-detail&id=<?= $leave['id'] ?>" class="w-8 h-8 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold flex items-center justify-center transition shadow-2xs" title="Lihat Detail">
-                                            <i class="fa-solid fa-eye text-xs"></i>
+                                <td class="text-center py-2.5 whitespace-nowrap">
+                                    <?= getStatusBadge($leave['status']) ?>
+                                </td>
+                                <td class="py-2.5 text-right pr-4 whitespace-nowrap">
+                                    <div class="inline-flex items-center gap-1 justify-end">
+                                        <a href="<?= BASE_URL ?>/index.php?page=leave-detail&id=<?= $leave['id'] ?>" class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition flex items-center justify-center shadow-2xs" title="Lihat Detail">
+                                            <i class="fa-solid fa-eye text-[11px]"></i>
                                         </a>
+                                        <?php if ($leave['status'] === 'approved'): ?>
+                                            <a href="<?= BASE_URL ?>/index.php?page=leave-print&id=<?= $leave['id'] ?>" target="_blank" class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition flex items-center justify-center shadow-2xs" title="Cetak Surat">
+                                                <i class="fa-solid fa-print text-[11px]"></i>
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>

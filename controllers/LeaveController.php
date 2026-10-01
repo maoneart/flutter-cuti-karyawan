@@ -224,13 +224,21 @@ class LeaveController {
                     $reason, $addressDuringLeave, $emergencyContact,
                     $attachmentName, $initialStep
                 ]);
+                $newLeaveId = (int)$pdo->lastInsertId();
 
                 $pdo->commit();
+
+                // Prepare WhatsApp modal payload for user
+                $waModalData = getLeaveWhatsAppNotificationData($newLeaveId, $pdo);
+                if ($waModalData) {
+                    $_SESSION['leave_whatsapp_modal'] = $waModalData;
+                }
+
                 if ($isAdminOnBehalf) {
-                    setFlash('success', "Permohonan cuti ({$nomorSurat}) untuk karyawan {$targetEmp['nama_lengkap']} berhasil dibuat dan menunggu persetujuan!");
+                    setFlash('success', "Permohonan cuti ({$nomorSurat}) untuk karyawan {$targetEmp['nama_lengkap']} berhasil dibuat!");
                     header('Location: ' . BASE_URL . '/index.php?page=leaves-team');
                 } else {
-                    setFlash('success', "Permohonan cuti ({$nomorSurat}) berhasil diajukan dan sedang menunggu persetujuan alur hierarki!");
+                    setFlash('success', "Permohonan cuti ({$nomorSurat}) berhasil diajukan!");
                     header('Location: ' . BASE_URL . '/index.php?page=leaves-my');
                 }
                 exit;

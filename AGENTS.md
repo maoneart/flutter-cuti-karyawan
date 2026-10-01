@@ -18,8 +18,8 @@ Dokumen ini berisi seluruh ringkasan aturan bisnis, arsitektur sistem, hierarki 
    * Approval Tier 1 bagi operator & staff di **1 departemen yang sama**.
    * Pengajuan cuti pribadi (otomatis bypass Tier 1 ke Tier 2).
 5. **Department / Plant Manager** (`role = 'manager'`, Level 6):
-   * Approval Tier 2 mencakup **seluruh 15 departemen** pabrik.
-   * Monitoring status kehadiran & kalender produksi pabrik.
+   * Approval Tier 2 mencakup **seluruh 15 departemen** perusahaan.
+   * Monitoring status kehadiran & kalender operasional perusahaan.
 6. **HRD** (`role = 'hrd'`, Level 7):
    * Approval Tier 3 (Final) seluruh departemen & eksekusi pemotongan kuota cuti resmi.
    * Pengelolaan data seluruh karyawan (CRUD data karyawan).

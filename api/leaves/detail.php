@@ -134,6 +134,8 @@ $timeline[] = [
     'notes' => $leave['hrd_notes'] ?? $leave['catatan_atasan'],
 ];
 
+require_once __DIR__ . '/../../config/functions.php';
+$leave['whatsapp'] = getLeaveWhatsAppNotificationData($leave['id'], $pdo);
 $leave['timeline'] = $timeline;
 
 jsonResponse(true, 'Detail pengajuan cuti berhasil diambil', $leave);

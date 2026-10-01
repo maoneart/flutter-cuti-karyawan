@@ -1,7 +1,7 @@
 <?php
 /**
  * Application & Company Settings View
- * PT. Nakakin Indonesia / White-label System Configuration
+ * PT. Nakakin Indonesia - System Configuration
  */
 
 require_once __DIR__ . '/../layouts/header.php';
@@ -27,7 +27,7 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
                 <div>
                     <div class="flex items-center gap-2.5 flex-wrap">
                         <h2 class="text-xl sm:text-2xl font-black tracking-tight text-white">Pengaturan Aplikasi & Perusahaan</h2>
-                        <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 text-xs font-bold font-mono">White-label Ready</span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-xs font-bold font-mono">Sistem Produksi Live</span>
                     </div>
                     <p class="text-xs sm:text-sm text-slate-300 mt-1">Ubah nama sistem, identitas perusahaan, logo, serta format surat perizinan cuti tanpa perlu mengubah kode sumber.</p>
                 </div>
@@ -126,7 +126,7 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
 
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                                Alamat Lengkap Pabrik / Kantor
+                                Alamat Lengkap Perusahaan / Kantor
                             </label>
                             <textarea name="alamat_perusahaan" id="inAlamat" rows="2" 
                                       oninput="updateLivePreview()"
@@ -400,10 +400,10 @@ $faviconPath = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . 
 
                     <div class="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700/60 text-[11px] text-slate-300 space-y-1">
                         <div class="font-bold text-white flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-info text-blue-400"></i> Siap Dijual & Di-White-label
+                            <i class="fa-solid fa-circle-info text-blue-400"></i> Informasi Identitas Perusahaan
                         </div>
                         <p class="text-slate-400 text-[10.5px] leading-relaxed">
-                            Cukup ganti form di atas untuk langsung mengalihkan sistem ini ke klien/perusahaan baru tanpa perlu *touch* satu baris pun kode pemrograman.
+                            Data profil, logo, dan kop surat ini digunakan secara otomatis pada seluruh dokumen cetak izin cuti serta tampilan antarmuka sistem.
                         </p>
                     </div>
 

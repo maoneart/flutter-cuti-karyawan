@@ -264,3 +264,116 @@ function getFlash() {
 function cleanInput($data) {
     return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
 }
+
+/**
+ * Generate WhatsApp Notification Data & URL for a Leave Request
+ */
+function getLeaveWhatsAppNotificationData($leaveId, $pdo = null) {
+    if (!$pdo) {
+        $pdo = getDbConnection();
+    }
+
+    $stmt = $pdo->prepare("
+        SELECT lr.*, 
+               e.nik, e.nama_lengkap, e.role as emp_role, e.departemen_id,
+               d.nama_dept,
+               p.nama_jabatan, p.level_hierarki,
+               lt.nama_cuti, lt.kode as kode_cuti
+        FROM pengajuan_cuti lr
+        JOIN karyawan e ON lr.employee_id = e.id
+        JOIN departemen d ON e.departemen_id = d.id
+        JOIN jabatan p ON e.jabatan_id = p.id
+        JOIN jenis_cuti lt ON lr.leave_type_id = lt.id
+        WHERE lr.id = ?
+    ");
+    $stmt->execute([$leaveId]);
+    $leave = $stmt->fetch();
+    if (!$leave) return null;
+
+    $empHierarki = (int)($leave['level_hierarki'] ?? 1);
+    $empRole = strtolower($leave['emp_role'] ?? '');
+
+    $targetAtasan = null;
+    $atasanRoleText = 'Atasan / Leader';
+
+    if ($empHierarki <= 2 || in_array($empRole, ['operator', 'staff'])) {
+        // Cari Leader atau Supervisor di Departemen yang sama
+        $stmtAtasan = $pdo->prepare("
+            SELECT id, nama_lengkap, no_hp, role 
+            FROM karyawan 
+            WHERE departemen_id = ? AND role IN ('supervisor', 'leader') AND status_aktif = 'Aktif' AND no_hp IS NOT NULL AND no_hp != ''
+            ORDER BY FIELD(role, 'leader', 'supervisor') ASC LIMIT 1
+        ");
+        $stmtAtasan->execute([$leave['departemen_id']]);
+        $targetAtasan = $stmtAtasan->fetch();
+        $atasanRoleText = 'Leader / Supervisor Departemen';
+    } elseif ($empHierarki <= 4 || in_array($empRole, ['leader', 'supervisor'])) {
+        // Cari Plant / Dept Manager
+        $stmtAtasan = $pdo->prepare("
+            SELECT id, nama_lengkap, no_hp, role 
+            FROM karyawan 
+            WHERE role = 'manager' AND status_aktif = 'Aktif' AND no_hp IS NOT NULL AND no_hp != ''
+            LIMIT 1
+        ");
+        $stmtAtasan->execute();
+        $targetAtasan = $stmtAtasan->fetch();
+        $atasanRoleText = 'Plant Manager';
+    } else {
+        // Cari HRD
+        $stmtAtasan = $pdo->prepare("
+            SELECT id, nama_lengkap, no_hp, role 
+            FROM karyawan 
+            WHERE role IN ('hrd', 'superadmin') AND status_aktif = 'Aktif' AND no_hp IS NOT NULL AND no_hp != ''
+            ORDER BY FIELD(role, 'hrd', 'superadmin') ASC LIMIT 1
+        ");
+        $stmtAtasan->execute();
+        $targetAtasan = $stmtAtasan->fetch();
+        $atasanRoleText = 'HRD Manager';
+    }
+
+    $rawPhone = $targetAtasan['no_hp'] ?? '';
+    $cleanPhone = preg_replace('/[^0-9]/', '', $rawPhone);
+    if (strpos($cleanPhone, '0') === 0) {
+        $cleanPhone = '62' . substr($cleanPhone, 1);
+    } elseif (strpos($cleanPhone, '8') === 0) {
+        $cleanPhone = '628' . substr($cleanPhone, 1);
+    }
+
+    $atasanNama = $targetAtasan['nama_lengkap'] ?? $atasanRoleText;
+    $tglMulaiIndo = formatTanggalIndo($leave['tanggal_mulai']);
+    $tglSelesaiIndo = formatTanggalIndo($leave['tanggal_selesai']);
+    $periodeText = ($leave['tanggal_mulai'] === $leave['tanggal_selesai']) 
+        ? $tglMulaiIndo 
+        : "$tglMulaiIndo s/d $tglSelesaiIndo";
+
+    $daysText = $leave['total_hari'] == 0.5 ? '0.5 Hari (Setengah Hari)' : $leave['total_hari'] . ' Hari Kerja';
+
+    $msg = "Halo Bapak/Ibu {$atasanNama},\n\n"
+         . "Saya mengajukan permohonan cuti/izin kerja melalui sistem *Nakakin Mobile / Web Cuti*:\n\n"
+         . "📋 *DETAIL PENGAJUAN CUTI*\n"
+         . "• *No. Surat:* {$leave['nomor_surat']}\n"
+         . "• *Nama:* {$leave['nama_lengkap']} (NIK: {$leave['nik']})\n"
+         . "• *Dept / Shift:* {$leave['nama_dept']} ({$leave['shift']})\n"
+         . "• *Jenis Permohonan:* {$leave['nama_cuti']}\n"
+         . "• *Periode:* {$periodeText} ({$daysText})\n"
+         . "• *Alasan:* {$leave['alasan']}\n\n"
+         . "Mohon kesediaan Bapak/Ibu untuk memeriksa dan memproses persetujuan permohonan ini.\n"
+         . "Terima kasih.";
+
+    $waUrl = !empty($cleanPhone) 
+        ? "https://api.whatsapp.com/send?phone={$cleanPhone}&text=" . rawurlencode($msg)
+        : "https://api.whatsapp.com/send?text=" . rawurlencode($msg);
+
+    return [
+        'leave_id' => (int)$leave['id'],
+        'nomor_surat' => $leave['nomor_surat'],
+        'nama_pemohon' => $leave['nama_lengkap'],
+        'atasan_nama' => $atasanNama,
+        'atasan_role' => $atasanRoleText,
+        'atasan_phone' => $cleanPhone,
+        'has_phone' => !empty($cleanPhone),
+        'message_text' => $msg,
+        'wa_url' => $waUrl
+    ];
+}
+

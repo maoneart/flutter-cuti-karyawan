@@ -43,14 +43,22 @@ function getBearerToken() {
  * Returns user data array or dies with 401 JSON
  */
 function authenticateApiUser() {
+    $userId = null;
     $token = getBearerToken();
-    if (!$token) {
+    
+    if (!empty($token)) {
+        $payload = verifyApiToken($token);
+        if ($payload && isset($payload['user_id'])) {
+            $userId = (int)$payload['user_id'];
+        } else {
+            jsonResponse(false, 'Sesi tidak valid atau telah kedaluwarsa. Silakan login kembali.', null, 401);
+        }
+    } elseif (isset($_SESSION['user_id'])) {
+        $userId = (int)$_SESSION['user_id'];
+    } elseif (isset($_SESSION['user']['id'])) {
+        $userId = (int)$_SESSION['user']['id'];
+    } else {
         jsonResponse(false, 'Akses ditolak. Token otentikasi tidak ditemukan.', null, 401);
-    }
-
-    $payload = verifyApiToken($token);
-    if (!$payload || !isset($payload['user_id'])) {
-        jsonResponse(false, 'Sesi tidak valid atau telah kedaluwarsa. Silakan login kembali.', null, 401);
     }
 
     $pdo = getDbConnection();
@@ -62,7 +70,7 @@ function authenticateApiUser() {
         WHERE e.id = ? AND e.status_aktif = 'Aktif'
         LIMIT 1
     ");
-    $stmt->execute([$payload['user_id']]);
+    $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
     if (!$user) {

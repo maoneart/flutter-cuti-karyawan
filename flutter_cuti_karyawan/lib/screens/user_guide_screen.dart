@@ -53,7 +53,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
     } else if (userRole == 'manager' || userLevel == 6) {
       roleCategory = 'manager';
       roleTitle = 'Plant Manager';
-      roleSubtitle = 'Tutorial persetujuan Tier 2 lintas 15 departemen pabrik & pengawasan lini produksi.';
+      roleSubtitle = 'Tutorial persetujuan Tier 2 lintas 15 departemen perusahaan & pengawasan lini produksi.';
       roleColor = const Color(0xFFD97706); // Amber
       roleIcon = CupertinoIcons.briefcase_fill;
     } else if (userRole == 'leader' || userRole == 'supervisor' || userLevel >= 3) {
@@ -476,8 +476,8 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
       case 'manager':
         return [
           _GuideStep(
-            title: 'Dashboard Pabrik Lintas 15 Departemen',
-            shortSummary: 'Monitoring status kehadiran di seluruh area pabrik.',
+            title: 'Dashboard Perusahaan Lintas 15 Departemen',
+            shortSummary: 'Monitoring status kehadiran di seluruh area perusahaan.',
             desc: 'Plant Manager memiliki akses pemantauan kehadiran dan pengajuan cuti yang mencakup seluruh 15 departemen di PT. Nakakin Indonesia (Casting, Machining, Engineering, QC, GA, PPIC, dll).',
           ),
           _GuideStep(
@@ -487,14 +487,14 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
             tips: 'Jika pengajuan masih berstatus pending_spv, tombol akan nonaktif dengan keterangan menunggu Leader.',
           ),
           _GuideStep(
-            title: 'Menyetujui / Menolak Berkas Pabrik',
+            title: 'Menyetujui / Menolak Berkas Perusahaan',
             shortSummary: 'Persetujuan meneruskan ke HRD; penolakan menghentikan alur.',
             desc: '• Setujui: Berkas beralih ke tahap Tier 3 ("Menunggu Review HRD") untuk finalisasi pemotongan kuota.\n• Tolak: Berkas langsung berstatus "Ditolak" dan proses selesai seketika.',
           ),
           _GuideStep(
             title: 'Pengawasan Produksi via Papan Live',
             shortSummary: 'Mencegah kekurangan tenaga kerja di line krusial.',
-            desc: 'Buka menu "Papan Live" untuk mengevaluasi dampak cuti massal terhadap target output produksi pabrik.',
+            desc: 'Buka menu "Papan Live" untuk mengevaluasi dampak cuti massal terhadap target output operasional perusahaan.',
           ),
           _GuideStep(
             title: 'Pengajuan Cuti Pribadi Manager',
@@ -575,7 +575,7 @@ class _UserGuideScreenState extends State<UserGuideScreen> {
           _GuideStep(
             title: 'Melihat Papan Kehadiran Live (Papan Live)',
             shortSummary: 'Mengecek jadwal cuti rekan kerja hari ini.',
-            desc: 'Klik tombol "Papan Live" di Dashboard untuk melihat siapa saja rekan kerja di pabrik yang sedang cuti hari ini agar memudahkan koordinasi operasional tim Anda.',
+            desc: 'Klik tombol "Papan Live" di Dashboard untuk melihat siapa saja rekan kerja di perusahaan yang sedang cuti hari ini agar memudahkan koordinasi operasional tim Anda.',
           ),
         ];
     }

@@ -1,8 +1,8 @@
         </main>
 
         <?php $footerSettings = getAppSettings(); ?>
-        <!-- Modern Tailwind Footer -->
-        <footer class="mt-auto border-t border-slate-200/80 bg-white/70 backdrop-blur py-4 px-6 sm:px-8 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2 no-print">
+        <!-- Modern Tailwind Footer (Desktop) -->
+        <footer class="mt-auto border-t border-slate-200/80 bg-white/70 backdrop-blur py-4 px-6 sm:px-8 text-xs text-slate-500 hidden lg:flex flex-col sm:flex-row items-center justify-between gap-2 no-print">
             <div class="flex items-center gap-2">
                 <span>&copy; <?= date('Y') ?></span>
                 <strong class="text-slate-800 font-bold"><?= htmlspecialchars($footerSettings['nama_perusahaan'] ?: 'PT. Nakakin Indonesia') ?></strong>
@@ -18,6 +18,115 @@
                 <span>v2.5 Pro</span>
             </div>
         </footer>
+
+        <!-- Flutter Material 3 Styled Mobile Bottom Navigation Bar -->
+        <?php 
+        $currPage = $_GET['page'] ?? 'dashboard'; 
+        $canApproveNav = in_array($currentUser['role'] ?? '', ['leader', 'supervisor', 'manager', 'hrd', 'admin', 'superadmin']) || ($currentUser['level_hierarki'] ?? 1) >= 3;
+        ?>
+        <nav id="mobileAppBottomBar" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] px-1 py-1.5 no-print">
+            <div class="max-w-md mx-auto flex items-center justify-around">
+                
+                <!-- 1. Beranda (Icons.dashboard_outlined / Icons.dashboard_rounded) -->
+                <?php $isHome = ($currPage === 'dashboard'); ?>
+                <a href="<?= BASE_URL ?>/index.php?page=dashboard" 
+                   class="flex flex-col items-center justify-center flex-1 py-0.5 transition group">
+                    <?php if ($isHome): ?>
+                        <div class="w-14 h-7 rounded-full bg-blue-600/15 text-blue-700 flex items-center justify-center transition">
+                            <span class="material-symbols-rounded filled text-[22px] text-blue-700 leading-none">dashboard</span>
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-900 mt-1 tracking-tight leading-none">Beranda</span>
+                    <?php else: ?>
+                        <div class="w-14 h-7 rounded-full flex items-center justify-center transition">
+                            <span class="material-symbols-rounded text-[22px] text-slate-500 group-hover:text-slate-700 leading-none">dashboard</span>
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1 tracking-tight leading-none">Beranda</span>
+                    <?php endif; ?>
+                </a>
+
+                <!-- 2. Ajukan (Icons.add_circle_outline_rounded / Icons.add_circle_rounded) -->
+                <?php $isCreate = ($currPage === 'leave-create'); ?>
+                <a href="<?= BASE_URL ?>/index.php?page=leave-create" 
+                   class="flex flex-col items-center justify-center flex-1 py-0.5 transition group">
+                    <?php if ($isCreate): ?>
+                        <div class="w-14 h-7 rounded-full bg-blue-600/15 text-blue-700 flex items-center justify-center transition">
+                            <span class="material-symbols-rounded filled text-[22px] text-blue-700 leading-none">add_circle</span>
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-900 mt-1 tracking-tight leading-none">Ajukan</span>
+                    <?php else: ?>
+                        <div class="w-14 h-7 rounded-full flex items-center justify-center transition">
+                            <span class="material-symbols-rounded text-[22px] text-slate-500 group-hover:text-slate-700 leading-none">add_circle</span>
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1 tracking-tight leading-none">Ajukan</span>
+                    <?php endif; ?>
+                </a>
+
+                <!-- 3. Riwayat (Icons.history_outlined / Icons.history_rounded) -->
+                <?php $isHistory = in_array($currPage, ['leaves-my', 'leave-detail']); ?>
+                <a href="<?= BASE_URL ?>/index.php?page=leaves-my" 
+                   class="flex flex-col items-center justify-center flex-1 py-0.5 transition group">
+                    <?php if ($isHistory): ?>
+                        <div class="w-14 h-7 rounded-full bg-blue-600/15 text-blue-700 flex items-center justify-center transition">
+                            <span class="material-symbols-rounded filled text-[22px] text-blue-700 leading-none">history</span>
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-900 mt-1 tracking-tight leading-none">Riwayat</span>
+                    <?php else: ?>
+                        <div class="w-14 h-7 rounded-full flex items-center justify-center transition">
+                            <span class="material-symbols-rounded text-[22px] text-slate-500 group-hover:text-slate-700 leading-none">history</span>
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1 tracking-tight leading-none">Riwayat</span>
+                    <?php endif; ?>
+                </a>
+
+                <!-- 4. Approval (Icons.verified_outlined / Icons.verified_rounded) -->
+                <?php if ($canApproveNav): 
+                    $isApproval = ($currPage === 'leave-approvals');
+                ?>
+                    <a href="<?= BASE_URL ?>/index.php?page=leave-approvals" 
+                       class="flex flex-col items-center justify-center flex-1 py-0.5 transition group relative">
+                        <?php if ($isApproval): ?>
+                            <div class="w-14 h-7 rounded-full bg-blue-600/15 text-blue-700 flex items-center justify-center transition relative">
+                                <span class="material-symbols-rounded filled text-[22px] text-blue-700 leading-none">verified</span>
+                                <?php if (!empty($pendingApprovalCount) && $pendingApprovalCount > 0): ?>
+                                    <span class="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#FF3B30] text-white text-[9px] font-black border border-white">
+                                        <?= $pendingApprovalCount > 99 ? '99+' : $pendingApprovalCount ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="text-[11px] font-bold text-slate-900 mt-1 tracking-tight leading-none">Approval</span>
+                        <?php else: ?>
+                            <div class="w-14 h-7 rounded-full flex items-center justify-center transition relative">
+                                <span class="material-symbols-rounded text-[22px] text-slate-500 group-hover:text-slate-700 leading-none">verified</span>
+                                <?php if (!empty($pendingApprovalCount) && $pendingApprovalCount > 0): ?>
+                                    <span class="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-[#FF3B30] text-white text-[9px] font-black border border-white">
+                                        <?= $pendingApprovalCount > 99 ? '99+' : $pendingApprovalCount ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
+                            <span class="text-[11px] font-medium text-slate-500 mt-1 tracking-tight leading-none">Approval</span>
+                        <?php endif; ?>
+                    </a>
+                <?php endif; ?>
+
+                <!-- 5. Setting (CupertinoIcons.gear / CupertinoIcons.gear_solid) -->
+                <?php $isSetting = in_array($currPage, ['profile', 'settings']); ?>
+                <a href="<?= BASE_URL ?>/index.php?page=profile" 
+                   class="flex flex-col items-center justify-center flex-1 py-0.5 transition group">
+                    <?php if ($isSetting): ?>
+                        <div class="w-14 h-7 rounded-full bg-blue-600/15 text-blue-700 flex items-center justify-center transition">
+                            <span class="material-symbols-rounded filled text-[22px] text-blue-700 leading-none">settings</span>
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-900 mt-1 tracking-tight leading-none">Setting</span>
+                    <?php else: ?>
+                        <div class="w-14 h-7 rounded-full flex items-center justify-center transition">
+                            <span class="material-symbols-rounded text-[22px] text-slate-500 group-hover:text-slate-700 leading-none">settings</span>
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 mt-1 tracking-tight leading-none">Setting</span>
+                    <?php endif; ?>
+                </a>
+
+            </div>
+        </nav>
     </div>
 </div>
 
@@ -147,8 +256,100 @@
         }
     });
 
-    // Handle SweetAlert Flash Messages
-    <?php if ($flash): ?>
+    // Global Dark Mode Handler & Synchronization
+    function syncDarkModeUI(isDark) {
+        const toggleMobile = document.getElementById('darkModeToggleMobile');
+        if (toggleMobile) {
+            toggleMobile.checked = isDark;
+        }
+        const themeLabel = document.getElementById('themeModeLabel');
+        if (themeLabel) {
+            themeLabel.innerText = isDark ? 'Tema Gelap Aktif' : 'Tema Terang Standar';
+        }
+        const iconContainer = document.getElementById('themeModeIconContainer');
+        const iconEl = document.getElementById('themeModeIcon');
+        if (iconContainer && iconEl) {
+            if (isDark) {
+                iconContainer.className = 'w-8 h-8 rounded-lg bg-indigo-950/80 text-indigo-400 flex items-center justify-center flex-shrink-0 transition';
+                iconEl.innerText = 'dark_mode';
+            } else {
+                iconContainer.className = 'w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 transition';
+                iconEl.innerText = 'light_mode';
+            }
+        }
+    }
+
+    function toggleGlobalDarkMode() {
+        const isDark = document.documentElement.classList.toggle('dark');
+        try {
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        } catch (e) {}
+        syncDarkModeUI(isDark);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const isDark = document.documentElement.classList.contains('dark');
+        syncDarkModeUI(isDark);
+    });
+
+    // Handle Leave WhatsApp Submission Modal
+    <?php if (isset($_SESSION['leave_whatsapp_modal'])): 
+        $waModal = $_SESSION['leave_whatsapp_modal'];
+        unset($_SESSION['leave_whatsapp_modal']);
+    ?>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            title: '',
+            html: `
+                <div class="text-left space-y-4">
+                    <div class="flex items-center gap-3.5 pb-3.5 border-b border-slate-100">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl font-bold flex-shrink-0 shadow-sm">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-900 leading-snug">Permohonan Cuti Berhasil Diajukan!</h3>
+                            <p class="text-xs text-blue-600 font-mono font-bold mt-0.5"><?= htmlspecialchars($waModal['nomor_surat']) ?></p>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs text-slate-700 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 font-medium">Pemohon:</span>
+                            <strong class="text-slate-900 font-bold"><?= htmlspecialchars($waModal['nama_pemohon']) ?></strong>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-slate-400 font-medium">Tujuan Notifikasi:</span>
+                            <span class="text-emerald-700 font-extrabold flex items-center gap-1.5">
+                                <i class="fa-brands fa-whatsapp text-emerald-600"></i>
+                                <?= htmlspecialchars($waModal['atasan_nama']) ?> (<?= htmlspecialchars($waModal['atasan_role']) ?>)
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Data cuti Anda telah aman tercatat di sistem. Anda dapat langsung mengirimkan pesan notifikasi WhatsApp ke atasan agar permohonan dapat segera ditinjau.
+                    </p>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonColor: '#25D366',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: '<i class="fa-brands fa-whatsapp text-lg mr-1.5"></i> Kirim WA ke Atasan',
+            cancelButtonText: 'Selesai / Lihat Riwayat',
+            allowOutsideClick: false,
+            customClass: {
+                popup: 'rounded-3xl shadow-2xl border border-slate-200 p-6',
+                confirmButton: 'px-5 py-3 rounded-2xl font-extrabold text-xs text-white shadow-lg shadow-emerald-500/30',
+                cancelButton: 'px-5 py-3 rounded-2xl font-bold text-xs'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.open('<?= addslashes($waModal['wa_url']) ?>', '_blank');
+            }
+        });
+    });
+    <?php elseif ($flash): ?>
+    // Handle Regular SweetAlert Flash Messages
     document.addEventListener('DOMContentLoaded', function() {
         Swal.fire({
             icon: '<?= $flash['type'] === 'error' ? 'error' : ($flash['type'] === 'warning' ? 'warning' : 'success') ?>',
@@ -163,6 +364,25 @@
         });
     });
     <?php endif; ?>
+
+    // Universal Logout Confirmation Modal
+    function confirmLogout() {
+        Swal.fire({
+            title: 'Keluar dari Akun?',
+            text: 'Apakah Anda yakin ingin keluar dari sistem E-Cuti?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: '<i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> Ya, Keluar',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = '<?= BASE_URL ?>/index.php?page=logout';
+            }
+        });
+    }
 </script>
 
 </body>

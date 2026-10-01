@@ -18,6 +18,7 @@ class ApiConfig {
   // Endpoints
   static String get login => '$baseUrl/auth/login.php';
   static String get profile => '$baseUrl/auth/profile.php';
+  static String get updateProfile => '$baseUrl/auth/update_profile.php';
   static String get changePassword => '$baseUrl/auth/change_password.php';
   static String get dashboardStats => '$baseUrl/dashboard/stats.php';
   static String get notifications => '$baseUrl/notifications/list.php';

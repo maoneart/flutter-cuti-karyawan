@@ -842,3 +842,761 @@ body {
     padding: 0 16px;
   }
 }
+
+/* ========================================================
+   COMPREHENSIVE FLUTTER-IDENTICAL DARK MODE THEME
+   (100% Alignment with Flutter DarkTheme Palette)
+   ======================================================== */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark,
+html.dark body,
+html.dark #mainWrapper,
+html.dark main {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+/* 1. Surfaces, Cards, Bento Grids, Modals, Popovers */
+html.dark .bg-white,
+html.dark .bg-white\/95,
+html.dark .bg-white\/90,
+html.dark .bg-white\/80,
+html.dark .bg-white\/70,
+html.dark .card,
+html.dark .panel,
+html.dark .bg-surface {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+/* 2. Inset Containers & Sub-Backgrounds */
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/40,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-50\/90,
+html.dark .bg-gray-50,
+html.dark .bg-gray-100 {
+  background-color: #0f172a !important;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-slate-100\/90,
+html.dark .bg-slate-100\/80,
+html.dark .bg-slate-200,
+html.dark .bg-slate-200\/60 {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+/* 3. Borders & Dividers */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/70,
+html.dark .border-slate-200\/60,
+html.dark .border-slate-300,
+html.dark .border-slate-400,
+html.dark .border-gray-100,
+html.dark .border-gray-200 {
+  border-color: #334155 !important;
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200\/80 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+/* 4. Text Contrast Adjustments */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-blue-900 {
+  color: #ffffff !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600,
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-slate-400,
+html.dark .text-gray-500,
+html.dark .text-gray-400 {
+  color: #94a3b8 !important;
+}
+
+/* Brand & Status Text in Dark Mode */
+html.dark .text-blue-600,
+html.dark .text-blue-700,
+html.dark .text-sky-600 {
+  color: #38bdf8 !important;
+}
+
+html.dark .text-teal-600,
+html.dark .text-teal-700 {
+  color: #2dd4bf !important;
+}
+
+html.dark .text-emerald-600,
+html.dark .text-emerald-700,
+html.dark .text-emerald-800 {
+  color: #34d399 !important;
+}
+
+html.dark .text-amber-600,
+html.dark .text-amber-700,
+html.dark .text-amber-800 {
+  color: #fbbf24 !important;
+}
+
+html.dark .text-rose-600,
+html.dark .text-rose-700,
+html.dark .text-rose-800 {
+  color: #fb7185 !important;
+}
+
+html.dark .text-indigo-600,
+html.dark .text-indigo-700 {
+  color: #818cf8 !important;
+}
+
+html.dark .text-purple-600,
+html.dark .text-purple-700 {
+  color: #c084fc !important;
+}
+
+html.dark .text-orange-600,
+html.dark .text-orange-700 {
+  color: #fb923c !important;
+}
+
+/* 5. Tinted Icon Containers & Sub-cards */
+html.dark .bg-blue-50,
+html.dark .bg-sky-50,
+html.dark .bg-blue-100 {
+  background-color: rgba(56, 189, 248, 0.18) !important;
+}
+
+html.dark .bg-teal-50,
+html.dark .bg-teal-100 {
+  background-color: rgba(45, 212, 191, 0.18) !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-100 {
+  background-color: rgba(52, 211, 153, 0.18) !important;
+}
+
+html.dark .bg-amber-50,
+html.dark .bg-amber-100 {
+  background-color: rgba(251, 191, 36, 0.18) !important;
+}
+
+html.dark .bg-rose-50,
+html.dark .bg-rose-100 {
+  background-color: rgba(251, 113, 133, 0.18) !important;
+}
+
+html.dark .bg-indigo-50,
+html.dark .bg-indigo-100 {
+  background-color: rgba(129, 140, 248, 0.18) !important;
+}
+
+html.dark .bg-purple-50,
+html.dark .bg-purple-100 {
+  background-color: rgba(192, 132, 252, 0.18) !important;
+}
+
+html.dark .bg-orange-50,
+html.dark .bg-orange-100 {
+  background-color: rgba(251, 146, 60, 0.18) !important;
+}
+
+/* 6. Form Inputs, Selects, and Textareas */
+html.dark input[type="text"]:not(.bg-transparent),
+html.dark input[type="password"]:not(.bg-transparent),
+html.dark input[type="email"]:not(.bg-transparent),
+html.dark input[type="date"]:not(.bg-transparent),
+html.dark input[type="number"]:not(.bg-transparent),
+html.dark input[type="search"]:not(.bg-transparent),
+html.dark select:not(.bg-transparent),
+html.dark textarea:not(.bg-transparent) {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark input.bg-transparent,
+html.dark input[type="date"].bg-transparent,
+html.dark input[type="text"].bg-transparent,
+html.dark input[type="search"].bg-transparent {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(100%) saturate(300%) hue-rotate(170deg);
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+html.dark input[type="text"]:not(.bg-transparent):focus,
+html.dark input[type="password"]:not(.bg-transparent):focus,
+html.dark input[type="email"]:not(.bg-transparent):focus,
+html.dark input[type="date"]:not(.bg-transparent):focus,
+html.dark input[type="number"]:not(.bg-transparent):focus,
+html.dark input[type="search"]:not(.bg-transparent):focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  background-color: #0f172a !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2) !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* 7. Flutter Mobile Bottom Bar & Header */
+html.dark #mobileAppBottomBar {
+  background-color: rgba(30, 41, 59, 0.98) !important;
+  border-top-color: #334155 !important;
+}
+
+html.dark #mobileAppBottomBar .text-slate-900 {
+  color: #38bdf8 !important;
+}
+
+html.dark #mobileAppBottomBar .bg-blue-600\/15 {
+  background-color: rgba(56, 189, 248, 0.2) !important;
+}
+
+html.dark #mobileAppBottomBar .material-symbols-rounded.filled {
+  color: #38bdf8 !important;
+}
+
+html.dark header {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+  border-bottom-color: #334155 !important;
+}
+
+html.dark #userMenuBtn {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+html.dark #userDropdown {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+html.dark #userDropdown a:hover {
+  background-color: #0f172a !important;
+}
+
+html.dark footer {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+  border-top-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+/* 8. Tables and DataTables in Dark Mode */
+html.dark .dataTables_wrapper .dataTables_length select,
+html.dark .dataTables_wrapper .dataTables_filter input {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark table.dataTable,
+html.dark table {
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+html.dark table.dataTable thead th,
+html.dark table thead th {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+  background-color: #0f172a !important;
+  color: #94a3b8 !important;
+  border-top: 1px solid #334155 !important;
+  border-bottom: 2px solid #334155 !important;
+  border-left-color: #334155 !important;
+  border-right-color: #334155 !important;
+}
+
+html.dark table.dataTable,
+html.dark table {
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+  background-color: transparent !important;
+}
+
+html.dark table.dataTable thead th,
+html.dark table thead th {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%) !important;
+  background-color: #0f172a !important;
+  color: #94a3b8 !important;
+  border-top: 1px solid #334155 !important;
+  border-bottom: 2px solid #334155 !important;
+  border-left-color: #334155 !important;
+  border-right-color: #334155 !important;
+}
+
+html.dark table.dataTable thead th:first-child,
+html.dark table thead th:first-child {
+  border-left: 1px solid #334155 !important;
+}
+
+html.dark table.dataTable thead th:last-child,
+html.dark table thead th:last-child {
+  border-right: 1px solid #334155 !important;
+}
+
+html.dark table.dataTable tbody td,
+html.dark table tbody td,
+html.dark table.dataTable > tbody > tr > td,
+html.dark table.dataTable > tbody > tr > th,
+html.dark table.dataTable > tbody > tr > * {
+  border-bottom: 1px solid #334155 !important;
+  color: #cbd5e1 !important;
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html.dark table.dataTable tbody tr,
+html.dark table tbody tr,
+html.dark table.dataTable > tbody > tr {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #cbd5e1 !important;
+}
+
+html.dark table.dataTable tbody tr:hover td,
+html.dark table.dataTable tbody tr:hover,
+html.dark table.dataTable tbody tr:hover > *,
+html.dark table.dataTable > tbody > tr:hover > *,
+html.dark table.dataTable > tbody > tr:hover > td,
+html.dark table tbody tr:hover td,
+html.dark table tbody tr:hover,
+html.dark tr.hover\:bg-slate-50\/60:hover,
+html.dark tr.hover\:bg-slate-50:hover,
+html.dark tr:hover {
+  background-color: #1e293b !important;
+  background: #1e293b !important;
+  box-shadow: none !important;
+  transition: background-color 0.15s ease-in-out !important;
+}
+
+html.dark table.dataTable.stripe tbody tr.odd,
+html.dark table.dataTable.display tbody tr.odd,
+html.dark table.dataTable.stripe tbody tr.even,
+html.dark table.dataTable.display tbody tr.even,
+html.dark table.dataTable > tbody > tr.odd > *,
+html.dark table.dataTable > tbody > tr.even > *,
+html.dark table.dataTable.display > tbody > tr.odd > *,
+html.dark table.dataTable.display > tbody > tr.even > *,
+html.dark table.dataTable.order-column.stripe tbody tr.odd > .sorting_1,
+html.dark table.dataTable.order-column.stripe tbody tr.even > .sorting_1 {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html.dark table.dataTable.stripe tbody tr.odd:hover > *,
+html.dark table.dataTable.display tbody tr.odd:hover > *,
+html.dark table.dataTable.stripe tbody tr.even:hover > *,
+html.dark table.dataTable.display tbody tr.even:hover > * {
+  background-color: #1e293b !important;
+  background: #1e293b !important;
+  box-shadow: none !important;
+}
+
+/* Dark Mode Badges in Tables & Lists */
+html.dark .bg-blue-50 {
+  background-color: rgba(30, 58, 138, 0.4) !important;
+  color: #60a5fa !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+html.dark .bg-emerald-50 {
+  background-color: rgba(6, 78, 59, 0.4) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+html.dark .bg-rose-50 {
+  background-color: rgba(136, 19, 55, 0.4) !important;
+  color: #fb7185 !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+}
+html.dark .bg-amber-50,
+html.dark .bg-\[\#FFF7ED\] {
+  background-color: rgba(120, 53, 15, 0.4) !important;
+  color: #fbbf24 !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+html.dark .bg-purple-50 {
+  background-color: rgba(88, 28, 135, 0.4) !important;
+  color: #c084fc !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+html.dark .dt-footer {
+  border-top-color: #334155 !important;
+}
+
+html.dark .dataTables_wrapper .dataTables_info {
+  color: #94a3b8 !important;
+}
+
+html.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+  background: #0f172a !important;
+  border-color: #334155 !important;
+  color: #94a3b8 !important;
+}
+
+html.dark .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  color: #ffffff !important;
+  background: #1e293b !important;
+  border-color: #3b82f6 !important;
+}
+
+html.dark .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+/* 9. SweetAlert2 Modals in Dark Mode */
+html.dark div.swal2-container {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+html.dark .swal2-popup,
+html.dark .swal2-popup.modern-swal-popup {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+}
+
+html.dark .swal2-title,
+html.dark .swal2-title.modern-swal-title {
+  color: #ffffff !important;
+}
+
+html.dark .swal2-html-container,
+html.dark .swal2-html-container.modern-swal-html {
+  color: #cbd5e1 !important;
+}
+
+html.dark .swal2-cancel,
+html.dark .swal2-cancel.modern-swal-cancel {
+  background-color: #0f172a !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+}
+
+html.dark .swal2-cancel:hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+/* 10. Modals, Filter Popovers & Floating Actions */
+html.dark #filterPopover,
+html.dark .popover-menu,
+html.dark .modal-card {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+/* 11. TabBar & Filter Chips */
+html.dark .tab-pill:not(.active) {
+  color: #94a3b8 !important;
+}
+html.dark .tab-pill:not(.active):hover {
+  color: #f8fafc !important;
+  background-color: rgba(51, 65, 85, 0.4) !important;
+}
+
+/* 12. Hover Effects */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-50\/70:hover,
+html.dark .hover\:bg-slate-50\/50:hover {
+  background-color: rgba(51, 65, 85, 0.45) !important;
+}
+
+html.dark .hover\:bg-slate-100:hover {
+  background-color: rgba(51, 65, 85, 0.65) !important;
+}
+
+/* 13. Shadows in Dark Mode */
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .shadow-2xl,
+html.dark .shadow-soft,
+html.dark .shadow-2xs,
+html.dark .shadow-xs {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ========================================================
+   PIXEL-PERFECT SWEETALERT2 ICONS (Fix Checkmark Distortion)
+   ======================================================== */
+.swal2-icon {
+  margin: 0.5rem auto 1.25rem auto !important;
+  box-sizing: content-box !important;
+}
+
+/* ========================================================
+   ULTRA-HIGH CONTRAST SWEETALERT2 ICONS (Bold & Vivid)
+   ======================================================== */
+div.swal2-container .swal2-icon,
+.swal2-icon {
+  margin: 0.75rem auto 1.25rem auto !important;
+  box-sizing: content-box !important;
+  border-radius: 50% !important;
+  width: 5rem !important;
+  height: 5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+div.swal2-container .swal2-icon .swal2-icon-content,
+.swal2-icon .swal2-icon-content {
+  color: #ffffff !important;
+  font-size: 2.75rem !important;
+  font-weight: 900 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.4) !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* 1. SUCCESS ICON (Deep Forest Emerald + Thick White Checkmark) */
+div.swal2-container .swal2-icon.swal2-success,
+.swal2-icon.swal2-success {
+  border: 3.5px solid #047857 !important;
+  background: #059669 !important;
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px -4px rgba(5, 150, 105, 0.6), 0 0 0 6px rgba(16, 185, 129, 0.25) !important;
+  animation: swal2-pop-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+.swal2-icon.swal2-success .swal2-success-ring,
+.swal2-icon.swal2-success .swal2-success-fix,
+.swal2-icon.swal2-success .swal2-success-circular-line-left,
+.swal2-icon.swal2-success .swal2-success-circular-line-right,
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+  display: none !important;
+}
+.swal2-icon.swal2-success::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: -9px !important;
+  border-radius: 50% !important;
+  border: 2.5px solid rgba(16, 185, 129, 0.6) !important;
+  animation: swal2-pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite !important;
+  pointer-events: none !important;
+}
+.swal2-icon.swal2-success::after {
+  content: '' !important;
+  display: block !important;
+  width: 16px !important;
+  height: 28px !important;
+  border: solid #ffffff !important;
+  border-width: 0 5px 5px 0 !important;
+  transform: rotate(45deg) translate(-2px, -3px) !important;
+  margin-top: -5px !important;
+  margin-left: 2px !important;
+  box-sizing: border-box !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) !important;
+  animation: swal2-check-stroke 0.45s cubic-bezier(0.65, 0, 0.45, 1) 0.15s both !important;
+}
+
+/* 2. QUESTION ICON (Deep Royal Indigo + Thick White Question Mark) */
+div.swal2-container .swal2-icon.swal2-question,
+.swal2-icon.swal2-question {
+  border: 3.5px solid #3730a3 !important;
+  background: #4338ca !important;
+  background-color: #4338ca !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px -4px rgba(67, 56, 202, 0.6), 0 0 0 6px rgba(99, 102, 241, 0.25) !important;
+  animation: swal2-question-flip 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+.swal2-icon.swal2-question::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: -9px !important;
+  border-radius: 50% !important;
+  border: 2.5px solid rgba(99, 102, 241, 0.6) !important;
+  animation: swal2-pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite !important;
+  pointer-events: none !important;
+}
+.swal2-icon.swal2-question .swal2-icon-content {
+  animation: swal2-float-wobble 2s ease-in-out 0.7s infinite alternate !important;
+}
+
+/* 3. ERROR ICON (Deep Crimson Red + Thick White X) */
+div.swal2-container .swal2-icon.swal2-error,
+.swal2-icon.swal2-error {
+  border: 3.5px solid #b91c1c !important;
+  background: #dc2626 !important;
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px -4px rgba(220, 38, 38, 0.6), 0 0 0 6px rgba(239, 68, 68, 0.25) !important;
+  animation: swal2-error-shake 0.5s ease-in-out forwards !important;
+}
+.swal2-icon.swal2-error .swal2-x-mark {
+  display: none !important;
+}
+.swal2-icon.swal2-error::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: -9px !important;
+  border-radius: 50% !important;
+  border: 2.5px solid rgba(239, 68, 68, 0.6) !important;
+  animation: swal2-pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite !important;
+  pointer-events: none !important;
+}
+.swal2-icon.swal2-error::after {
+  content: '✕' !important;
+  color: #ffffff !important;
+  font-size: 2.3rem !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  display: block !important;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.4) !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+/* 4. WARNING ICON (Deep Golden Amber + Thick White Exclamation) */
+div.swal2-container .swal2-icon.swal2-warning,
+.swal2-icon.swal2-warning {
+  border: 3.5px solid #b45309 !important;
+  background: #d97706 !important;
+  background-color: #d97706 !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px -4px rgba(217, 119, 6, 0.6), 0 0 0 6px rgba(245, 158, 11, 0.25) !important;
+  animation: swal2-warning-bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+.swal2-icon.swal2-warning::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: -9px !important;
+  border-radius: 50% !important;
+  border: 2.5px solid rgba(245, 158, 11, 0.6) !important;
+  animation: swal2-pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite !important;
+  pointer-events: none !important;
+}
+.swal2-icon.swal2-warning .swal2-icon-content {
+  animation: swal2-warning-wobble 1.5s ease-in-out 0.6s infinite alternate !important;
+}
+
+/* 5. INFO ICON (Deep Ocean Blue + Thick White i) */
+div.swal2-container .swal2-icon.swal2-info,
+.swal2-icon.swal2-info {
+  border: 3.5px solid #0369a1 !important;
+  background: #0284c7 !important;
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 30px -4px rgba(2, 132, 199, 0.6), 0 0 0 6px rgba(6, 182, 212, 0.25) !important;
+  animation: swal2-pop-bounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+}
+.swal2-icon.swal2-info::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: -9px !important;
+  border-radius: 50% !important;
+  border: 2.5px solid rgba(6, 182, 212, 0.6) !important;
+  animation: swal2-pulse-ring 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite !important;
+  pointer-events: none !important;
+}
+.swal2-icon.swal2-info .swal2-icon-content {
+  font-style: italic !important;
+  animation: swal2-float-wobble 2s ease-in-out 0.5s infinite alternate !important;
+}
+
+/* Keyframes */
+@keyframes swal2-pop-bounce {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes swal2-question-flip {
+  0% { transform: scale(0) rotateY(180deg); opacity: 0; }
+  60% { transform: scale(1.15) rotateY(-15deg); opacity: 1; }
+  100% { transform: scale(1) rotateY(0deg); opacity: 1; }
+}
+
+@keyframes swal2-error-shake {
+  0% { transform: scale(0.5); opacity: 0; }
+  30% { transform: scale(1.1) translateX(-6px); opacity: 1; }
+  50% { transform: scale(1) translateX(6px); }
+  70% { transform: scale(1) translateX(-3px); }
+  100% { transform: scale(1) translateX(0); opacity: 1; }
+}
+
+@keyframes swal2-warning-bounce {
+  0% { transform: scale(0) rotate(-15deg); opacity: 0; }
+  60% { transform: scale(1.18) rotate(8deg); opacity: 1; }
+  80% { transform: scale(0.95) rotate(-4deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes swal2-pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.22); opacity: 0; }
+  100% { transform: scale(0.95); opacity: 0; }
+}
+
+@keyframes swal2-check-stroke {
+  0% {
+    clip-path: polygon(0 0, 0 0, 0 0, 0 0);
+    transform: rotate(45deg) scale(0.7) translate(-2px, -3px);
+  }
+  50% {
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    transform: rotate(45deg) scale(1) translate(-2px, -3px);
+  }
+}
+
+@keyframes swal2-float-wobble {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}
+
+@keyframes swal2-warning-wobble {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
+
+
+

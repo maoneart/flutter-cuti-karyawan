@@ -154,6 +154,31 @@ class AppTheme {
         labelStyle: const TextStyle(color: textSecondary, fontSize: 14),
         hintStyle: const TextStyle(color: textMuted, fontSize: 14),
       ),
+      dialogTheme: DialogTheme(
+        backgroundColor: Colors.white,
+        elevation: 16,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: textPrimary,
+        ),
+        contentTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          color: textSecondary,
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: Colors.white,
+        modalBackgroundColor: Colors.white,
+        elevation: 16,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        showDragHandle: false,
+      ),
     );
   }
 
@@ -266,6 +291,32 @@ class AppTheme {
         ),
         labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
         hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 14),
+      ),
+      dialogTheme: DialogTheme(
+        backgroundColor: darkSurface,
+        elevation: 16,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: darkBorder, width: 1),
+        ),
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+        ),
+        contentTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          color: const Color(0xFF94A3B8),
+        ),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: darkSurface,
+        modalBackgroundColor: darkSurface,
+        elevation: 16,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        showDragHandle: false,
       ),
     );
   }

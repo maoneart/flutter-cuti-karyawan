@@ -125,6 +125,53 @@ class ApiService {
     }
   }
 
+  /// 1.1 Update Personal Profile (Nama, No WA/HP, Email, Alamat)
+  static Future<ApiResponse<UserModel>> updateProfile({
+    required String namaLengkap,
+    required String email,
+    required String noHp,
+    required String alamat,
+  }) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse(ApiConfig.updateProfile),
+            headers: _getHeaders(),
+            body: jsonEncode({
+              'nama_lengkap': namaLengkap,
+              'email': email,
+              'no_hp': noHp,
+              'alamat': alamat,
+            }),
+          )
+          .timeout(timeoutDuration);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200 && body['success'] == true) {
+        final userData = body['data']['user'] as Map<String, dynamic>;
+        final updatedUser = UserModel.fromJson(userData);
+        await AuthService.updateUser(updatedUser);
+        return ApiResponse<UserModel>(
+          success: true,
+          message: body['message'] ?? 'Data profil berhasil diperbarui',
+          data: updatedUser,
+        );
+      } else {
+        return ApiResponse<UserModel>(
+          success: false,
+          message: body['message'] ?? 'Gagal memperbarui profil',
+          errors: body['errors'] != null ? Map<String, dynamic>.from(body['errors']) : null,
+        );
+      }
+    } catch (e) {
+      return ApiResponse<UserModel>(
+        success: false,
+        message: 'Koneksi error: $e',
+      );
+    }
+  }
+
   /// 2. Change Password
   static Future<ApiResponse<void>> changePassword({
     required String currentPassword,

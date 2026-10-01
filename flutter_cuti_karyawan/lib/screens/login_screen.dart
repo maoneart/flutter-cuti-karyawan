@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/app_theme.dart';
 import '../config/api_config.dart';
 import '../services/api_service.dart';
@@ -28,6 +29,82 @@ class _LoginScreenState extends State<LoginScreen> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _showForgotPasswordDialog(BuildContext ctx) {
+    final nikCtrl = TextEditingController(text: _usernameController.text.trim());
+    final isDark = Theme.of(ctx).brightness == Brightness.dark;
+
+    showDialog(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: isDark ? AppTheme.darkSurface : Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.key_rounded, color: Color(0xFFF59E0B), size: 22),
+            ),
+            const SizedBox(width: 10),
+            const Text('Lupa Password', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Permintaan reset password akan diteruskan langsung ke WhatsApp Super User / Admin HRD.',
+              style: TextStyle(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : Colors.black54),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: nikCtrl,
+              decoration: const InputDecoration(
+                labelText: 'NIK atau Email Anda',
+                prefixIcon: Icon(Icons.badge_outlined, size: 20),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF16A34A),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              final nik = nikCtrl.text.trim();
+              if (nik.isEmpty) return;
+              Navigator.pop(dialogCtx);
+
+              final message = Uri.encodeComponent(
+                'Halo Super User / Admin HRD PT. Nakakin Indonesia,\n\n'
+                'Saya ingin meminta bantuan reset password untuk akun E-Cuti Karyawan:\n'
+                '- NIK / Email: $nik\n\n'
+                'Mohon bantuannya untuk melakukan reset password akun saya. Terima kasih.',
+              );
+              final waUrl = Uri.parse('https://api.whatsapp.com/send?phone=6281234567890&text=$message');
+              if (await canLaunchUrl(waUrl)) {
+                await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+              }
+            },
+            icon: const Icon(Icons.chat_bubble_outline, size: 18),
+            label: const Text('Kirim ke WhatsApp'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _handleLogin() async {
@@ -410,7 +487,29 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                   validator: (v) => (v == null || v.isEmpty) ? 'Password wajib diisi' : null,
                                 ),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 8),
+
+                                // Forgot Password Link
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    onPressed: () => _showForgotPasswordDialog(context),
+                                    style: TextButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: const Size(50, 30),
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(
+                                      'Lupa Password?',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark ? const Color(0xFF38BDF8) : AppTheme.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
 
                                 // Submit Button
                                 ElevatedButton(
@@ -472,7 +571,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ActionChip(
                                     backgroundColor: isDark ? const Color(0xFF831843) : const Color(0xFFFCE7F3),
                                     side: BorderSide(color: borderCol),
-                                    label: Text('Super Admin', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFFF472B6) : const Color(0xFFBE185D))),
+                                    label: Text('Hermawan (Super Admin)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? const Color(0xFFF472B6) : const Color(0xFFBE185D))),
                                     avatar: const CircleAvatar(backgroundColor: Color(0xFFDB2777), child: Text('S', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold))),
                                     onPressed: () => _setDemoAccount('admin@nakakin.co.id', 'password123'),
                                   ),

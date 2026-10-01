@@ -215,44 +215,44 @@ foreach ($reports as $r) {
                 <table class="w-full text-left text-xs datatable">
                     <thead>
                         <tr>
-                            <th class="text-center w-12">No</th>
-                            <th class="min-w-[150px]">No. Surat</th>
-                            <th class="min-w-[180px]">Karyawan & NIK</th>
-                            <th class="min-w-[140px]">Departemen</th>
-                            <th class="min-w-[200px]">Jenis Cuti</th>
-                            <th class="min-w-[160px]">Periode Tanggal</th>
-                            <th class="min-w-[80px] text-center">Hari</th>
-                            <th class="min-w-[120px] text-center">Status</th>
-                            <th class="min-w-[140px]">Pemeriksa</th>
+                            <th class="text-center w-8">No</th>
+                            <th>No. Surat</th>
+                            <th>Karyawan & NIK</th>
+                            <th>Departemen</th>
+                            <th>Jenis Cuti</th>
+                            <th>Periode Tanggal</th>
+                            <th class="text-center">Hari</th>
+                            <th class="text-center">Status</th>
+                            <th>Pemeriksa</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php $no = 1; foreach ($reports as $r): ?>
-                            <tr>
+                            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition">
                                 <td class="text-center">
-                                    <span class="w-6 h-6 rounded-lg bg-slate-100 inline-flex items-center justify-center text-[11px] text-slate-600 font-black">
+                                    <span class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 inline-flex items-center justify-center text-[11px] text-slate-600 dark:text-slate-300 font-black">
                                         <?= $no++ ?>
                                     </span>
                                 </td>
-                                <td class="whitespace-nowrap font-mono font-black text-blue-600">
-                                    <span class="bg-blue-50/80 px-2 py-0.5 rounded-lg border border-blue-100"><?= htmlspecialchars($r['nomor_surat']) ?></span>
+                                <td class="whitespace-nowrap font-mono font-black text-blue-600 dark:text-blue-400">
+                                    <span class="bg-blue-50/80 dark:bg-blue-950/60 px-2 py-0.5 rounded-lg border border-blue-100 dark:border-blue-900"><?= htmlspecialchars($r['nomor_surat']) ?></span>
                                 </td>
                                 <td>
-                                    <div class="font-extrabold text-slate-900 text-xs"><?= htmlspecialchars($r['nama_lengkap']) ?></div>
-                                    <div class="text-[10.5px] text-slate-400 font-mono">NIK: <strong class="text-slate-700"><?= htmlspecialchars($r['nik']) ?></strong> &bull; <?= htmlspecialchars($r['nama_jabatan']) ?></div>
+                                    <div class="font-extrabold text-slate-900 dark:text-white text-xs"><?= htmlspecialchars($r['nama_lengkap']) ?></div>
+                                    <div class="text-[10.5px] text-slate-400 dark:text-slate-500 font-mono">NIK: <strong class="text-slate-700 dark:text-slate-300"><?= htmlspecialchars($r['nik']) ?></strong> &bull; <?= htmlspecialchars($r['nama_jabatan']) ?></div>
                                 </td>
                                 <td>
-                                    <div class="font-extrabold text-slate-900 text-xs"><?= htmlspecialchars($r['nama_dept']) ?></div>
+                                    <div class="font-extrabold text-slate-900 dark:text-white text-xs"><?= htmlspecialchars($r['nama_dept']) ?></div>
                                 </td>
                                 <td class="whitespace-nowrap"><?= renderLeaveTypeDisplay($r['nama_cuti'], $r['potong_kuota'] ?? null) ?></td>
-                                <td class="whitespace-nowrap font-bold text-slate-800">
+                                <td class="whitespace-nowrap font-bold text-slate-800 dark:text-slate-200">
                                     <?= formatTanggalIndo($r['tanggal_mulai']) ?> s/d <?= formatTanggalIndo($r['tanggal_selesai']) ?>
                                 </td>
                                 <td class="text-center whitespace-nowrap">
-                                    <span class="px-3 py-1 rounded-full bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200/80 font-black text-xs shadow-2xs"><?= $r['total_hari'] ?> Hari</span>
+                                    <span class="px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-900 font-black text-xs shadow-2xs"><?= $r['total_hari'] ?> Hari</span>
                                 </td>
                                 <td class="text-center whitespace-nowrap"><?= getStatusBadge($r['status']) ?></td>
-                                <td class="text-slate-700 font-semibold whitespace-nowrap"><?= htmlspecialchars($r['nama_atasan'] ?: '-') ?></td>
+                                <td class="text-slate-700 dark:text-slate-300 font-semibold whitespace-nowrap"><?= htmlspecialchars($r['nama_atasan'] ?: '-') ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

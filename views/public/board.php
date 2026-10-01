@@ -1,7 +1,8 @@
 <?php
 /**
- * Public Today's Attendance & Leave Board (Papan Kehadiran & Cuti Karyawan Hari Ini)
- * White-label & TV Display Ready
+ * Public & In-App Today's Attendance & Leave Board
+ * PT. Nakakin Indonesia Leave Management System
+ * 100% Parity with Flutter PublicBoardScreen (Mobile) & Fullscreen TV Display (Desktop/TV)
  */
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -14,6 +15,7 @@ require_once __DIR__ . '/../../config/session.php';
 $pdo = getDbConnection();
 $appSettings = getAppSettings($pdo);
 $currentUser = getCurrentUser();
+$isTvMode = ($_GET['view'] ?? '') === 'tv';
 
 $todayDate = date('Y-m-d');
 $todayFormatted = formatTanggalIndo($todayDate);
@@ -63,6 +65,7 @@ $upcomingLeaves = $stmtUpcoming->fetchAll();
 $totalKaryawan = (int)$pdo->query("SELECT COUNT(*) FROM karyawan WHERE status_aktif = 'Aktif'")->fetchColumn();
 $countCutiHariIni = count($todayLeaves);
 $countHadirHariIni = max(0, $totalKaryawan - $countCutiHariIni);
+$tingkatKehadiran = $totalKaryawan > 0 ? round(($countHadirHariIni / $totalKaryawan) * 100, 1) : 100;
 $countSakitHariIni = 0;
 $countIzinHariIni = 0;
 $countTahunanHariIni = 0;
@@ -82,530 +85,549 @@ $departments = $pdo->query("SELECT * FROM departemen ORDER BY nama_dept ASC")->f
 
 $logoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . $appSettings['logo'] : BASE_URL . '/assets/images/Nakakin.png';
 $favUrl = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images/' . $appSettings['favicon'] : BASE_URL . '/assets/images/Nakakin.png';
+
+// IF RAW TV MODE (Fullscreen dark dashboard for TV screens)
+if ($isTvMode):
 ?>
 <!DOCTYPE html>
 <html lang="id" class="h-full bg-slate-900">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Papan Informasi Kehadiran & Cuti Karyawan | <?= htmlspecialchars($appSettings['nama_perusahaan']) ?></title>
-    
+    <title>TV Display &bull; Papan Kehadiran Live | <?= htmlspecialchars($appSettings['nama_perusahaan']) ?></title>
     <link rel="icon" type="image/png" href="<?= $favUrl ?>">
-
-    <!-- Google Fonts: Plus Jakarta Sans & Space Grotesk -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Tailwind CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-                        display: ['"Space Grotesk"', 'sans-serif'],
-                    },
-                    boxShadow: {
-                        'soft': '0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
-                        'glow-blue': '0 0 35px -5px rgba(59, 130, 246, 0.35)',
-                        'glow-rose': '0 0 35px -5px rgba(225, 29, 72, 0.35)',
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 9999px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
-    </style>
 </head>
-<body class="min-h-full bg-[#0a0f1d] text-slate-100 font-sans antialiased flex flex-col selection:bg-rose-500 selection:text-white relative overflow-x-hidden">
-
-    <!-- Ambient Glowing Background Lights -->
-    <div class="fixed -top-40 -left-40 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[130px] pointer-events-none"></div>
-    <div class="fixed top-1/3 -right-40 w-[500px] h-[500px] bg-rose-600/15 rounded-full blur-[130px] pointer-events-none"></div>
-    <div class="fixed -bottom-40 left-1/3 w-[600px] h-[600px] bg-indigo-600/15 rounded-full blur-[140px] pointer-events-none"></div>
-
-    <!-- Top Navigation Bar -->
-    <header class="sticky top-0 z-50 bg-[#090e1a]/85 backdrop-blur-xl border-b border-slate-800/80 px-4 sm:px-8 py-3.5 transition-all">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            
-            <!-- Left: Brand Logo & Title -->
-            <a href="<?= BASE_URL ?>/index.php" class="flex items-center gap-3.5 group">
-                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-500 via-red-600 to-rose-700 p-0.5 shadow-lg shadow-rose-600/25 group-hover:scale-105 transition duration-300 flex items-center justify-center flex-shrink-0">
-                    <div class="w-full h-full bg-[#0a0f1d] rounded-[14px] flex items-center justify-center p-1 overflow-hidden">
-                        <img src="<?= $logoUrl ?>" alt="Logo" class="max-h-full max-w-full object-contain">
-                    </div>
+<body class="min-h-full bg-[#0a0f1d] text-slate-100 font-sans antialiased flex flex-col p-6 sm:p-8 space-y-6">
+    <header class="flex items-center justify-between border-b border-slate-800 pb-5">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-red-700 p-0.5 shadow-lg shadow-rose-600/30 flex items-center justify-center">
+                <div class="w-full h-full bg-[#0a0f1d] rounded-[14px] flex items-center justify-center p-1.5">
+                    <img src="<?= $logoUrl ?>" alt="Logo" class="max-h-full max-w-full object-contain">
                 </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-display font-black text-white text-base sm:text-lg tracking-wide uppercase leading-tight group-hover:text-rose-200 transition">
-                            <?= htmlspecialchars($appSettings['nama_perusahaan']) ?>
-                        </span>
-                        <span class="hidden sm:inline-block text-[9px] font-black px-2 py-0.5 rounded-full bg-rose-950/80 text-rose-400 border border-rose-800/60 uppercase tracking-wider">
-                            Live Board
-                        </span>
-                    </div>
-                    <p class="text-[11px] text-slate-400 font-medium">Papan Informasi Kehadiran & Jadwal Cuti Karyawan</p>
-                </div>
-            </a>
-
-            <!-- Right: Realtime Digital Clock & Login Action -->
-            <div class="flex items-center gap-3 sm:gap-4">
-                
-                <!-- Live Clock Pill -->
-                <div class="hidden md:flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 text-xs text-slate-300 shadow-2xs">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="font-bold text-slate-200"><?= $dayNameIndo ?>, <?= $todayFormatted ?></span>
-                    <span class="text-slate-600">&bull;</span>
-                    <span id="liveDigitalClock" class="font-mono font-black text-emerald-400">00:00:00 WIB</span>
-                </div>
-
-                <!-- Action Button -->
-                <?php if ($currentUser): ?>
-                    <a href="<?= BASE_URL ?>/index.php?page=dashboard" 
-                       class="px-4 sm:px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-blue-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2">
-                        <i class="fa-solid fa-gauge-high"></i>
-                        <span>Dashboard Saya</span>
-                    </a>
-                <?php else: ?>
-                    <a href="<?= BASE_URL ?>/index.php?page=login" 
-                       class="px-4 sm:px-5 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2">
-                        <i class="fa-solid fa-right-to-bracket"></i>
-                        <span>Masuk ke Akun</span>
-                    </a>
-                <?php endif; ?>
-
             </div>
-
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-white"><?= htmlspecialchars($appSettings['nama_perusahaan']) ?></h1>
+                <p class="text-xs text-slate-400 font-medium">Papan Informasi Kehadiran & Cuti Karyawan (Live TV Display)</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="px-4 py-2 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-xs font-mono">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block mr-2"></span>
+                <span id="tvClock" class="font-bold text-emerald-400">00:00:00 WIB</span>
+            </div>
+            <div class="px-3 py-2 rounded-2xl bg-slate-800/60 border border-slate-700/60 text-slate-400 text-xs font-mono">
+                Auto-Refresh: <strong id="tvRefreshTimer" class="text-emerald-400 font-bold">60s</strong>
+            </div>
         </div>
     </header>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-7 relative z-10">
-
-        <!-- Top Welcome Banner & Date Header -->
-        <div class="rounded-3xl bg-gradient-to-r from-slate-900/95 via-[#111827]/95 to-slate-900/95 border border-slate-800 p-6 sm:p-7 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 relative z-10">
-                <div class="space-y-1.5">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold">
-                        <i class="fa-solid fa-calendar-day"></i>
-                        <span>Rekap Status Kehadiran Hari Ini</span>
-                    </div>
-                    <h1 class="text-xl sm:text-2xl lg:text-3xl font-black font-display text-white tracking-tight">
-                        Daftar Karyawan Tidak Hadir / Cuti Hari Ini
-                    </h1>
-                    <p class="text-xs sm:text-sm text-slate-400 font-medium">
-                        <?= $dayNameIndo ?>, <?= $todayFormatted ?> &bull; Data tersinkronisasi otomatis dengan permohonan cuti resmi.
-                    </p>
-                </div>
-
-                <div class="flex items-center gap-2 text-xs">
-                    <button type="button" onclick="window.location.reload()" 
-                            class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700 transition flex items-center gap-1.5 shadow-2xs">
-                        <i class="fa-solid fa-rotate text-blue-400"></i>
-                        <span>Segarkan Data</span>
-                    </button>
-                    <div class="px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-400 text-[11px] font-mono">
-                        Auto-Refresh: <strong id="refreshTimer" class="text-emerald-400 font-black">60s</strong>
-                    </div>
-                </div>
-            </div>
+    <!-- TV 4 Stats Cards -->
+    <div class="grid grid-cols-4 gap-5">
+        <div class="bg-slate-800/70 rounded-3xl p-5 border border-slate-700/60">
+            <div class="text-xs font-extrabold text-slate-400 uppercase">Total Karyawan</div>
+            <div class="text-3xl font-black text-white mt-1"><?= $totalKaryawan ?></div>
         </div>
-
-        <!-- 4 Top Bento Metric Stat Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            
-            <!-- Card 1: Total Karyawan Aktif -->
-            <div class="bg-gradient-to-b from-slate-800/70 to-slate-900/80 rounded-3xl p-5 border border-slate-700/60 shadow-lg backdrop-blur-md relative overflow-hidden group hover:border-slate-600 transition">
-                <div class="flex items-center justify-between gap-3 mb-3">
-                    <span class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Total Karyawan</span>
-                    <div class="w-10 h-10 rounded-2xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-base border border-blue-500/20">
-                        <i class="fa-solid fa-users"></i>
-                    </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black font-display text-white"><?= $totalKaryawan ?></div>
-                <div class="text-[11px] text-slate-400 mt-1 font-medium">Karyawan Terdaftar Aktif</div>
-            </div>
-
-            <!-- Card 2: Hadir Hari Ini -->
-            <div class="bg-gradient-to-b from-slate-800/70 to-slate-900/80 rounded-3xl p-5 border border-emerald-500/30 shadow-lg backdrop-blur-md relative overflow-hidden group hover:border-emerald-500/50 transition">
-                <div class="flex items-center justify-between gap-3 mb-3">
-                    <span class="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">Hadir Bekerja</span>
-                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-base border border-emerald-500/30">
-                        <i class="fa-solid fa-user-check"></i>
-                    </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black font-display text-emerald-400"><?= $countHadirHariIni ?></div>
-                <div class="text-[11px] text-slate-400 mt-1 font-medium">Bekerja di pabrik / kantor</div>
-            </div>
-
-            <!-- Card 3: Cuti / Izin Hari Ini -->
-            <div class="bg-gradient-to-b from-slate-800/70 to-slate-900/80 rounded-3xl p-5 border border-rose-500/30 shadow-lg backdrop-blur-md relative overflow-hidden group hover:border-rose-500/50 transition">
-                <div class="flex items-center justify-between gap-3 mb-3">
-                    <span class="text-xs font-extrabold text-rose-400 uppercase tracking-wider">Cuti / Izin Hari Ini</span>
-                    <div class="w-10 h-10 rounded-2xl bg-rose-500/15 text-rose-400 flex items-center justify-center text-base border border-rose-500/30 animate-pulse">
-                        <i class="fa-solid fa-user-xmark"></i>
-                    </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black font-display text-rose-400"><?= $countCutiHariIni ?></div>
-                <div class="text-[11px] text-slate-400 mt-1 font-medium"><?= $countTahunanHariIni ?> Cuti &bull; <?= $countIzinHariIni ?> Izin Lainnya</div>
-            </div>
-
-            <!-- Card 4: Izin Sakit Hari Ini -->
-            <div class="bg-gradient-to-b from-slate-800/70 to-slate-900/80 rounded-3xl p-5 border border-amber-500/30 shadow-lg backdrop-blur-md relative overflow-hidden group hover:border-amber-500/50 transition">
-                <div class="flex items-center justify-between gap-3 mb-3">
-                    <span class="text-xs font-extrabold text-amber-400 uppercase tracking-wider">Izin Sakit</span>
-                    <div class="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-base border border-amber-500/30">
-                        <i class="fa-solid fa-head-side-cough"></i>
-                    </div>
-                </div>
-                <div class="text-2xl sm:text-3xl font-black font-display text-amber-400"><?= $countSakitHariIni ?></div>
-                <div class="text-[11px] text-slate-400 mt-1 font-medium">Surat Dokter & Rawat Jalan</div>
-            </div>
-
+        <div class="bg-slate-800/70 rounded-3xl p-5 border border-emerald-500/30">
+            <div class="text-xs font-extrabold text-emerald-400 uppercase">Hadir Bekerja</div>
+            <div class="text-3xl font-black text-emerald-400 mt-1"><?= $countHadirHariIni ?></div>
         </div>
-
-        <!-- Filter & Search Toolbar -->
-        <div class="bg-slate-900/90 rounded-3xl p-4 sm:p-5 border border-slate-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 backdrop-blur-md">
-            
-            <!-- Search Box -->
-            <div class="relative w-full md:w-80">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
-                <input type="text" id="filterKeyword" oninput="filterLeaveCards()" placeholder="Cari nama karyawan / NIK..."
-                       class="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-slate-800/80 border border-slate-700 text-white placeholder-slate-400 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition">
-            </div>
-
-            <!-- Filter Controls -->
-            <div class="flex items-center gap-3 w-full md:w-auto flex-wrap">
-                <!-- Dept Filter -->
-                <select id="filterDept" onchange="filterLeaveCards()" 
-                        class="px-3.5 py-2.5 rounded-2xl bg-slate-800/80 border border-slate-700 text-slate-200 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-500/20">
-                    <option value="">-- Semua Departemen --</option>
-                    <?php foreach ($departments as $d): ?>
-                        <option value="<?= htmlspecialchars($d['nama_dept']) ?>"><?= htmlspecialchars($d['nama_dept']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-
-                <!-- Category Filter -->
-                <select id="filterCategory" onchange="filterLeaveCards()" 
-                        class="px-3.5 py-2.5 rounded-2xl bg-slate-800/80 border border-slate-700 text-slate-200 text-xs font-semibold focus:outline-none focus:ring-4 focus:ring-blue-500/20">
-                    <option value="">-- Semua Kategori Cuti --</option>
-                    <option value="Tahunan">Cuti Tahunan</option>
-                    <option value="Sakit">Sakit</option>
-                    <option value="Melahirkan">Melahirkan</option>
-                    <option value="Haid">Haid</option>
-                    <option value="Khusus">Cuti Khusus</option>
-                    <option value="Ijin">Izin Potong Gaji</option>
-                </select>
-
-                <!-- Display Mode Toggle -->
-                <div class="inline-flex p-1 rounded-xl bg-slate-800 border border-slate-700 text-xs">
-                    <button type="button" id="btnViewGrid" onclick="setViewMode('grid')" class="px-2.5 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition shadow-xs" title="Tampilan Kotak Grid">
-                        <i class="fa-solid fa-grip"></i>
-                    </button>
-                    <button type="button" id="btnViewTable" onclick="setViewMode('table')" class="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white transition" title="Tampilan Tabel Rinci">
-                        <i class="fa-solid fa-list"></i>
-                    </button>
-                </div>
-            </div>
-
+        <div class="bg-slate-800/70 rounded-3xl p-5 border border-rose-500/30">
+            <div class="text-xs font-extrabold text-rose-400 uppercase">Cuti / Izin</div>
+            <div class="text-3xl font-black text-rose-400 mt-1"><?= $countCutiHariIni ?></div>
         </div>
-
-        <!-- 5. Main Today's Leaves Display Area -->
-        <div id="leavesContainer">
-            
-            <?php if (empty($todayLeaves)): ?>
-                <!-- Empty State: All Present -->
-                <div class="rounded-3xl bg-slate-900/80 border border-slate-800 p-10 sm:p-14 text-center space-y-4 shadow-xl">
-                    <div class="w-16 h-16 rounded-3xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-3xl mx-auto border border-emerald-500/20 shadow-lg shadow-emerald-500/10">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
-                    <div class="space-y-1">
-                        <h3 class="text-lg sm:text-xl font-black font-display text-white">Semua Karyawan Hadir Hari Ini!</h3>
-                        <p class="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
-                            Tidak ada karyawan yang tercatat sedang menjalani masa cuti atau izin sakit pada hari <?= $dayNameIndo ?>, <?= $todayFormatted ?>.
-                        </p>
-                    </div>
-                </div>
-            <?php else: ?>
-
-                <!-- Grid Cards View -->
-                <div id="gridViewArea" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                    <?php foreach ($todayLeaves as $leave): 
-                        $avatarLetter = strtoupper(substr($leave['nama_lengkap'], 0, 1));
-                        $isSakit = stripos($leave['nama_cuti'], 'Sakit') !== false;
-                        $cardBorder = $isSakit ? 'border-amber-500/40 hover:border-amber-500/70' : 'border-slate-800 hover:border-blue-500/60';
-                    ?>
-                        <div class="leave-card bg-gradient-to-b from-slate-900/90 to-[#0c1222]/95 rounded-3xl p-5 border <?= $cardBorder ?> shadow-xl hover:shadow-2xl transition-all duration-300 space-y-4 group backdrop-blur-md"
-                             data-name="<?= strtolower($leave['nama_lengkap']) ?>"
-                             data-nik="<?= strtolower($leave['nik']) ?>"
-                             data-dept="<?= htmlspecialchars($leave['nama_dept']) ?>"
-                             data-type="<?= htmlspecialchars($leave['nama_cuti']) ?>">
-                            
-                            <!-- Card Header: User Profile -->
-                            <div class="flex items-center gap-3.5 border-b border-slate-800/80 pb-3.5">
-                                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white font-black text-lg flex items-center justify-center shadow-md shadow-blue-600/20 flex-shrink-0 group-hover:scale-105 transition">
-                                    <?= $avatarLetter ?>
-                                </div>
-                                <div class="overflow-hidden">
-                                    <h4 class="text-sm font-extrabold text-white truncate group-hover:text-blue-300 transition" title="<?= htmlspecialchars($leave['nama_lengkap']) ?>">
-                                        <?= htmlspecialchars($leave['nama_lengkap']) ?>
-                                    </h4>
-                                    <div class="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
-                                        <span>NIK: <strong class="text-slate-200"><?= htmlspecialchars($leave['nik']) ?></strong></span>
-                                        <span>&bull;</span>
-                                        <span class="text-blue-400 font-sans font-semibold"><?= htmlspecialchars($leave['nama_dept']) ?></span>
-                                    </div>
-                                    <div class="text-[10.5px] text-slate-400 truncate mt-0.5"><?= htmlspecialchars($leave['nama_jabatan']) ?></div>
-                                </div>
-                            </div>
-
-                            <!-- Leave Details -->
-                            <div class="space-y-2.5 text-xs">
-                                <div>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Jenis Cuti / Izin:</span>
-                                    <div class="font-extrabold text-white text-xs flex items-center gap-1.5">
-                                        <i class="fa-solid fa-tag text-rose-400 text-xs"></i>
-                                        <span><?= htmlspecialchars($leave['nama_cuti']) ?></span>
-                                    </div>
-                                </div>
-
-                                <div class="p-3 rounded-2xl bg-slate-800/50 border border-slate-800 space-y-1.5">
-                                    <div class="flex justify-between items-center text-[11px]">
-                                        <span class="text-slate-400 font-medium">Periode Cuti:</span>
-                                        <span class="font-bold text-slate-200"><?= formatTanggalIndo($leave['tanggal_mulai']) ?> s/d <?= formatTanggalIndo($leave['tanggal_selesai']) ?></span>
-                                    </div>
-                                    <div class="flex justify-between items-center text-[11px]">
-                                        <span class="text-slate-400 font-medium">Durasi:</span>
-                                        <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 font-black text-[10.5px]">
-                                            <?= $leave['total_hari'] ?> Hari Kerja
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <?php if (!empty($leave['alasan'])): ?>
-                                    <div class="text-[11px] text-slate-400 line-clamp-2 bg-slate-800/30 p-2.5 rounded-xl border border-slate-800/50" title="<?= htmlspecialchars($leave['alasan']) ?>">
-                                        <i class="fa-solid fa-comment-dots text-slate-400 mr-1"></i> <?= htmlspecialchars($leave['alasan']) ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <!-- Card Footer: Status Badge -->
-                            <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[11px]">
-                                <span class="text-slate-400 font-mono text-[10px]"><?= htmlspecialchars($leave['nomor_surat']) ?></span>
-                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-extrabold text-[10.5px]">
-                                    <i class="fa-solid fa-circle-check text-[9px]"></i> Disetujui
-                                </span>
-                            </div>
-
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-
-                <!-- Table View (Hidden by default) -->
-                <div id="tableViewArea" class="hidden bg-slate-900 rounded-3xl border border-slate-800 shadow-xl overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs text-slate-300">
-                            <thead class="bg-slate-800/80 text-slate-400 uppercase tracking-wider text-[10.5px] border-b border-slate-800">
-                                <tr>
-                                    <th class="p-4 text-center w-12">No</th>
-                                    <th class="p-4">Karyawan</th>
-                                    <th class="p-4">Departemen & Jabatan</th>
-                                    <th class="p-4">Jenis Cuti</th>
-                                    <th class="p-4">Periode</th>
-                                    <th class="p-4 text-center">Durasi</th>
-                                    <th class="p-4">Alasan</th>
-                                    <th class="p-4 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-800/70">
-                                <?php $n = 1; foreach ($todayLeaves as $leave): ?>
-                                    <tr class="leave-card hover:bg-slate-800/40 transition"
-                                        data-name="<?= strtolower($leave['nama_lengkap']) ?>"
-                                        data-nik="<?= strtolower($leave['nik']) ?>"
-                                        data-dept="<?= htmlspecialchars($leave['nama_dept']) ?>"
-                                        data-type="<?= htmlspecialchars($leave['nama_cuti']) ?>">
-                                        <td class="p-4 text-center font-bold text-slate-400"><?= $n++ ?></td>
-                                        <td class="p-4">
-                                            <div class="font-extrabold text-white text-xs"><?= htmlspecialchars($leave['nama_lengkap']) ?></div>
-                                            <div class="text-[10.5px] text-slate-400 font-mono">NIK: <?= htmlspecialchars($leave['nik']) ?></div>
-                                        </td>
-                                        <td class="p-4">
-                                            <div class="font-bold text-blue-300"><?= htmlspecialchars($leave['nama_dept']) ?></div>
-                                            <div class="text-[10.5px] text-slate-400"><?= htmlspecialchars($leave['nama_jabatan']) ?></div>
-                                        </td>
-                                        <td class="p-4 font-bold text-white"><?= htmlspecialchars($leave['nama_cuti']) ?></td>
-                                        <td class="p-4 whitespace-nowrap">
-                                            <?= formatTanggalIndo($leave['tanggal_mulai']) ?> s/d <?= formatTanggalIndo($leave['tanggal_selesai']) ?>
-                                        </td>
-                                        <td class="p-4 text-center whitespace-nowrap">
-                                            <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold border border-blue-400/30">
-                                                <?= $leave['total_hari'] ?> Hari
-                                            </span>
-                                        </td>
-                                        <td class="p-4 max-w-[200px] truncate text-slate-400"><?= htmlspecialchars($leave['alasan']) ?></td>
-                                        <td class="p-4 text-center whitespace-nowrap">
-                                            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30 text-[10.5px]">
-                                                Disetujui
-                                            </span>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            <?php endif; ?>
-
+        <div class="bg-slate-800/70 rounded-3xl p-5 border border-purple-500/30">
+            <div class="text-xs font-extrabold text-purple-400 uppercase">Tingkat Kehadiran</div>
+            <div class="text-3xl font-black text-purple-400 mt-1"><?= $tingkatKehadiran ?>%</div>
         </div>
+    </div>
 
-        <!-- 6. Upcoming Leaves Preview (Next 7 Days) -->
-        <?php if (!empty($upcomingLeaves)): ?>
-            <div class="bg-slate-900/80 rounded-3xl p-6 border border-slate-800 shadow-xl space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xs font-bold border border-purple-500/30">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
+    <!-- TV Leaves Grid -->
+    <div class="flex-1">
+        <?php if (empty($todayLeaves)): ?>
+            <div class="rounded-3xl bg-slate-800/50 border border-slate-800 p-14 text-center space-y-3">
+                <div class="text-emerald-400 text-4xl"><i class="fa-solid fa-circle-check"></i></div>
+                <h3 class="text-xl font-bold text-white">Semua Karyawan Hadir Lengkap!</h3>
+                <p class="text-xs text-slate-400">Tidak ada catatan cuti/izin aktif hari ini.</p>
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-3 gap-4">
+                <?php foreach ($todayLeaves as $leave): ?>
+                    <div class="p-4 rounded-2xl bg-slate-800/70 border border-slate-700/60 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white text-sm"><?= htmlspecialchars($leave['nama_lengkap']) ?></span>
+                            <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold text-xs"><?= htmlspecialchars($leave['kode_cuti'] ?: 'CUTI') ?></span>
                         </div>
-                        <div>
-                            <h3 class="text-sm font-extrabold text-white">Jadwal Cuti Mendatang (7 Hari Ke Depan)</h3>
-                            <p class="text-[11px] text-slate-400">Informasi awal untuk perencanaan shift dan operasional kerja</p>
-                        </div>
+                        <div class="text-xs text-slate-400"><?= htmlspecialchars($leave['nik']) ?> &bull; <?= htmlspecialchars($leave['nama_dept']) ?></div>
+                        <div class="text-xs font-semibold text-blue-400"><?= date('d/m/Y', strtotime($leave['tanggal_mulai'])) ?> - <?= date('d/m/Y', strtotime($leave['tanggal_selesai'])) ?> (<?= $leave['total_hari'] ?> hari)</div>
                     </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <?php foreach ($upcomingLeaves as $up): ?>
-                        <div class="p-3 rounded-2xl bg-slate-800/50 border border-slate-800 flex items-center justify-between gap-3 text-xs">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-xl bg-slate-700 text-white font-bold flex items-center justify-center text-xs flex-shrink-0">
-                                    <?= strtoupper(substr($up['nama_lengkap'], 0, 1)) ?>
-                                </div>
-                                <div>
-                                    <div class="font-extrabold text-white truncate max-w-[150px]"><?= htmlspecialchars($up['nama_lengkap']) ?></div>
-                                    <div class="text-[10px] text-slate-400"><?= htmlspecialchars($up['nama_dept']) ?> &bull; <span class="text-blue-300"><?= htmlspecialchars($up['nama_cuti']) ?></span></div>
-                                </div>
-                            </div>
-                            <div class="text-right flex-shrink-0">
-                                <div class="text-[10.5px] font-bold text-purple-300"><?= date('d M', strtotime($up['tanggal_mulai'])) ?></div>
-                                <div class="text-[9.5px] text-slate-400"><?= $up['total_hari'] ?> Hari</div>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
+                <?php endforeach; ?>
             </div>
         <?php endif; ?>
+    </div>
 
-    </main>
-
-    <!-- Public Footer -->
-    <footer class="mt-auto border-t border-slate-800 bg-[#090e1a]/90 backdrop-blur py-5 px-4 sm:px-8 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="flex items-center gap-2 text-center sm:text-left flex-wrap justify-center">
-            <span>&copy; <?= date('Y') ?></span>
-            <strong class="text-white font-bold"><?= htmlspecialchars($appSettings['nama_perusahaan']) ?></strong>
-            <span class="text-slate-600">&bull;</span>
-            <span><?= htmlspecialchars($appSettings['footer_text']) ?></span>
-        </div>
-        <div class="flex items-center gap-3">
-            <span class="text-[11px] text-slate-400 font-mono">Papan Informasi Publik Live</span>
-            <?php if (!$currentUser): ?>
-                <a href="<?= BASE_URL ?>/index.php?page=login" class="text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 transition">
-                    <i class="fa-solid fa-lock text-[10px]"></i> Login Admin / Karyawan
-                </a>
-            <?php endif; ?>
-        </div>
-    </footer>
-
-    <!-- Scripts -->
     <script>
-        // Real-time Digital Clock
-        function updateClock() {
+        function updateTvClock() {
             const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const clockEl = document.getElementById('liveDigitalClock');
-            if (clockEl) {
-                clockEl.textContent = `${hours}:${minutes}:${seconds} WIB`;
-            }
+            const el = document.getElementById('tvClock');
+            if (el) el.textContent = now.toLocaleTimeString('id-ID') + ' WIB';
         }
-        setInterval(updateClock, 1000);
-        updateClock();
+        setInterval(updateTvClock, 1000);
+        updateTvClock();
 
-        // 60-Second Auto Refresh Timer for TV Displays
         let countdown = 60;
         setInterval(function() {
             countdown--;
-            const timerEl = document.getElementById('refreshTimer');
-            if (timerEl) {
-                timerEl.textContent = countdown + 's';
-            }
-            if (countdown <= 0) {
-                window.location.reload();
-            }
+            const timerEl = document.getElementById('tvRefreshTimer');
+            if (timerEl) timerEl.textContent = countdown + 's';
+            if (countdown <= 0) window.location.reload();
         }, 1000);
-
-        // Filter Functionality
-        function filterLeaveCards() {
-            const keyword = document.getElementById('filterKeyword').value.toLowerCase().trim();
-            const dept = document.getElementById('filterDept').value.toLowerCase();
-            const category = document.getElementById('filterCategory').value.toLowerCase();
-
-            const cards = document.querySelectorAll('.leave-card');
-            cards.forEach(card => {
-                const name = card.getAttribute('data-name') || '';
-                const nik = card.getAttribute('data-nik') || '';
-                const cardDept = (card.getAttribute('data-dept') || '').toLowerCase();
-                const type = (card.getAttribute('data-type') || '').toLowerCase();
-
-                const matchKeyword = !keyword || name.includes(keyword) || nik.includes(keyword);
-                const matchDept = !dept || cardDept === dept;
-                const matchCategory = !category || type.includes(category);
-
-                if (matchKeyword && matchDept && matchCategory) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        // View Mode Switcher
-        function setViewMode(mode) {
-            const gridArea = document.getElementById('gridViewArea');
-            const tableArea = document.getElementById('tableViewArea');
-            const btnGrid = document.getElementById('btnViewGrid');
-            const btnTable = document.getElementById('btnViewTable');
-
-            if (mode === 'grid') {
-                if (gridArea) gridArea.classList.remove('hidden');
-                if (tableArea) tableArea.classList.add('hidden');
-                if (btnGrid) {
-                    btnGrid.className = 'px-2.5 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition shadow-xs';
-                }
-                if (btnTable) {
-                    btnTable.className = 'px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
-                }
-            } else {
-                if (gridArea) gridArea.classList.add('hidden');
-                if (tableArea) tableArea.classList.remove('hidden');
-                if (btnTable) {
-                    btnTable.className = 'px-2.5 py-1.5 rounded-lg bg-blue-600 text-white font-bold transition shadow-xs';
-                }
-                if (btnGrid) {
-                    btnGrid.className = 'px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-white transition';
-                }
-            }
-        }
     </script>
-
 </body>
 </html>
+<?php 
+    exit;
+endif;
+
+// =========================================================================
+// NORMAL / MOBILE / DESKTOP VIEW (FOR BOTH LOGGED IN & PUBLIC GUESTS)
+// =========================================================================
+if ($currentUser) {
+    $pageTitle = 'Papan Kehadiran Hari Ini';
+    require_once __DIR__ . '/../layouts/header.php';
+} else {
+?>
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50 dark:bg-[#0F172A]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papan Kehadiran Hari Ini &bull; <?= htmlspecialchars($appSettings['nama_perusahaan'] ?: 'PT. Nakakin Indonesia') ?></title>
+    <link rel="icon" type="image/png" href="<?= $favUrl ?>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <script>
+        (function() {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+    <style>
+        .material-symbols-rounded {
+            font-family: 'Material Symbols Rounded', sans-serif;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 1;
+        }
+        .material-symbols-rounded.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="min-h-full bg-[#f8fafc] dark:bg-[#0F172A] font-sans antialiased text-slate-800 dark:text-slate-100 flex flex-col">
+
+    <!-- Standalone Header for Public Visitors (Matches Flutter PublicBoardScreen AppBar) -->
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-xl border-b border-slate-200/80 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <a href="<?= BASE_URL ?>/index.php?page=login" 
+               class="p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition flex items-center justify-center -ml-1" 
+               title="Kembali ke Login">
+                <span class="material-symbols-rounded text-xl">arrow_back</span>
+            </a>
+            <div>
+                <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">
+                    Papan Kehadiran Hari Ini
+                </h1>
+                <p class="text-[11px] text-slate-400 font-medium hidden sm:block">PT. Nakakin Indonesia &bull; Live Board</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="location.reload()" 
+                    class="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center justify-center" 
+                    title="Segarkan Data">
+                <span class="material-symbols-rounded text-xl">refresh</span>
+            </button>
+            <a href="<?= BASE_URL ?>/index.php?page=login" 
+               class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5">
+                <span class="material-symbols-rounded text-base">login</span>
+                <span>Masuk</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-1 p-3.5 sm:p-6 max-w-5xl w-full mx-auto pb-12">
+<?php } ?>
+
+<!-- Main Board Content (Unified for Mobile & Desktop) -->
+<div class="space-y-4 lg:space-y-6">
+
+    <!-- ========================================================================= -->
+    <!-- 1. MOBILE VIEW (Screen < 1024px) - 100% PARITY WITH FLUTTER PublicBoardScreen -->
+    <!-- ========================================================================= -->
+    <div class="block lg:hidden space-y-4">
+        
+        <!-- A. Live Clock / Date Card (Flutter Gradient Container) -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-[#1E3A8A] via-[#1E293B] to-[#0F172A] text-white shadow-md shadow-blue-950/30">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center text-lg text-white flex-shrink-0">
+                    <span class="material-symbols-rounded text-2xl">calendar_today</span>
+                </div>
+                <div class="min-w-0">
+                    <div class="text-[10px] font-bold text-white/70 tracking-widest uppercase">STATUS KEHADIRAN LIVE</div>
+                    <div class="text-sm font-bold text-white leading-tight truncate mt-0.5">
+                        <?= $dayNameIndo ?>, <?= $todayFormatted ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- B. Stats Summary Row (3 Bento Stat Boxes: Hadir, Cuti/Izin, % Kehadiran) -->
+        <div class="grid grid-cols-3 gap-2.5">
+            <!-- Box 1: Hadir -->
+            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs text-center flex flex-col items-center justify-center">
+                <div class="text-emerald-500 text-xl mb-1">
+                    <span class="material-symbols-rounded text-emerald-500">check_circle</span>
+                </div>
+                <div class="text-base font-black text-emerald-600 dark:text-emerald-400 leading-tight">
+                    <?= $countHadirHariIni ?>
+                </div>
+                <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                    Hadir
+                </div>
+            </div>
+
+            <!-- Box 2: Cuti / Izin -->
+            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs text-center flex flex-col items-center justify-center">
+                <div class="text-amber-500 text-xl mb-1">
+                    <span class="material-symbols-rounded text-amber-500">beach_access</span>
+                </div>
+                <div class="text-base font-black text-amber-600 dark:text-amber-400 leading-tight">
+                    <?= $countCutiHariIni ?>
+                </div>
+                <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                    Cuti / Izin
+                </div>
+            </div>
+
+            <!-- Box 3: % Kehadiran -->
+            <div class="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs text-center flex flex-col items-center justify-center">
+                <div class="text-blue-500 text-xl mb-1">
+                    <span class="material-symbols-rounded text-blue-500">pie_chart</span>
+                </div>
+                <div class="text-base font-black text-blue-600 dark:text-blue-400 leading-tight">
+                    <?= $tingkatKehadiran ?>%
+                </div>
+                <div class="text-[10.5px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+                    % Kehadiran
+                </div>
+            </div>
+        </div>
+
+        <!-- C. Department ChoiceChips (Horizontal Scrollable) -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+            <button type="button" onclick="filterBoardByDept(this, '')" 
+                    class="board-dept-chip px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition bg-blue-600 text-white shadow-2xs">
+                Semua Dept
+            </button>
+            <?php foreach ($departments as $dept): ?>
+                <button type="button" onclick="filterBoardByDept(this, '<?= strtolower(htmlspecialchars($dept['nama_dept'])) ?>')" 
+                        class="board-dept-chip px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 shadow-2xs">
+                    <?= htmlspecialchars($dept['nama_dept']) ?>
+                </button>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- D. Section Title: Karyawan Cuti Hari Ini -->
+        <div class="flex items-center justify-between pt-1">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                Karyawan Cuti Hari Ini (<span id="mobileLeaveCount"><?= count($todayLeaves) ?></span>)
+            </h3>
+            <button type="button" onclick="location.reload()" class="text-xs text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1">
+                <span class="material-symbols-rounded text-sm">refresh</span> Segarkan
+            </button>
+        </div>
+
+        <!-- E. Employee Leave Cards List -->
+        <div id="mobileBoardList" class="space-y-3">
+            <?php if (empty($todayLeaves)): ?>
+                <!-- Empty State (Matching Flutter) -->
+                <div id="mobileEmptyState" class="p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-center space-y-2 shadow-2xs">
+                    <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto">
+                        <span class="material-symbols-rounded text-3xl text-emerald-500">sentiment_satisfied</span>
+                    </div>
+                    <div class="text-sm font-bold text-slate-900 dark:text-white">Semua Karyawan Hadir Lengkap!</div>
+                    <div class="text-xs text-slate-400">Tidak ada catatan cuti/izin aktif untuk hari ini.</div>
+                </div>
+            <?php else: ?>
+                <div id="mobileEmptyState" class="hidden p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-center space-y-2 shadow-2xs">
+                    <div class="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl mx-auto">
+                        <span class="material-symbols-rounded text-3xl text-emerald-500">sentiment_satisfied</span>
+                    </div>
+                    <div class="text-sm font-bold text-slate-900 dark:text-white">Semua Karyawan Hadir Lengkap!</div>
+                    <div class="text-xs text-slate-400">Tidak ada karyawan di departemen ini yang sedang cuti.</div>
+                </div>
+
+                <?php foreach ($todayLeaves as $leave): 
+                    $durasiText = ($leave['total_hari'] == 0.5) ? '0.5 hari' : $leave['total_hari'] . ' hari';
+                ?>
+                    <div class="board-mobile-card p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xs space-y-2.5 transition"
+                         data-dept="<?= strtolower(htmlspecialchars($leave['nama_dept'])) ?>"
+                         data-name="<?= strtolower(htmlspecialchars($leave['nama_lengkap'])) ?>">
+                        
+                        <div class="flex items-start gap-3">
+                            <div class="w-11 h-11 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold text-sm flex items-center justify-center flex-shrink-0 border border-blue-100 dark:border-blue-900">
+                                <?= strtoupper(substr($leave['nama_lengkap'], 0, 1)) ?>
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="text-xs font-bold text-slate-900 dark:text-white truncate">
+                                        <?= htmlspecialchars($leave['nama_lengkap']) ?>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-extrabold text-[10px] border border-amber-200/80 dark:border-amber-800 flex-shrink-0">
+                                        <?= htmlspecialchars($leave['kode_cuti'] ?: 'CUTI') ?>
+                                    </span>
+                                </div>
+
+                                <div class="text-[11px] text-slate-400 mt-0.5">
+                                    <?= htmlspecialchars($leave['nik']) ?> &bull; <?= htmlspecialchars($leave['nama_dept']) ?>
+                                </div>
+
+                                <div class="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1.5">
+                                    <?= $leave['tanggal_mulai'] ?> s/d <?= $leave['tanggal_selesai'] ?> (<?= $durasiText ?>)
+                                </div>
+
+                                <?php if (!empty($leave['alasan'])): ?>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                                        Alasan: <?= htmlspecialchars($leave['alasan']) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2. DESKTOP IN-APP VIEW (Screen >= 1024px) -->
+    <!-- ========================================================================= -->
+    <div class="hidden lg:block space-y-6">
+        
+        <!-- Header Actions & TV Mode Link -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 text-white border border-slate-700/60 shadow-xl flex items-center justify-between">
+            <div class="space-y-1">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Papan Informasi Kehadiran Perusahaan</span>
+                </div>
+                <h2 class="text-xl font-black text-white">Status Kehadiran & Cuti Hari Ini</h2>
+                <p class="text-xs text-slate-400"><?= $dayNameIndo ?>, <?= $todayFormatted ?> &bull; Data tersinkronisasi otomatis</p>
+            </div>
+            <a href="<?= BASE_URL ?>/index.php?page=board&view=tv" target="_blank" 
+               class="px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs shadow-lg shadow-rose-600/30 flex items-center gap-2 transition transform active:scale-95">
+                <span class="material-symbols-rounded text-lg">tv</span>
+                <span>Buka Mode TV Fullscreen</span>
+            </a>
+        </div>
+
+        <!-- 4 Bento Metric Stat Cards -->
+        <div class="grid grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl font-bold border border-blue-100 dark:border-blue-900 shadow-2xs">
+                    <span class="material-symbols-rounded text-2xl text-blue-600 dark:text-blue-400">group</span>
+                </div>
+                <div>
+                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Karyawan</div>
+                    <div class="text-xl font-black text-slate-900 dark:text-white leading-tight"><?= $totalKaryawan ?> <span class="text-xs font-semibold text-slate-500">Orang</span></div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl font-bold border border-emerald-100 dark:border-emerald-900 shadow-2xs">
+                    <span class="material-symbols-rounded text-2xl text-emerald-600 dark:text-emerald-400">check_circle</span>
+                </div>
+                <div>
+                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hadir Bekerja</div>
+                    <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 leading-tight"><?= $countHadirHariIni ?> <span class="text-xs font-semibold text-slate-500">Orang</span></div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl font-bold border border-amber-100 dark:border-amber-900 shadow-2xs">
+                    <span class="material-symbols-rounded text-2xl text-amber-600 dark:text-amber-400">beach_access</span>
+                </div>
+                <div>
+                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cuti / Izin</div>
+                    <div class="text-xl font-black text-amber-600 dark:text-amber-400 leading-tight"><?= $countCutiHariIni ?> <span class="text-xs font-semibold text-slate-500">Orang</span></div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-2xs flex items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl font-bold border border-purple-100 dark:border-purple-900 shadow-2xs">
+                    <span class="material-symbols-rounded text-2xl text-purple-600 dark:text-purple-400">pie_chart</span>
+                </div>
+                <div>
+                    <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Tingkat Kehadiran</div>
+                    <div class="text-xl font-black text-purple-600 dark:text-purple-400 leading-tight"><?= $tingkatKehadiran ?>%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table View of Today's Leaves -->
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="p-5 sm:px-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/40 dark:bg-slate-800/40">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base font-bold border border-blue-200/60 dark:border-blue-900 shadow-2xs">
+                        <span class="material-symbols-rounded text-2xl text-blue-600 dark:text-blue-400">schedule</span>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">Daftar Karyawan Cuti & Izin Hari Ini</h3>
+                        <p class="text-[11px] text-slate-400 font-medium">Data resmi karyawan yang sedang menjalani cuti aktif</p>
+                    </div>
+                </div>
+                <span class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-black border border-slate-200/60 dark:border-slate-700 shadow-2xs">
+                    Total: <?= count($todayLeaves) ?> Karyawan
+                </span>
+            </div>
+
+            <div class="p-4 sm:p-6 overflow-x-auto">
+                <table class="w-full text-left text-xs datatable">
+                    <thead>
+                        <tr>
+                            <th class="text-center w-12">No</th>
+                            <th>Karyawan</th>
+                            <th>Departemen & Jabatan</th>
+                            <th>Jenis Cuti</th>
+                            <th>Periode Cuti</th>
+                            <th class="text-center">Durasi</th>
+                            <th>Alasan</th>
+                            <th class="text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $no = 1; foreach ($todayLeaves as $leave): ?>
+                            <tr>
+                                <td class="text-center">
+                                    <span class="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 inline-flex items-center justify-center text-[11px] text-slate-600 dark:text-slate-300 font-black">
+                                        <?= $no++ ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-xs flex items-center justify-center flex-shrink-0 shadow-2xs">
+                                            <?= strtoupper(substr($leave['nama_lengkap'], 0, 1)) ?>
+                                        </div>
+                                        <div>
+                                            <div class="font-extrabold text-slate-900 dark:text-white text-xs"><?= htmlspecialchars($leave['nama_lengkap']) ?></div>
+                                            <div class="text-[11px] text-slate-400 font-mono">NIK: <strong class="text-slate-700 dark:text-slate-300"><?= htmlspecialchars($leave['nik']) ?></strong></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="font-extrabold text-slate-900 dark:text-white text-xs"><?= htmlspecialchars($leave['nama_dept']) ?></div>
+                                    <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5"><?= htmlspecialchars($leave['nama_jabatan']) ?></div>
+                                </td>
+                                <td>
+                                    <span class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-extrabold text-[11px] border border-blue-200/60 dark:border-blue-900">
+                                        <?= htmlspecialchars($leave['nama_cuti']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="font-bold text-slate-800 dark:text-slate-200"><?= date('d M Y', strtotime($leave['tanggal_mulai'])) ?> s/d <?= date('d M Y', strtotime($leave['tanggal_selesai'])) ?></div>
+                                </td>
+                                <td class="text-center whitespace-nowrap">
+                                    <span class="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-black text-[11px]">
+                                        <?= $leave['total_hari'] ?> Hari
+                                    </span>
+                                </td>
+                                <td class="max-w-[200px] truncate text-slate-500 dark:text-slate-400">
+                                    <?= htmlspecialchars($leave['alasan']) ?>
+                                </td>
+                                <td class="text-center whitespace-nowrap">
+                                    <span class="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-black text-[10.5px] border border-emerald-200 dark:border-emerald-800">
+                                        Disetujui
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+let selectedBoardDept = '';
+
+function filterBoardByDept(btnElement, deptName) {
+    selectedBoardDept = deptName.toLowerCase().trim();
+
+    // Update styling for choice chips
+    document.querySelectorAll('.board-dept-chip').forEach(c => {
+        c.className = 'board-dept-chip px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 shadow-2xs';
+    });
+    btnElement.className = 'board-dept-chip px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition bg-blue-600 text-white shadow-2xs';
+
+    let visibleCount = 0;
+    const cards = document.querySelectorAll('.board-mobile-card');
+    cards.forEach(card => {
+        const cardDept = card.getAttribute('data-dept') || '';
+        if (!selectedBoardDept || cardDept.includes(selectedBoardDept)) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    const countEl = document.getElementById('mobileLeaveCount');
+    if (countEl) countEl.innerText = visibleCount;
+
+    const emptyState = document.getElementById('mobileEmptyState');
+    if (emptyState) {
+        if (visibleCount === 0) emptyState.classList.remove('hidden');
+        else emptyState.classList.add('hidden');
+    }
+}
+</script>
+
+<?php 
+if ($currentUser) {
+    require_once __DIR__ . '/../layouts/footer.php';
+} else {
+?>
+    </main>
+    <footer class="border-t border-slate-200 bg-white py-4 px-4 text-center text-xs text-slate-400">
+        &copy; <?= date('Y') ?> <?= htmlspecialchars($appSettings['nama_perusahaan']) ?> &bull; Papan Informasi Kehadiran Publik
+    </footer>
+</body>
+</html>
+<?php } ?>
