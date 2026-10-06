@@ -181,57 +181,67 @@ $usedPercent = $currentUser['kuota_cuti'] > 0 ? round(($currentUser['cuti_terpak
                 <div class="lg:col-span-7 space-y-5">
                     
                     <!-- 1. Kategori & Jenis Permohonan -->
-                    <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
-                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                            1. Jenis Permohonan <span class="text-rose-500">*</span>
+                    <div class="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 space-y-3.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                            1. Pilih Kategori Permohonan <span class="text-rose-500">*</span>
                         </label>
 
-                        <!-- Compact Category Tabs -->
-                        <div class="grid grid-cols-2 gap-2">
+                        <!-- Compact Category Tabs (Flutter Styled) -->
+                        <div class="grid grid-cols-2 gap-2.5">
                             <button type="button" id="btnGroupCuti" onclick="switchCategoryGroup('cuti')"
-                                    class="flex items-center justify-center gap-2 py-2 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-blue-600 bg-blue-50 text-blue-700 shadow-2xs transition">
-                                <i class="fa-solid fa-umbrella-beach text-blue-600"></i>
-                                <span>🌴 Kategori Cuti</span>
+                                    class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:border-sky-400 dark:text-sky-300 shadow-xs transition active:scale-[0.98]">
+                                <i class="fa-solid fa-umbrella-beach text-sm"></i>
+                                <span>Kategori Cuti</span>
                             </button>
                             <button type="button" id="btnGroupIzin" onclick="switchCategoryGroup('izin')"
-                                    class="flex items-center justify-center gap-2 py-2 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-indigo-400 hover:text-indigo-600 shadow-2xs transition">
-                                <i class="fa-solid fa-file-signature text-indigo-500"></i>
-                                <span>📋 Kategori Izin & Sakit</span>
+                                    class="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-purple-400 hover:text-purple-600 shadow-xs transition active:scale-[0.98]">
+                                <i class="fa-solid fa-clipboard-check text-sm"></i>
+                                <span>Kategori Izin & Sakit</span>
                             </button>
                         </div>
 
-                        <!-- Dropdown Select -->
-                        <div class="relative">
-                            <select id="leave_type_select" onchange="handleDropdownChange(this.value)"
-                                    class="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-200 bg-white text-slate-900 font-bold text-xs sm:text-sm focus:outline-none focus:border-blue-600 transition appearance-none cursor-pointer">
-                                <!-- Dynamic options injected via JS -->
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-slate-400 pointer-events-none text-xs"></i>
+                        <!-- Dropdown Select Header -->
+                        <div class="pt-1">
+                            <label id="dropdownLabelText" class="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">
+                                Pilih Jenis Cuti <span class="text-rose-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-sky-600 dark:text-sky-400 text-sm" id="dropdownPrefixIcon">
+                                    <i class="fa-solid fa-umbrella-beach"></i>
+                                </div>
+                                <select id="leave_type_select" onchange="handleDropdownChange(this.value)"
+                                        class="w-full pl-10 pr-10 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs sm:text-sm focus:outline-none focus:border-sky-500 transition appearance-none cursor-pointer">
+                                    <!-- Dynamic options injected via JS -->
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-slate-400 text-xs">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </div>
+                            </div>
                         </div>
 
                         <input type="hidden" name="leave_type_id" id="leave_type_id" required>
 
-                        <!-- Dynamic Mini Info Preview Card -->
-                        <div id="typeInfoCard" class="p-3 rounded-xl bg-white border border-blue-100 flex items-start gap-3 text-xs shadow-2xs">
-                            <div id="typeInfoIcon" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm flex-shrink-0">
-                                <i class="fa-solid fa-calendar-check"></i>
+                        <!-- Dynamic Mini Info Preview Card (Flutter-Identical) -->
+                        <div id="typeInfoCard" class="p-3.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-start gap-3 text-xs shadow-xs">
+                            <div id="typeInfoIcon" class="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-base flex-shrink-0 border border-sky-100 dark:border-sky-900">
+                                <i class="fa-solid fa-umbrella-beach"></i>
                             </div>
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center justify-between flex-wrap gap-1">
-                                    <strong id="typeInfoName" class="text-slate-900 font-bold">Cuti Tahunan Penuh</strong>
-                                    <span id="typeInfoBadge" class="px-2 py-0.2 rounded text-[10.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">Potong Kuota</span>
+                                <div class="flex items-center justify-between flex-wrap gap-1.5">
+                                    <strong id="typeInfoName" class="text-slate-900 dark:text-white font-bold text-xs sm:text-sm">Cuti Tahunan Penuh</strong>
+                                    <span id="typeInfoBadge" class="px-2 py-0.5 rounded-md text-[10.5px] font-black bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">Potong Kuota</span>
                                 </div>
-                                <div id="typeInfoDesc" class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                <div id="typeInfoDesc" class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">
                                     Maksimal durasi sesuai sisa kuota cuti tahunan reguler karyawan.
                                 </div>
                             </div>
                         </div>
 
                         <!-- Doctor Note Alert -->
-                        <div id="doctorNoteAlert" class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-start gap-2.5 hidden">
-                            <i class="fa-solid fa-hospital-user text-rose-600 mt-0.5 text-sm flex-shrink-0"></i>
+                        <div id="doctorNoteAlert" class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900 text-xs text-rose-800 dark:text-rose-200 flex items-start gap-2.5 hidden">
+                            <i class="fa-solid fa-hospital-user text-rose-600 dark:text-rose-400 mt-0.5 text-base flex-shrink-0"></i>
                             <div class="leading-relaxed text-[11.5px]">
-                                <strong>Wajib Surat Dokter:</strong> Anda wajib melampirkan foto / scan Surat Dokter asli di form sebelah kanan agar tidak memotong cuti/gaji.
+                                <strong>Wajib Surat Dokter / Bukti:</strong> Anda wajib melampirkan foto / scan Surat Keterangan resmi di form lampiran agar permohonan dapat diproses.
                             </div>
                         </div>
                     </div>
@@ -444,9 +454,10 @@ document.addEventListener('DOMContentLoaded', function() {
         filtered.forEach(t => {
             const opt = document.createElement('option');
             opt.value = t.id;
-            const potongLabel = t.potong_kuota === 1 ? ' [Potong Kuota]' : '';
-            const docLabel = t.butuh_lampiran === 1 ? ' [Wajib Surat Dokter]' : '';
-            opt.textContent = `${t.nama_cuti} (Max: ${t.durasi_maks})${potongLabel}${docLabel}`;
+            let tag = '';
+            if (t.potong_kuota === 1) tag = ' (Potong Kuota)';
+            else if (t.butuh_lampiran === 1) tag = ' (Wajib Surat)';
+            opt.textContent = `${t.nama_cuti}${tag}`;
             typeSelect.appendChild(opt);
         });
 
@@ -458,12 +469,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Switch Category Group (Cuti vs Izin)
     window.switchCategoryGroup = function(group) {
         currentGroup = group;
+        const dropdownLabel = document.getElementById('dropdownLabelText');
+        const prefixIcon = document.getElementById('dropdownPrefixIcon');
+
         if (group === 'cuti') {
-            btnCuti.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-blue-600 bg-blue-50 text-blue-700 shadow-2xs transition';
-            btnIzin.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-indigo-400 hover:text-indigo-600 shadow-2xs transition';
+            btnCuti.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:border-sky-400 dark:text-sky-300 shadow-xs transition active:scale-[0.98]';
+            btnIzin.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-purple-400 hover:text-purple-600 shadow-xs transition active:scale-[0.98]';
+            if (dropdownLabel) dropdownLabel.innerHTML = 'Pilih Jenis Cuti <span class="text-rose-500">*</span>';
+            if (prefixIcon) prefixIcon.innerHTML = '<i class="fa-solid fa-umbrella-beach text-sky-600 dark:text-sky-400"></i>';
         } else {
-            btnIzin.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-indigo-600 bg-indigo-50 text-indigo-700 shadow-2xs transition';
-            btnCuti.className = 'flex items-center justify-center gap-2 py-2 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-slate-200 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 shadow-2xs transition';
+            btnIzin.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:border-purple-400 dark:text-purple-300 shadow-xs transition active:scale-[0.98]';
+            btnCuti.className = 'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 font-bold text-xs cursor-pointer border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:border-sky-400 hover:text-sky-600 shadow-xs transition active:scale-[0.98]';
+            if (dropdownLabel) dropdownLabel.innerHTML = 'Pilih Jenis Izin / Sakit <span class="text-rose-500">*</span>';
+            if (prefixIcon) prefixIcon.innerHTML = '<i class="fa-solid fa-clipboard-check text-purple-600 dark:text-purple-400"></i>';
         }
         populateDropdown(group);
     };
@@ -484,15 +502,24 @@ document.addEventListener('DOMContentLoaded', function() {
         typeInfoName.textContent = item.nama_cuti;
         typeInfoDesc.textContent = item.deskripsi ? item.deskripsi : `Durasi maksimal: ${item.durasi_maks}`;
 
+        // Update Mini Info Card Icon and Badges
+        if (item.kategori === 'cuti') {
+            typeInfoIcon.className = 'w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-base flex-shrink-0 border border-sky-100 dark:border-sky-900';
+            typeInfoIcon.innerHTML = '<i class="fa-solid fa-umbrella-beach"></i>';
+        } else {
+            typeInfoIcon.className = 'w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base flex-shrink-0 border border-purple-100 dark:border-purple-900';
+            typeInfoIcon.innerHTML = '<i class="fa-solid fa-clipboard-check"></i>';
+        }
+
         if (item.butuh_lampiran === 1) {
-            typeInfoBadge.className = 'px-2 py-0.2 rounded text-[10.5px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200';
+            typeInfoBadge.className = 'px-2 py-0.5 rounded-md text-[10.5px] font-black bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800';
             typeInfoBadge.textContent = 'Wajib Surat Dokter';
         } else if (item.potong_kuota === 1) {
-            typeInfoBadge.className = 'px-2 py-0.2 rounded text-[10.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200';
+            typeInfoBadge.className = 'px-2 py-0.5 rounded-md text-[10.5px] font-black bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
             typeInfoBadge.textContent = 'Potong Kuota';
         } else {
-            typeInfoBadge.className = 'px-2 py-0.2 rounded text-[10.5px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200';
-            typeInfoBadge.textContent = 'Cuti Khusus';
+            typeInfoBadge.className = 'px-2 py-0.5 rounded-md text-[10.5px] font-black bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+            typeInfoBadge.textContent = (item.kategori === 'cuti') ? 'Cuti Khusus' : 'Izin Khusus';
         }
 
         // Half-day logic
