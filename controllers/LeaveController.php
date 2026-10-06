@@ -86,6 +86,31 @@ class LeaveController {
                 header('Location: ' . BASE_URL . '/index.php?page=leave-create');
                 exit;
             }
+        // Check Overlap
+        $stmtOverlap = $pdo->prepare("
+            SELECT id, nomor_surat, tanggal_mulai, tanggal_selesai 
+            FROM pengajuan_cuti 
+            WHERE employee_id = ? 
+              AND status IN ('pending', 'approved')
+              AND (
+                  (tanggal_mulai BETWEEN ? AND ?) OR
+                  (tanggal_selesai BETWEEN ? AND ?) OR
+                  (? BETWEEN tanggal_mulai AND tanggal_selesai)
+              )
+            LIMIT 1
+        ");
+        $stmtOverlap->execute([
+            $employeeId, 
+            $startDate, $endDate, 
+            $startDate, $endDate, 
+            $startDate
+        ]);
+        $overlapping = $stmtOverlap->fetch();
+
+        if ($overlapping) {
+            setFlash('error', "Karyawan {$targetEmp['nama_lengkap']} sudah memiliki pengajuan cuti aktif ({$overlapping['nomor_surat']}) pada rentang tanggal tersebut!");
+            header('Location: ' . BASE_URL . '/index.php?page=leave-create');
+            exit;
         }
 
         // Handle attachment file upload
