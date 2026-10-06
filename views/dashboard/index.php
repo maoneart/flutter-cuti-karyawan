@@ -123,8 +123,12 @@ $isShiftMalam = strpos($currentUser['current_shift'] ?? '', 'Shift 2') !== false
     <div class="p-5 rounded-2xl bg-gradient-to-br from-[#0F172A] to-[#1E3A8A] text-white shadow-xl shadow-blue-950/20 border border-slate-800/80">
         <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-3.5 min-w-0">
-                <div class="w-13 h-13 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white text-xl font-black flex-shrink-0 shadow-inner">
-                    <?= strtoupper(substr($currentUser['nama_lengkap'] ?? 'U', 0, 1)) ?>
+                <div class="w-12 h-12 min-w-[48px] min-h-[48px] aspect-square rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white text-xl font-black flex-shrink-0 shadow-inner overflow-hidden">
+                    <?php if (!empty($currentUser['foto']) && file_exists(__DIR__ . '/../../uploads/' . $currentUser['foto'])): ?>
+                        <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($currentUser['foto']) ?>" alt="Foto" class="w-full h-full object-cover rounded-full">
+                    <?php else: ?>
+                        <?= strtoupper(substr($currentUser['nama_lengkap'] ?? 'U', 0, 1)) ?>
+                    <?php endif; ?>
                 </div>
                 <div class="min-w-0 flex-1">
                     <h2 class="text-base font-bold text-white truncate leading-snug">
