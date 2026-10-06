@@ -166,13 +166,31 @@ CREATE TABLE `jenis_cuti` (
 LOCK TABLES `jenis_cuti` WRITE;
 /*!40000 ALTER TABLE `jenis_cuti` DISABLE KEYS */;
 INSERT INTO `jenis_cuti` VALUES 
-(1,'Sakit Surat Dokter (Tidak Potong Gaji)','Cuti Reguler','SSD','1 Hari','Izin sakit resmi dengan melampirkan surat keterangan dokter.',0,0,14,1,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
-(2,'Sakit Tanpa Surat Dokter (Potong Jatah/Gaji)','Cuti Reguler','STSD','1 Hari','Izin sakit tanpa surat dokter.',1,0,3,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
-(3,'Cuti Tahunan (Reguler HRD)','Cuti Reguler','CT','1 Hari','Hak cuti tahunan yang dialokasikan oleh HRD.',1,0,12,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
-(4,'Cuti Haid','Cuti Reguler','CH','1 Hari','Cuti haid/menstruasi bagi karyawati.',1,0,2,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
-(5,'Cuti Melahirkan / Bersalin (3 Bulan)','Cuti Reguler','CML','1 Hari','Hak cuti bersalin bagi karyawati (3 bulan / 90 hari).',0,0,90,1,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
-(6,'Cuti Khusus (Keluarga Meninggal)','Cuti Reguler','CKH','1 Hari','Cuti duka cita karena anggota keluarga inti meninggal.',0,0,2,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
-(7,'Ijin Tidak Masuk (Potong Gaji)','Cuti Reguler','IJN','1 Hari','Izin tidak masuk kerja untuk keperluan mendesak.',0,0,7,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35');
+(1,'Cuti Tahunan Penuh','Cuti Reguler','CT','Sesuai Sisa','Kuota tahunan reguler',1,0,12,0,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(2,'Cuti Setengah Hari (Pagi / Siang)','Cuti Reguler','CT-HALF','0.5 Hari (4 Jam)','4 jam = 1/2 hari',1,0,1,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(3,'Izin Pulang Cepat (PC) - Pribadi','Jam-Jaman','PC-PRI','Sisa Jam Shift','4 jam = 1/2 hari',0,1,1,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(4,'Izin Pulang Cepat (PC) - Sakit Klinik','Jam-Jaman','PC-SKT','Sisa Jam Shift','4 jam = 1/2 hari',0,1,1,1,'Dokter Klinik & Leader',NULL,'2026-10-01 15:11:35'),
+(5,'Izin Keluar Sementara (Kembali Masuk)','Jam-Jaman','IK-TMP','1 - 3 Jam','4 jam = 1/2 hari',0,1,1,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(6,'Izin Datang Terlambat','Jam-Jaman','T','1 - 2 Jam','tidak boleh diawal masuk',0,1,1,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(7,'Sakit Surat Dokter (SD)','Medis','SD','Sesuai Surat','Surat Keterangan Dokter Resmi',0,0,14,1,'Leader & HRD',NULL,'2026-10-01 15:11:35'),
+(8,'Sakit Tanpa Surat Dokter (ST)','Medis','ST','Maks 1 Hari','Potong cuti, jika kuota 0 potong gaji',1,1,1,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(9,'Cuti Haid (Karyawati, H1 & H2)','Normatif','CH','2 Hari','Wajib Surat Dokter',0,0,2,1,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(10,'Cuti Melahirkan / Bersalin','Normatif','CML','90 Hari (3 Bln)','Surat Bidan / RS / HPL',0,0,90,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(11,'Cuti Keguguran Kandungan','Normatif','CKG','45 Hari (1.5 Bln)','Surat Dokter Kandungan (Obgyn)',0,0,45,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(12,'Pekerja Menikah','Cuti Khusus','CK-NIK','3 Hari','Surat Nikah/akta Nikah',0,0,3,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(13,'Menikahkan Anak Sah','Cuti Khusus','CK-ANK','2 Hari','Undangan Pernikahan',0,0,2,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(14,'Khitanan / Baptis Anak','Cuti Khusus','CK-KHT','2 Hari','Keterangan Khitan/Baptis',0,0,2,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(15,'Istri Melahirkan / Keguguran','Cuti Khusus','CK-IMS','2 Hari','Surat Keterangan RS/Klinik',0,0,2,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(16,'Duka Cita (Keluarga Inti Meninggal)','Cuti Khusus','CK-DK1','2 Hari','Surat Kematian (Suami/Istri/Anak/Ortu/Mertua)',0,0,2,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(17,'Duka Cita (Keluarga Serumah Meninggal)','Cuti Khusus','CK-DK2','1 Hari','Surat Kematian & Ket. RT',0,0,1,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(18,'Ibadah Haji (Pertama Kali)','Cuti Khusus','CK-HAJ','40 Hari','Porsi Haji Kemenag',0,0,40,1,'Leader -> Mgr -> HRD',NULL,'2026-10-01 15:11:35'),
+(19,'Dispensasi Serikat Pekerja (PUK/Serikat)','Dispensasi','DISP-SP','Sesuai Agenda','Surat Mandat / Undangan Resmi Serikat',0,0,30,1,'Leader & Spv Dept (CC HRD)',NULL,'2026-10-01 15:11:35'),
+(20,'Tugas Perusahaan / Dinas Luar','Dispensasi','DISP-DNS','Sesuai Tugas','Surat Perintah Perjalanan Dinas (SPPD)',0,0,30,1,'Manager Dept',NULL,'2026-10-01 15:11:35'),
+(21,'Bencana Alam / Force Majeure','Dispensasi','DISP-BNC','1 - 2 Hari','Foto lokasi & Surat RT/RW (Banjir/Kebakaran)',0,0,2,1,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(22,'Pendidikan / Ujian Akhir / Wisuda','Izin Khusus','DISP-STD','1 - 2 Hari','masuknya ke ijin',0,0,2,1,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(23,'Panggilan Negara / Pengadilan / Donor','Cuti Khusus','DISP-NGR','Sesuai Acara','jika casenya wajib militer dan pemilu masuknya ka kecuti khusus',0,0,7,1,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(24,'Izin Tidak Masuk (Keperluan Pribadi)','Unpaid','IJN','Sesuai Pengajuan','Form Izin Pribadi',0,1,7,0,'Leader & Spv Dept',NULL,'2026-10-01 15:11:35'),
+(25,'Mangkir / Alpha (Tanpa Kabar)','Pelanggaran','ALPHA','1 Hari (Per Shift)','Diinput langsung oleh Leader (Bisa direvisi)',0,1,1,0,'Full Leader (HRD Info Only)',NULL,'2026-10-01 15:11:35');
 /*!40000 ALTER TABLE `jenis_cuti` ENABLE KEYS */;
 UNLOCK TABLES;
 
