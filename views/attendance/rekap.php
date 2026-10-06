@@ -103,76 +103,68 @@ require_once __DIR__ . '/../layouts/header.php';
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <?php if (empty($records)): ?>
-                        <tr>
-                            <td colspan="7" class="py-10 text-center text-slate-400 font-bold">
-                                Tidak ada data catatan ketidakhadiran pada rentang tanggal ini.
+                    <?php $no = 1; foreach ($records as $r): ?>
+                        <tr class="hover:bg-slate-50/60 transition">
+                            <td class="py-3 px-3 text-center text-slate-400 font-semibold"><?= $no++ ?></td>
+                            
+                            <td class="py-3 px-3 whitespace-nowrap">
+                                <?php 
+                                $isShiftMalam = stripos($r['shift'] ?? '', 'Shift 2') !== false;
+                                $displayShift = $isShiftMalam ? 'Shift 2 (Malam)' : 'Shift 1 (Pagi)';
+                                ?>
+                                <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[9.5px] font-extrabold <?= $isShiftMalam ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-amber-50 text-amber-700 border border-amber-200' ?>">
+                                    <?= htmlspecialchars($displayShift) ?>
+                                </span>
+                            </td>
+
+                            <td class="py-3 px-3">
+                                <div class="font-bold text-slate-900"><?= htmlspecialchars($r['nama_lengkap']) ?></div>
+                                <div class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($r['nik']) ?> &bull; <?= htmlspecialchars($r['nama_jabatan']) ?></div>
+                            </td>
+
+                            <td class="py-3 px-3">
+                                <span class="px-2 py-0.5 rounded-lg bg-slate-100 font-bold text-slate-700 text-[10.5px]">
+                                    <?= htmlspecialchars($r['nama_dept']) ?>
+                                </span>
+                            </td>
+
+                            <td class="py-3 px-3 text-center whitespace-nowrap">
+                                <?php if ($r['status_revisi'] === 'revised'): ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        <i class="fa-solid fa-check-double"></i> Direvisi: <?= htmlspecialchars($r['direvisi_menjadi']) ?>
+                                    </span>
+                                    <div class="text-[9.5px] text-slate-400 mt-0.5"><?= formatDateTimeIndo($r['direvisi_pada']) ?></div>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-black bg-rose-100 text-rose-800 border border-rose-300">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> MANGKIR (ALPHA)
+                                    </span>
+                                    <div class="text-[9.5px] text-rose-600 font-bold mt-0.5">Potong Gaji & Premi</div>
+                                <?php endif; ?>
+                            </td>
+
+                            <td class="py-3 px-3">
+                                <div class="font-bold text-slate-800 text-[11px]"><?= htmlspecialchars($r['nama_leader'] ?? 'Leader') ?></div>
+                                <div class="text-[10px] text-slate-400"><?= formatDateTimeIndo($r['created_at']) ?></div>
+                            </td>
+
+                            <td class="py-3 px-3">
+                                <?php if ($r['status_revisi'] === 'revised'): ?>
+                                    <div class="text-[11px] text-slate-700 font-medium">
+                                        <?= htmlspecialchars($r['alasan_revisi'] ?: '-') ?>
+                                    </div>
+                                    <?php if (!empty($r['bukti_lampiran'])): ?>
+                                        <a href="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($r['bukti_lampiran']) ?>" 
+                                           target="_blank" 
+                                           class="mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-600 hover:text-blue-700 underline">
+                                            <i class="fa-solid fa-paperclip"></i> Lihat Berkas Bukti
+                                        </a>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="text-[11px] text-slate-500"><?= htmlspecialchars($r['keterangan_mangkir'] ?: '-') ?></span>
+                                <?php endif; ?>
                             </td>
                         </tr>
-                    <?php else: ?>
-                        <?php $no = 1; foreach ($records as $r): ?>
-                            <tr class="hover:bg-slate-50/60 transition">
-                                <td class="py-3 px-3 text-center text-slate-400 font-semibold"><?= $no++ ?></td>
-                                
-                                <td class="py-3 px-3 whitespace-nowrap">
-                                    <?php 
-                                    $isShiftMalam = stripos($r['shift'] ?? '', 'Shift 2') !== false;
-                                    $displayShift = $isShiftMalam ? 'Shift 2 (Malam)' : 'Shift 1 (Pagi)';
-                                    ?>
-                                    <span class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[9.5px] font-extrabold <?= $isShiftMalam ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-amber-50 text-amber-700 border border-amber-200' ?>">
-                                        <?= htmlspecialchars($displayShift) ?>
-                                    </span>
-                                </td>
-
-                                <td class="py-3 px-3">
-                                    <div class="font-bold text-slate-900"><?= htmlspecialchars($r['nama_lengkap']) ?></div>
-                                    <div class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($r['nik']) ?> &bull; <?= htmlspecialchars($r['nama_jabatan']) ?></div>
-                                </td>
-
-                                <td class="py-3 px-3">
-                                    <span class="px-2 py-0.5 rounded-lg bg-slate-100 font-bold text-slate-700 text-[10.5px]">
-                                        <?= htmlspecialchars($r['nama_dept']) ?>
-                                    </span>
-                                </td>
-
-                                <td class="py-3 px-3 text-center whitespace-nowrap">
-                                    <?php if ($r['status_revisi'] === 'revised'): ?>
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                            <i class="fa-solid fa-check-double"></i> Direvisi: <?= htmlspecialchars($r['direvisi_menjadi']) ?>
-                                        </span>
-                                        <div class="text-[9.5px] text-slate-400 mt-0.5"><?= formatDateTimeIndo($r['direvisi_pada']) ?></div>
-                                    <?php else: ?>
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-black bg-rose-100 text-rose-800 border border-rose-300">
-                                            <i class="fa-solid fa-triangle-exclamation"></i> MANGKIR (ALPHA)
-                                        </span>
-                                        <div class="text-[9.5px] text-rose-600 font-bold mt-0.5">Potong Gaji & Premi</div>
-                                    <?php endif; ?>
-                                </td>
-
-                                <td class="py-3 px-3">
-                                    <div class="font-bold text-slate-800 text-[11px]"><?= htmlspecialchars($r['nama_leader'] ?? 'Leader') ?></div>
-                                    <div class="text-[10px] text-slate-400"><?= formatDateTimeIndo($r['created_at']) ?></div>
-                                </td>
-
-                                <td class="py-3 px-3">
-                                    <?php if ($r['status_revisi'] === 'revised'): ?>
-                                        <div class="text-[11px] text-slate-700 font-medium">
-                                            <?= htmlspecialchars($r['alasan_revisi'] ?: '-') ?>
-                                        </div>
-                                        <?php if (!empty($r['bukti_lampiran'])): ?>
-                                            <a href="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($r['bukti_lampiran']) ?>" 
-                                               target="_blank" 
-                                               class="mt-1 inline-flex items-center gap-1 text-[10.5px] font-bold text-blue-600 hover:text-blue-700 underline">
-                                                <i class="fa-solid fa-paperclip"></i> Lihat Berkas Bukti
-                                            </a>
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <span class="text-[11px] text-slate-500"><?= htmlspecialchars($r['keterangan_mangkir'] ?: '-') ?></span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
