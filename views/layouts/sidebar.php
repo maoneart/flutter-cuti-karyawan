@@ -55,10 +55,10 @@ $sidebarLogoUrl = !empty($appSettings['logo']) ? BASE_URL . '/assets/images/' . 
     <div class="sidebar-profile-card mx-3 my-2 p-3 rounded-2xl bg-gradient-to-b from-slate-800/60 to-slate-900/60 border border-slate-700/40 relative backdrop-blur-md shadow-sm transition-all flex flex-col justify-center">
         <div class="sidebar-profile-flex flex items-center gap-3">
             <a href="<?= BASE_URL ?>/index.php?page=profile" 
-               class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md flex-shrink-0 hover:ring-2 hover:ring-blue-400 transition" 
+               class="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full aspect-square bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md flex-shrink-0 hover:ring-2 hover:ring-blue-400 transition overflow-hidden" 
                title="<?= htmlspecialchars($currentUser['nama_lengkap'] ?? '') ?>">
                 <?php if (!empty($currentUser['foto']) && file_exists(__DIR__ . '/../../uploads/' . $currentUser['foto'])): ?>
-                    <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($currentUser['foto']) ?>" alt="Foto" class="w-full h-full object-cover rounded-xl">
+                    <img src="<?= BASE_URL ?>/uploads/<?= htmlspecialchars($currentUser['foto']) ?>" alt="Foto" class="w-full h-full object-cover rounded-full">
                 <?php else: ?>
                     <?= strtoupper(substr($currentUser['nama_lengkap'] ?? 'N', 0, 1)) ?>
                 <?php endif; ?>
