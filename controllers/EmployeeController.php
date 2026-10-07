@@ -292,18 +292,38 @@ class EmployeeController {
 
         if ($format === 'csv') {
             $filename = 'template_import_karyawan_nakakin.csv';
+            $staticPath = __DIR__ . '/../assets/templates/' . $filename;
+            if (file_exists($staticPath)) {
+                $content = file_get_contents($staticPath);
+            } else {
+                $content = ExcelHelper::generateTemplateCsv();
+            }
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
             header('Content-Type: text/csv; charset=UTF-8');
             header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Length: ' . strlen($content));
             header('Pragma: no-cache');
             header('Expires: 0');
-            echo ExcelHelper::generateTemplateCsv();
+            echo $content;
         } else {
             $filename = 'template_import_karyawan_nakakin.xlsx';
+            $staticPath = __DIR__ . '/../assets/templates/' . $filename;
+            if (file_exists($staticPath)) {
+                $content = file_get_contents($staticPath);
+            } else {
+                $content = ExcelHelper::generateXlsxTemplate();
+            }
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Content-Length: ' . strlen($content));
             header('Pragma: no-cache');
             header('Expires: 0');
-            echo ExcelHelper::generateXlsxTemplate();
+            echo $content;
         }
         exit;
     }

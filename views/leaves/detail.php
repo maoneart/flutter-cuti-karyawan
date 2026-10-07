@@ -322,8 +322,8 @@ $initial = strtoupper(substr($leave['nama_lengkap'] ?? 'K', 0, 1));
 
             <!-- Approval Action Box for Approvers -->
             <?php if ($canApprove): ?>
-                <div class="pt-3 border-t border-slate-100 space-y-2">
-                    <span class="text-xs font-bold text-slate-900 block">Tindakan Giliran Anda:</span>
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                    <span class="text-xs font-bold text-slate-900 dark:text-white block">Tindakan Giliran Anda:</span>
                     <div class="grid grid-cols-2 gap-2">
                         <button type="button" class="py-2.5 rounded-xl border border-rose-400 text-rose-600 hover:bg-rose-50 font-bold text-xs flex items-center justify-center gap-1.5 transition" onclick="openRejectModal(<?= $leave['id'] ?>, '<?= addslashes(htmlspecialchars($leave['nama_lengkap'])) ?>')">
                             <span class="material-symbols-rounded text-sm">close</span>
@@ -334,6 +334,21 @@ $initial = strtoupper(substr($leave['nama_lengkap'] ?? 'K', 0, 1));
                             <span>Setujui</span>
                         </button>
                     </div>
+                </div>
+            <?php endif; ?>
+
+            <?php 
+            $isOwner = ($currentUser['id'] == $leave['employee_id']);
+            $canCancel = ($status === 'pending') && ($isOwner || $isHRD);
+            ?>
+            <?php if ($canCancel): ?>
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button type="button" 
+                            class="w-full py-2.5 rounded-xl border border-rose-300 dark:border-rose-900/60 bg-rose-50/60 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-2xs" 
+                            onclick="confirmDelete('<?= BASE_URL ?>/index.php?page=leave-action&action=cancel&id=<?= $leave['id'] ?>', 'Batalkan permohonan cuti ini?')">
+                        <span class="material-symbols-rounded text-base">block</span>
+                        <span>Batalkan Pengajuan Cuti</span>
+                    </button>
                 </div>
             <?php endif; ?>
 
@@ -416,10 +431,16 @@ function openRejectModal(id, name) {
             
             const input = document.createElement('input');
             input.type = 'hidden';
-            input.name = 'catatan_atasan';
+            input.name = 'reason';
             input.value = result.value;
             
+            const inputNotes = document.createElement('input');
+            inputNotes.type = 'hidden';
+            inputNotes.name = 'catatan_atasan';
+            inputNotes.value = result.value;
+
             form.appendChild(input);
+            form.appendChild(inputNotes);
             document.body.appendChild(form);
             form.submit();
         }

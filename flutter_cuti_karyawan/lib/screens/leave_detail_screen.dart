@@ -646,8 +646,9 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    final isOwner = _leave != null && user != null && _leave!.employeeId == user.id;
+    final isOwner = _leave != null && user != null && (_leave!.employeeId == user.id || _leave!.nik == user.nik || _leave!.namaLengkap == user.namaLengkap);
     final canApproveNow = _leave != null && _canUserApprove(_leave!, user);
+    final canCancel = _leave != null && _leave!.isPending && (isOwner || (user?.isAdmin == true));
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
@@ -689,6 +690,12 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
           ),
         ),
         actions: [
+          if (canCancel)
+            IconButton(
+              icon: const Icon(CupertinoIcons.xmark_circle, color: Color(0xFFFF3B30), size: 22),
+              tooltip: 'Batalkan Pengajuan',
+              onPressed: _isCancelling ? null : _handleCancel,
+            ),
           if (_leave != null)
             IconButton(
               icon: const Icon(CupertinoIcons.printer_fill, color: Color(0xFF007AFF), size: 22),
@@ -813,7 +820,29 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                               );
                             },
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 12),
+
+                          // Tombol Batalkan Pengajuan (Pemohon / Admin jika status pending)
+                          if (canCancel) ...[
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFFF3B30),
+                                side: const BorderSide(color: Color(0xFFFF3B30), width: 1.5),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              icon: const Icon(CupertinoIcons.clear_circled_solid, size: 20, color: Color(0xFFFF3B30)),
+                              label: _isCancelling
+                                  ? const CupertinoActivityIndicator(color: Color(0xFFFF3B30))
+                                  : const Text(
+                                      'Batalkan Pengajuan Cuti',
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Color(0xFFFF3B30)),
+                                    ),
+                              onPressed: _isCancelling ? null : _handleCancel,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                          const SizedBox(height: 8),
 
                           // Tindakan Persetujuan Card (for Approvers: Leader, Manager, HRD)
                           if (!isOwner && (user?.canApprove == true || _leave!.isPending)) ...[
@@ -959,21 +988,6 @@ class _LeaveDetailScreenState extends State<LeaveDetailScreen> {
                             ),
                             const SizedBox(height: 16),
                           ],
-
-                          // Cancel Button (if pending and is owner)
-                          if (isOwner && _leave!.isPending)
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFF3B30),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              ),
-                              onPressed: _isCancelling ? null : _handleCancel,
-                              child: _isCancelling
-                                  ? const CupertinoActivityIndicator(color: Colors.white)
-                                  : const Text('Batalkan Pengajuan Cuti', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                            ),
                           const SizedBox(height: 24),
                         ],
                       ),

@@ -55,7 +55,20 @@ class ExcelHelper {
             $trimmed = trim($line);
             if ($trimmed === '') continue;
             $row = str_getcsv($line, $chosenDelimiter);
-            $rows[] = array_map('trim', $row);
+            $cleanRow = [];
+            foreach ($row as $val) {
+                $v = trim($val);
+                // Strip ="..." Excel formula wrapper if present
+                if (preg_match('/^="?(.*?)"?$/', $v, $m)) {
+                    $v = $m[1];
+                }
+                // Convert scientific notation (e.g. 6.28123E+12) back to full digit string
+                if (preg_match('/^[0-9]+(\.[0-9]+)?[eE]\+[0-9]+$/', $v)) {
+                    $v = sprintf('%.0f', (float)$v);
+                }
+                $cleanRow[] = trim($v);
+            }
+            $rows[] = $cleanRow;
         }
 
         return $rows;
@@ -185,7 +198,7 @@ class ExcelHelper {
             'Jenis Kelamin (Laki-laki/Perempuan)',
             'Agama (Islam/Kristen/Katolik/Hindu/Buddha/Konghucu)',
             'Status Pernikahan (Belum Menikah/Menikah/Duda/Janda)',
-            'No HP/WhatsApp',
+            'No HP/WhatsApp (Contoh: 6281234567891)',
             'Alamat Lengkap',
             'Status Aktif (Aktif/Nonaktif)'
         ];
@@ -203,7 +216,7 @@ class ExcelHelper {
                 'Laki-laki',
                 'Islam',
                 'Belum Menikah',
-                '081234567891',
+                '="6281234567891"',
                 'Dusun Sukamaju RT 01/02, Karawang Barat',
                 'Aktif'
             ],
@@ -219,7 +232,7 @@ class ExcelHelper {
                 'Perempuan',
                 'Islam',
                 'Menikah',
-                '081298765432',
+                '="6281298765432"',
                 'Perum Telukjambe Blok C-12, Karawang',
                 'Aktif'
             ],
@@ -235,7 +248,7 @@ class ExcelHelper {
                 'Laki-laki',
                 'Islam',
                 'Menikah',
-                '081345678901',
+                '="6281345678901"',
                 'Klari, Karawang Timur',
                 'Aktif'
             ]
@@ -244,9 +257,9 @@ class ExcelHelper {
         $fp = fopen('php://temp', 'r+');
         // Add UTF-8 BOM so Excel opens it with proper encoding
         fwrite($fp, pack('H*', 'EFBBBF'));
-        fputcsv($fp, $headers);
+        fputcsv($fp, $headers, ',', '"', "\\");
         foreach ($examples as $ex) {
-            fputcsv($fp, $ex);
+            fputcsv($fp, $ex, ',', '"', "\\");
         }
         rewind($fp);
         $csv = stream_get_contents($fp);
@@ -274,7 +287,7 @@ class ExcelHelper {
             'Jenis Kelamin',
             'Agama',
             'Status Pernikahan',
-            'No HP / WhatsApp',
+            'No HP / WhatsApp (Contoh: 6281234567891)',
             'Alamat Tinggal',
             'Status Aktif'
         ];
@@ -292,7 +305,7 @@ class ExcelHelper {
                 'Laki-laki',
                 'Islam',
                 'Belum Menikah',
-                '081234567891',
+                '6281234567891',
                 'Dusun Sukamaju RT 01/02, Karawang Barat',
                 'Aktif'
             ],
@@ -308,7 +321,7 @@ class ExcelHelper {
                 'Perempuan',
                 'Islam',
                 'Menikah',
-                '081298765432',
+                '6281298765432',
                 'Perum Telukjambe Blok C-12, Karawang',
                 'Aktif'
             ],
@@ -324,7 +337,7 @@ class ExcelHelper {
                 'Laki-laki',
                 'Islam',
                 'Menikah',
-                '081345678901',
+                '6281345678901',
                 'Klari, Karawang Timur',
                 'Aktif'
             ]
@@ -341,6 +354,8 @@ class ExcelHelper {
             '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' .
             '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' .
             '<Default Extension="xml" ContentType="application/xml"/>' .
+            '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>' .
+            '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>' .
             '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' .
             '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' .
             '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' .
@@ -352,10 +367,38 @@ class ExcelHelper {
         $rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' .
             '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' .
+            '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>' .
+            '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>' .
             '</Relationships>';
         $zip->addFromString('_rels/.rels', $rels);
 
-        // 3. xl/_rels/workbook.xml.rels
+        // 3. docProps/core.xml
+        $core = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
+            '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">' .
+            '<dc:creator>PT. Nakakin Indonesia</dc:creator>' .
+            '<cp:lastModifiedBy>PT. Nakakin Indonesia</cp:lastModifiedBy>' .
+            '<dcterms:created xsi:type="dcterms:W3CDTF">' . gmdate('Y-m-d\TH:i:s\Z') . '</dcterms:created>' .
+            '<dcterms:modified xsi:type="dcterms:W3CDTF">' . gmdate('Y-m-d\TH:i:s\Z') . '</dcterms:modified>' .
+            '</cp:coreProperties>';
+        $zip->addFromString('docProps/core.xml', $core);
+
+        // 4. docProps/app.xml
+        $app = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
+            '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">' .
+            '<Application>Microsoft Excel</Application>' .
+            '<DocSecurity>0</DocSecurity>' .
+            '<ScaleCrop>false</ScaleCrop>' .
+            '<HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Worksheets</vt:lpstr></vt:variant><vt:variant><vt:i4>2</vt:i4></vt:variant></vt:vector></HeadingPairs>' .
+            '<TitlesOfParts><vt:vector size="2" baseType="lpstr"><vt:lpstr>Data Karyawan</vt:lpstr><vt:lpstr>Referensi</vt:lpstr></vt:vector></TitlesOfParts>' .
+            '<Company>PT. Nakakin Indonesia</Company>' .
+            '<LinksUpToDate>false</LinksUpToDate>' .
+            '<SharedDoc>false</SharedDoc>' .
+            '<HyperlinksChanged>false</HyperlinksChanged>' .
+            '<AppVersion>16.0300</AppVersion>' .
+            '</Properties>';
+        $zip->addFromString('docProps/app.xml', $app);
+
+        // 5. xl/_rels/workbook.xml.rels
         $wbRels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
             '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' .
             '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' .
@@ -364,27 +407,33 @@ class ExcelHelper {
             '</Relationships>';
         $zip->addFromString('xl/_rels/workbook.xml.rels', $wbRels);
 
-        // 4. xl/workbook.xml
+        // 6. xl/workbook.xml
         $wb = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
             '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' .
+            '<fileVersion appName="xl" lastEdited="7" lowestEdited="7" rupBuild="24816"/>' .
+            '<workbookPr defaultThemeVersion="166925"/>' .
+            '<bookViews>' .
+            '<workbookView xWindow="0" yWindow="0" windowWidth="22260" windowHeight="12525"/>' .
+            '</bookViews>' .
             '<sheets>' .
             '<sheet name="Data Karyawan" sheetId="1" r:id="rId1"/>' .
             '<sheet name="Referensi" sheetId="2" r:id="rId2"/>' .
             '</sheets>' .
+            '<calcPr calcId="191029"/>' .
             '</workbook>';
         $zip->addFromString('xl/workbook.xml', $wb);
 
-        // 5. xl/styles.xml
+        // 7. xl/styles.xml (Strict OpenXML Schema)
         $styles = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
             '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' .
             '<fonts count="2">' .
-            '<font><name val="Segoe UI"/><sz val="11"/><color theme="1"/></font>' .
-            '<font><b/><name val="Segoe UI"/><sz val="11"/><color rgb="FFFFFFFF"/></font>' .
+            '<font><sz val="11"/><color rgb="FF000000"/><name val="Calibri"/><family val="2"/></font>' .
+            '<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/><family val="2"/></font>' .
             '</fonts>' .
             '<fills count="3">' .
             '<fill><patternFill patternType="none"/></fill>' .
             '<fill><patternFill patternType="gray125"/></fill>' .
-            '<fill><patternFill patternType="solid"><fgColor rgb="FF0284C7"/></patternFill></fill>' .
+            '<fill><patternFill patternType="solid"><fgColor rgb="FF0284C7"/><bgColor indexed="64"/></patternFill></fill>' .
             '</fills>' .
             '<borders count="1">' .
             '<border><left/><right/><top/><bottom/><diagonal/></border>' .
@@ -396,6 +445,11 @@ class ExcelHelper {
             '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' .
             '<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' .
             '</cellXfs>' .
+            '<cellStyles count="1">' .
+            '<cellStyle name="Normal" xfId="0" builtinId="0"/>' .
+            '</cellStyles>' .
+            '<dxfs count="0"/>' .
+            '<tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleLight16"/>' .
             '</styleSheet>';
         $zip->addFromString('xl/styles.xml', $styles);
 
@@ -411,7 +465,7 @@ class ExcelHelper {
 
         // 6. xl/worksheets/sheet1.xml (Main Data sheet with Dropdowns pointing to Sheet 2 "Referensi")
         $sheet1Xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
-            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' .
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' .
             '<dimension ref="A1:N500"/>' .
             '<sheetViews>' .
             '<sheetView tabSelected="1" workbookViewId="0">' .
@@ -459,57 +513,62 @@ class ExcelHelper {
         $sheet1Xml .= '</sheetData>';
 
         // Data Validations (Dropdowns referencing Sheet 2 Referensi)
-        // Col D (Role): Referensi!$B$2:$B$8
-        // Col E (Departemen): Referensi!$A$2:$A$16
-        // Col I (Jenis Kelamin): Referensi!$C$2:$C$3
-        // Col J (Agama): Referensi!$D$2:$D$7
-        // Col K (Status Pernikahan): Referensi!$E$2:$E$5
-        // Col N (Status Aktif): Referensi!$F$2:$F$3
-        $sheet1Xml .= '<dataValidations count="6">' .
-            '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" errorTitle="Role Tidak Valid" error="Pilih role dari dropdown." sqref="D2:D500">' .
-            '<formula1>Referensi!$B$2:$B$8</formula1>' .
+        $sheet1Xml .= '<dataValidations count="7">' .
+            '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="D2:D500">' .
+            '<formula1>=Referensi!$B$2:$B$8</formula1>' .
             '</dataValidation>' .
-            '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" errorTitle="Departemen Tidak Valid" error="Pilih salah satu dari 15 departemen resmi PT Nakakin." sqref="E2:E500">' .
-            '<formula1>Referensi!$A$2:$A$16</formula1>' .
+            '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="E2:E500">' .
+            '<formula1>=Referensi!$A$2:$A$16</formula1>' .
+            '</dataValidation>' .
+            '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="F2:F500">' .
+            '<formula1>=Referensi!$C$2:$C$8</formula1>' .
             '</dataValidation>' .
             '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="I2:I500">' .
-            '<formula1>Referensi!$C$2:$C$3</formula1>' .
+            '<formula1>=Referensi!$D$2:$D$3</formula1>' .
             '</dataValidation>' .
             '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="J2:J500">' .
-            '<formula1>Referensi!$D$2:$D$7</formula1>' .
+            '<formula1>=Referensi!$E$2:$E$7</formula1>' .
             '</dataValidation>' .
             '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="K2:K500">' .
-            '<formula1>Referensi!$E$2:$E$5</formula1>' .
+            '<formula1>=Referensi!$F$2:$F$5</formula1>' .
             '</dataValidation>' .
             '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="N2:N500">' .
-            '<formula1>Referensi!$F$2:$F$3</formula1>' .
+            '<formula1>=Referensi!$G$2:$G$3</formula1>' .
             '</dataValidation>' .
             '</dataValidations>';
 
+        $sheet1Xml .= '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>';
         $sheet1Xml .= '</worksheet>';
         $zip->addFromString('xl/worksheets/sheet1.xml', $sheet1Xml);
 
-        // 7. xl/worksheets/sheet2.xml (Reference Sheet holding Department, Role, Gender, etc.)
+        // 7. xl/worksheets/sheet2.xml (Reference Sheet holding Department, Role, Jabatan, Gender, etc.)
         $sheet2Xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' .
-            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' .
+            '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' .
+            '<dimension ref="A1:H20"/>' .
+            '<sheetViews>' .
+            '<sheetView workbookViewId="0"/>' .
+            '</sheetViews>' .
+            '<sheetFormatPr defaultRowHeight="20"/>' .
             '<cols>' .
             '<col min="1" max="1" width="22" customWidth="1"/>' .
             '<col min="2" max="2" width="16" customWidth="1"/>' .
-            '<col min="3" max="3" width="16" customWidth="1"/>' .
+            '<col min="3" max="3" width="24" customWidth="1"/>' .
             '<col min="4" max="4" width="16" customWidth="1"/>' .
             '<col min="5" max="5" width="20" customWidth="1"/>' .
-            '<col min="6" max="6" width="16" customWidth="1"/>' .
-            '<col min="7" max="7" width="40" customWidth="1"/>' .
+            '<col min="6" max="6" width="18" customWidth="1"/>' .
+            '<col min="7" max="7" width="16" customWidth="1"/>' .
+            '<col min="8" max="8" width="45" customWidth="1"/>' .
             '</cols>' .
             '<sheetData>' .
             '<row r="1" ht="24">' .
             '<c r="A1" s="1" t="inlineStr"><is><t>Departemen</t></is></c>' .
             '<c r="B1" s="1" t="inlineStr"><is><t>Role</t></is></c>' .
-            '<c r="C1" s="1" t="inlineStr"><is><t>Jenis Kelamin</t></is></c>' .
-            '<c r="D1" s="1" t="inlineStr"><is><t>Agama</t></is></c>' .
-            '<c r="E1" s="1" t="inlineStr"><is><t>Status Pernikahan</t></is></c>' .
-            '<c r="F1" s="1" t="inlineStr"><is><t>Status Karyawan</t></is></c>' .
-            '<c r="G1" s="1" t="inlineStr"><is><t>Petunjuk Pengisian</t></is></c>' .
+            '<c r="C1" s="1" t="inlineStr"><is><t>Jabatan</t></is></c>' .
+            '<c r="D1" s="1" t="inlineStr"><is><t>Jenis Kelamin</t></is></c>' .
+            '<c r="E1" s="1" t="inlineStr"><is><t>Agama</t></is></c>' .
+            '<c r="F1" s="1" t="inlineStr"><is><t>Status Pernikahan</t></is></c>' .
+            '<c r="G1" s="1" t="inlineStr"><is><t>Status Karyawan</t></is></c>' .
+            '<c r="H1" s="1" t="inlineStr"><is><t>Petunjuk Pengisian</t></is></c>' .
             '</row>';
 
         $depts = [
@@ -517,24 +576,23 @@ class ExcelHelper {
             'Fettling', 'GA', 'HRD', 'Machining', 'Marketing',
             'Maintenance', 'PPIC', 'Purchasing', 'QC', 'QC Line'
         ];
-        $rolesRef = [
-            'operator', 'staff', 'leader', 'supervisor', 'manager', 'hrd', 'admin'
-        ];
+        $rolesRef = ['operator', 'staff', 'leader', 'supervisor', 'manager', 'hrd', 'admin'];
+        $jabsRef = ['Operator Produksi', 'Staff', 'Leader', 'Supervisor (Spv)', 'Department Manager', 'HRD', 'Super Admin'];
         $genders = ['Laki-laki', 'Perempuan'];
         $agamas = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'];
         $nikahs = ['Belum Menikah', 'Menikah', 'Duda', 'Janda'];
         $statuss = ['Aktif', 'Nonaktif'];
         $tips = [
-            '1. Kolom NIK dan Email harus unik & belum pernah terdaftar.',
-            '2. Gunakan tanda panah dropdown di sheet Data Karyawan untuk memilih Departemen & Role.',
+            '1. Kolom NIK dan Email harus unik & belum pernah terdaftar di sistem.',
+            '2. Gunakan tanda panah dropdown di sheet Data Karyawan untuk memilih Role, Departemen, dan Jabatan.',
             '3. Format Tanggal Masuk: YYYY-MM-DD (Contoh: 2024-01-15).',
-            '4. Kuota cuti default adalah 12 hari.',
+            '4. Kuota cuti tahunan default adalah 12 hari.',
             '5. Password awal default akun otomatis: password123.',
-            '6. Simpan file lalu upload di menu Data Karyawan -> Import Excel.',
-            '7. Sistem akan menampilkan review data sebelum disimpan ke database.'
+            '6. Simpan file lalu upload di menu Master Data Karyawan -> Import Excel.',
+            '7. Sistem akan menampilkan preview validasi sebelum data dimasukkan ke database.'
         ];
 
-        $maxRows = max(count($depts), count($rolesRef), count($genders), count($agamas), count($nikahs), count($statuss), count($tips));
+        $maxRows = max(count($depts), count($rolesRef), count($jabsRef), count($genders), count($agamas), count($nikahs), count($statuss), count($tips));
         for ($r = 0; $r < $maxRows; $r++) {
             $rNum = $r + 2;
             $sheet2Xml .= '<row r="' . $rNum . '">';
@@ -544,25 +602,30 @@ class ExcelHelper {
             if (isset($rolesRef[$r])) {
                 $sheet2Xml .= '<c r="B' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($rolesRef[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
             }
+            if (isset($jabsRef[$r])) {
+                $sheet2Xml .= '<c r="C' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($jabsRef[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
+            }
             if (isset($genders[$r])) {
-                $sheet2Xml .= '<c r="C' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($genders[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
+                $sheet2Xml .= '<c r="D' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($genders[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
             }
             if (isset($agamas[$r])) {
-                $sheet2Xml .= '<c r="D' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($agamas[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
+                $sheet2Xml .= '<c r="E' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($agamas[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
             }
             if (isset($nikahs[$r])) {
-                $sheet2Xml .= '<c r="E' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($nikahs[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
+                $sheet2Xml .= '<c r="F' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($nikahs[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
             }
             if (isset($statuss[$r])) {
-                $sheet2Xml .= '<c r="F' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($statuss[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
+                $sheet2Xml .= '<c r="G' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($statuss[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
             }
             if (isset($tips[$r])) {
-                $sheet2Xml .= '<c r="G' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($tips[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
+                $sheet2Xml .= '<c r="H' . $rNum . '" t="inlineStr"><is><t>' . htmlspecialchars($tips[$r], ENT_XML1, 'UTF-8') . '</t></is></c>';
             }
             $sheet2Xml .= '</row>';
         }
 
-        $sheet2Xml .= '</sheetData></worksheet>';
+        $sheet2Xml .= '</sheetData>';
+        $sheet2Xml .= '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>';
+        $sheet2Xml .= '</worksheet>';
         $zip->addFromString('xl/worksheets/sheet2.xml', $sheet2Xml);
 
         $zip->close();
@@ -762,6 +825,18 @@ class ExcelHelper {
             $jenisKelamin = (stripos($jenisKelamin, 'perempuan') !== false || stripos($jenisKelamin, 'wanita') !== false || stripos($jenisKelamin, 'p') === 0) ? 'Perempuan' : 'Laki-laki';
             $statusPernikahan = in_array($statusPernikahan, ['Belum Menikah', 'Menikah', 'Duda', 'Janda']) ? $statusPernikahan : 'Belum Menikah';
             $statusAktif = (stripos($statusAktif, 'non') !== false || stripos($statusAktif, 'tidak') !== false) ? 'Nonaktif' : 'Aktif';
+
+            // Normalize No HP (mendukung format 08xxx, 628xxx, +628xxx, maupun 8xxx)
+            $cleanDigits = preg_replace('/[^0-9]/', '', $noHp);
+            if (!empty($cleanDigits)) {
+                if (strpos($cleanDigits, '62') === 0) {
+                    $noHp = '0' . substr($cleanDigits, 2);
+                } elseif (strpos($cleanDigits, '8') === 0) {
+                    $noHp = '0' . $cleanDigits;
+                } else {
+                    $noHp = $cleanDigits;
+                }
+            }
 
             $rowData = [
                 'row_number' => $rowNumber,

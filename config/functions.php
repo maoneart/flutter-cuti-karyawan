@@ -292,21 +292,72 @@ function getLeaveWhatsAppNotificationData($leaveId, $pdo = null) {
 
     $empHierarki = (int)($leave['level_hierarki'] ?? 1);
     $empRole = strtolower($leave['emp_role'] ?? '');
+    $leaveShift = $leave['shift'] ?? '';
+    $isShift2 = (stripos($leaveShift, 'Shift 2') !== false || stripos($leaveShift, 'Malam') !== false);
 
     $targetAtasan = null;
     $atasanRoleText = 'Atasan / Leader';
+    $allContacts = [];
 
     if ($empHierarki <= 2 || in_array($empRole, ['operator', 'staff'])) {
-        // Cari Leader atau Supervisor di Departemen yang sama
+        // Ambil seluruh Leader & Supervisor di Departemen yang sama
         $stmtAtasan = $pdo->prepare("
-            SELECT id, nama_lengkap, no_hp, role 
+            SELECT id, nama_lengkap, no_hp, role, current_shift 
             FROM karyawan 
             WHERE departemen_id = ? AND role IN ('supervisor', 'leader') AND status_aktif = 'Aktif' AND no_hp IS NOT NULL AND no_hp != ''
-            ORDER BY FIELD(role, 'leader', 'supervisor') ASC LIMIT 1
+            ORDER BY FIELD(role, 'leader', 'supervisor') ASC, id ASC
         ");
         $stmtAtasan->execute([$leave['departemen_id']]);
-        $targetAtasan = $stmtAtasan->fetch();
-        $atasanRoleText = 'Leader / Supervisor Departemen';
+        $deptSuperiors = $stmtAtasan->fetchAll();
+
+        // Cari Leader yang cocok dengan shift pemohon terlebih dahulu
+        $matchedLeader = null;
+        $fallbackLeader = null;
+        $spv = null;
+
+        foreach ($deptSuperiors as $sup) {
+            $supShift = $sup['current_shift'] ?? '';
+            $supIsShift2 = (stripos($supShift, 'Shift 2') !== false || stripos($supShift, 'Malam') !== false);
+            
+            $roleLabel = ($sup['role'] === 'supervisor') ? 'Supervisor Departemen' : ('Leader ' . ($supIsShift2 ? 'Shift 2 (Malam)' : 'Shift 1 (Pagi)'));
+            $cleanPhoneSup = preg_replace('/[^0-9]/', '', $sup['no_hp'] ?? '');
+            if (strpos($cleanPhoneSup, '0') === 0) $cleanPhoneSup = '62' . substr($cleanPhoneSup, 1);
+            elseif (strpos($cleanPhoneSup, '8') === 0) $cleanPhoneSup = '628' . substr($cleanPhoneSup, 1);
+
+            $allContacts[] = [
+                'id' => (int)$sup['id'],
+                'nama' => $sup['nama_lengkap'],
+                'role' => $sup['role'],
+                'label' => $roleLabel,
+                'phone' => $cleanPhoneSup,
+                'is_primary' => false
+            ];
+
+            if ($sup['role'] === 'leader') {
+                if ($isShift2 && $supIsShift2) {
+                    $matchedLeader = $sup;
+                } elseif (!$isShift2 && !$supIsShift2) {
+                    $matchedLeader = $sup;
+                } elseif (!$fallbackLeader) {
+                    $fallbackLeader = $sup;
+                }
+            } elseif ($sup['role'] === 'supervisor' && !$spv) {
+                $spv = $sup;
+            }
+        }
+
+        // Prioritas target default: Matched Shift Leader -> Fallback Leader -> Supervisor
+        if ($matchedLeader) {
+            $targetAtasan = $matchedLeader;
+            $atasanRoleText = 'Leader ' . ($isShift2 ? 'Shift 2 (Malam)' : 'Shift 1 (Pagi)');
+        } elseif ($fallbackLeader) {
+            $targetAtasan = $fallbackLeader;
+            $atasanRoleText = 'Leader Departemen';
+        } elseif ($spv) {
+            $targetAtasan = $spv;
+            $atasanRoleText = 'Supervisor Departemen';
+        }
+
     } elseif ($empHierarki <= 4 || in_array($empRole, ['leader', 'supervisor'])) {
         // Cari Plant / Dept Manager
         $stmtAtasan = $pdo->prepare("
@@ -318,6 +369,21 @@ function getLeaveWhatsAppNotificationData($leaveId, $pdo = null) {
         $stmtAtasan->execute();
         $targetAtasan = $stmtAtasan->fetch();
         $atasanRoleText = 'Plant Manager';
+
+        if ($targetAtasan) {
+            $cleanPhoneSup = preg_replace('/[^0-9]/', '', $targetAtasan['no_hp'] ?? '');
+            if (strpos($cleanPhoneSup, '0') === 0) $cleanPhoneSup = '62' . substr($cleanPhoneSup, 1);
+            elseif (strpos($cleanPhoneSup, '8') === 0) $cleanPhoneSup = '628' . substr($cleanPhoneSup, 1);
+
+            $allContacts[] = [
+                'id' => (int)$targetAtasan['id'],
+                'nama' => $targetAtasan['nama_lengkap'],
+                'role' => 'manager',
+                'label' => 'Plant Manager',
+                'phone' => $cleanPhoneSup,
+                'is_primary' => true
+            ];
+        }
     } else {
         // Cari HRD
         $stmtAtasan = $pdo->prepare("
@@ -329,6 +395,21 @@ function getLeaveWhatsAppNotificationData($leaveId, $pdo = null) {
         $stmtAtasan->execute();
         $targetAtasan = $stmtAtasan->fetch();
         $atasanRoleText = 'HRD Manager';
+
+        if ($targetAtasan) {
+            $cleanPhoneSup = preg_replace('/[^0-9]/', '', $targetAtasan['no_hp'] ?? '');
+            if (strpos($cleanPhoneSup, '0') === 0) $cleanPhoneSup = '62' . substr($cleanPhoneSup, 1);
+            elseif (strpos($cleanPhoneSup, '8') === 0) $cleanPhoneSup = '628' . substr($cleanPhoneSup, 1);
+
+            $allContacts[] = [
+                'id' => (int)$targetAtasan['id'],
+                'nama' => $targetAtasan['nama_lengkap'],
+                'role' => 'hrd',
+                'label' => 'HRD / Admin',
+                'phone' => $cleanPhoneSup,
+                'is_primary' => true
+            ];
+        }
     }
 
     $rawPhone = $targetAtasan['no_hp'] ?? '';
@@ -364,6 +445,17 @@ function getLeaveWhatsAppNotificationData($leaveId, $pdo = null) {
         ? "https://api.whatsapp.com/send?phone={$cleanPhone}&text=" . rawurlencode($msg)
         : "https://api.whatsapp.com/send?text=" . rawurlencode($msg);
 
+    // Populate personalized URL for all contact options
+    foreach ($allContacts as &$c) {
+        if (!empty($targetAtasan) && $c['id'] === (int)$targetAtasan['id']) {
+            $c['is_primary'] = true;
+        }
+        $contactMsg = str_replace("Bapak/Ibu {$atasanNama}", "Bapak/Ibu {$c['nama']}", $msg);
+        $c['wa_url'] = !empty($c['phone'])
+            ? "https://api.whatsapp.com/send?phone={$c['phone']}&text=" . rawurlencode($contactMsg)
+            : "https://api.whatsapp.com/send?text=" . rawurlencode($contactMsg);
+    }
+
     return [
         'leave_id' => (int)$leave['id'],
         'nomor_surat' => $leave['nomor_surat'],
@@ -372,6 +464,7 @@ function getLeaveWhatsAppNotificationData($leaveId, $pdo = null) {
         'atasan_role' => $atasanRoleText,
         'atasan_phone' => $cleanPhone,
         'has_phone' => !empty($cleanPhone),
+        'contacts' => $allContacts,
         'message_text' => $msg,
         'wa_url' => $waUrl
     ];

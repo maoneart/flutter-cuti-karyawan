@@ -267,6 +267,9 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
       final waData = (res.data is Map<String, dynamic>) ? res.data!['whatsapp'] as Map<String, dynamic>? : null;
       final waUrl = waData?['wa_url']?.toString();
       final atasanNama = waData?['atasan_nama']?.toString() ?? 'Atasan';
+      final contactsRaw = waData?['contacts'] as List<dynamic>?;
+      final contacts = contactsRaw?.map((e) => e as Map<String, dynamic>).toList() ?? [];
+      final hasMultipleContacts = contacts.length > 1;
 
       void resetForm() {
         setState(() {
@@ -288,53 +291,116 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: AppTheme.statusApprovedBg,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.check_circle_rounded, color: AppTheme.statusApproved, size: 48),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Pengajuan Berhasil Dikirim!',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Pengajuan cuti $daysText hari ($_selectedShift) Anda telah tercatat dan masuk ke antrean persetujuan.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
-              ),
-              if (waUrl != null && waUrl.isNotEmpty) ...[
-                const SizedBox(height: 14),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBBF7D0)),
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.statusApprovedBg,
+                    shape: BoxShape.circle,
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(CupertinoIcons.chat_bubble_2_fill, color: Color(0xFF16A34A), size: 18),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Kirim pesan WhatsApp ke $atasanNama agar segera diproses.',
-                          style: const TextStyle(fontSize: 11.5, color: Color(0xFF15803D), fontWeight: FontWeight.w600),
+                  child: const Icon(Icons.check_circle_rounded, color: AppTheme.statusApproved, size: 48),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Pengajuan Berhasil Dikirim!',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Pengajuan cuti $daysText hari ($_selectedShift) Anda telah tercatat dan masuk ke antrean persetujuan.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                ),
+                if (hasMultipleContacts) ...[
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Pilih Atasan untuk Notifikasi WA:',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppTheme.textPrimary),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ...contacts.map((c) {
+                    final isPrimary = c['is_primary'] == true;
+                    final contactUrl = c['wa_url']?.toString();
+                    final cName = c['nama']?.toString() ?? '';
+                    final cLabel = c['label']?.toString() ?? '';
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 6.0),
+                      child: InkWell(
+                        onTap: () async {
+                          if (contactUrl != null && contactUrl.isNotEmpty) {
+                            final uri = Uri.parse(contactUrl);
+                            if (await canLaunchUrl(uri)) {
+                              await launchUrl(uri, mode: LaunchMode.externalApplication);
+                            }
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isPrimary ? const Color(0xFFF0FDF4) : (Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+                            border: Border.all(color: isPrimary ? const Color(0xFF86EFAC) : const Color(0xFFE2E8F0)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: isPrimary ? const Color(0xFF25D366) : const Color(0xFF64748B),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(CupertinoIcons.bubble_left_bubble_right_fill, color: Colors.white, size: 12),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(cName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                    Text(cLabel, style: TextStyle(fontSize: 10.5, color: isPrimary ? const Color(0xFF16A34A) : AppTheme.textSecondary)),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF25D366)),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
+                    );
+                  }),
+                ] else if (waUrl != null && waUrl.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0FDF4),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFBBF7D0)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(CupertinoIcons.chat_bubble_2_fill, color: Color(0xFF16A34A), size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Kirim pesan WhatsApp ke $atasanNama agar segera diproses.',
+                            style: const TextStyle(fontSize: 11.5, color: Color(0xFF15803D), fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
           actionsAlignment: MainAxisAlignment.center,
           actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -342,7 +408,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (waUrl != null && waUrl.isNotEmpty)
+                if (!hasMultipleContacts && waUrl != null && waUrl.isNotEmpty)
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF25D366),
@@ -365,7 +431,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                     ),
                   ),
-                const SizedBox(height: 8),
+                if (!hasMultipleContacts && waUrl != null && waUrl.isNotEmpty) const SizedBox(height: 8),
                 OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),

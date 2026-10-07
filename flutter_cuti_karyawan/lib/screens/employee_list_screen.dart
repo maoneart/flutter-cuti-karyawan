@@ -858,36 +858,66 @@ class _EmployeeListScreenState extends State<EmployeeListScreen> {
         children: [
           if (canAdd)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
               color: isDark ? const Color(0xFF1A2234) : Colors.white,
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        side: const BorderSide(color: Color(0xFF10B981)),
-                        foregroundColor: const Color(0xFF10B981),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark ? const Color(0xFF0284C7) : AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 2,
                       ),
-                      icon: const Icon(Icons.file_upload_outlined, size: 16),
-                      label: const Text('Import Excel', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
-                      onPressed: _pickAndImportExcel,
+                      icon: const Icon(CupertinoIcons.person_badge_plus_fill, size: 18),
+                      label: const Text(
+                        'Tambah Karyawan Baru',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AddEmployeeScreen()),
+                        ).then((_) => _loadEmployees());
+                      },
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        side: BorderSide(color: primaryAccent),
-                        foregroundColor: primaryAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            side: BorderSide(color: isDark ? const Color(0xFF34D399) : const Color(0xFF10B981)),
+                            foregroundColor: isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
+                            backgroundColor: isDark ? const Color(0xFF064E3B).withOpacity(0.3) : const Color(0xFFECFDF5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.file_upload_outlined, size: 16),
+                          label: const Text('Import Excel', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          onPressed: _pickAndImportExcel,
+                        ),
                       ),
-                      icon: const Icon(Icons.download_rounded, size: 16),
-                      label: const Text('Template', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
-                      onPressed: _downloadTemplate,
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            side: BorderSide(color: isDark ? const Color(0xFF38BDF8) : const Color(0xFF2563EB)),
+                            foregroundColor: isDark ? const Color(0xFF38BDF8) : const Color(0xFF1D4ED8),
+                            backgroundColor: isDark ? const Color(0xFF0C4A6E).withOpacity(0.3) : const Color(0xFFEFF6FF),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                          icon: const Icon(Icons.download_rounded, size: 16),
+                          label: const Text('Template (.xlsx)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          onPressed: _downloadTemplate,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

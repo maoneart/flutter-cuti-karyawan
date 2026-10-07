@@ -524,10 +524,16 @@ function openRejectModal(id, name, nik, durasi, periode) {
             
             const input = document.createElement('input');
             input.type = 'hidden';
-            input.name = 'catatan_atasan';
+            input.name = 'reason';
             input.value = result.value;
             
+            const inputNotes = document.createElement('input');
+            inputNotes.type = 'hidden';
+            inputNotes.name = 'catatan_atasan';
+            inputNotes.value = result.value;
+
             form.appendChild(input);
+            form.appendChild(inputNotes);
             document.body.appendChild(form);
             form.submit();
         }

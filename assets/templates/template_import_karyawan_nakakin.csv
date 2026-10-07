@@ -1,0 +1,4 @@
+﻿NIK,"Nama Lengkap",Email,"Role (operator/staff/leader/supervisor/manager/hrd/admin)",Departemen,Jabatan,"Tanggal Masuk (YYYY-MM-DD)","Kuota Cuti Default (12)","Jenis Kelamin (Laki-laki/Perempuan)","Agama (Islam/Kristen/Katolik/Hindu/Buddha/Konghucu)","Status Pernikahan (Belum Menikah/Menikah/Duda/Janda)","No HP/WhatsApp (Contoh: 6281234567891)","Alamat Lengkap","Status Aktif (Aktif/Nonaktif)"
+OP-011,"Ahmad Fauzi",ahmad.fauzi@nakakin.co.id,operator,Core,"Operator Produksi",2024-02-01,12,Laki-laki,Islam,"Belum Menikah","=""6281234567891""","Dusun Sukamaju RT 01/02, Karawang Barat",Aktif
+STF-012,"Dewi Lestari",dewi.lestari@nakakin.co.id,staff,Accounting,Staff,2023-11-15,12,Perempuan,Islam,Menikah,"=""6281298765432""","Perum Telukjambe Blok C-12, Karawang",Aktif
+LDR-013,"Rahmat Hidayat",rahmat.hidayat@nakakin.co.id,leader,Diecasting,Leader,2022-05-10,12,Laki-laki,Islam,Menikah,"=""6281345678901""","Klari, Karawang Timur",Aktif

@@ -57,7 +57,7 @@ class AuthController {
             $_SESSION['user_dept_id'] = $user['departemen_id'];
             $_SESSION['user_dept_name'] = $user['nama_dept'];
 
-            setFlash('success', 'Selamat datang kembali, ' . $user['nama_lengkap'] . '!');
+            // Direct redirect to dashboard without popup
             header('Location: ' . BASE_URL . '/index.php?page=dashboard');
             exit;
         } else {

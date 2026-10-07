@@ -242,8 +242,29 @@ $headerFaviconUrl = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images
         /* ========================================================
            ULTRA-HIGH CONTRAST SWEETALERT2 ICONS (Bold & Vivid)
            ======================================================== */
-        div.swal2-container .swal2-icon,
-        .swal2-icon {
+        div.swal2-container .swal2-icon.swal2-hidden,
+        div.swal2-container .swal2-icon[style*="display: none"],
+        .swal2-icon.swal2-hidden,
+        .swal2-icon[style*="display: none"],
+        div.swal2-container .swal2-icon:not(.swal2-success):not(.swal2-error):not(.swal2-warning):not(.swal2-info):not(.swal2-question) {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            width: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+
+        div.swal2-container .swal2-icon.swal2-success,
+        div.swal2-container .swal2-icon.swal2-error,
+        div.swal2-container .swal2-icon.swal2-warning,
+        div.swal2-container .swal2-icon.swal2-info,
+        div.swal2-container .swal2-icon.swal2-question,
+        .swal2-icon.swal2-success,
+        .swal2-icon.swal2-error,
+        .swal2-icon.swal2-warning,
+        .swal2-icon.swal2-info,
+        .swal2-icon.swal2-question {
             margin: 0.75rem auto 1.25rem auto !important;
             box-sizing: content-box !important;
             border-radius: 50% !important;
@@ -1342,6 +1363,8 @@ $headerFaviconUrl = !empty($appSettings['favicon']) ? BASE_URL . '/assets/images
             $backUrl = isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'leave-approvals') !== false 
                 ? BASE_URL . '/index.php?page=leave-approvals' 
                 : BASE_URL . '/index.php?page=leaves-my';
+        } elseif (in_array($headerCurrPage, ['employee-create', 'employee-edit', 'employee-detail', 'employee-template'])) {
+            $backUrl = BASE_URL . '/index.php?page=employees';
         }
 
         // Determine which right action buttons to show per screen

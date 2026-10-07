@@ -39,9 +39,6 @@ $positions = $pdo->query("SELECT * FROM jabatan ORDER BY level_hierarki ASC")->f
                     <p class="text-xs text-slate-500 dark:text-slate-400">Perbarui data kepegawaian, profil, atau reset password akun karyawan.</p>
                 </div>
             </div>
-            <a href="<?= BASE_URL ?>/index.php?page=employees" class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1.5 border border-transparent dark:border-slate-700">
-                <i class="fa-solid fa-arrow-left"></i> Kembali
-            </a>
         </div>
 
         <form action="<?= BASE_URL ?>/index.php?page=employee-update" method="POST" id="editEmployeeForm" class="p-6 sm:p-8 space-y-8 text-xs">

@@ -55,16 +55,23 @@ $employees = $stmt->fetchAll();
          ========================================================= -->
     <div class="block lg:hidden space-y-3.5">
         <?php if ($canManageEmployees): ?>
-            <!-- Mobile Action Buttons: Import & Template -->
-            <div class="grid grid-cols-2 gap-2">
-                <button type="button" onclick="openImportModal()" 
-                        class="py-2.5 px-3 rounded-xl border border-emerald-500 bg-emerald-50/60 hover:bg-emerald-100 text-emerald-700 font-bold text-xs flex items-center justify-center gap-1.5 transition">
-                    <i class="fa-solid fa-file-arrow-up text-emerald-600"></i> Import Excel
-                </button>
-                <a href="<?= BASE_URL ?>/index.php?page=employee-template" 
-                    class="py-2.5 px-3 rounded-xl border border-blue-400 bg-blue-50/60 hover:bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center gap-1.5 transition text-center">
-                    <i class="fa-solid fa-download text-blue-600"></i> Template Excel
+            <!-- Mobile Action Header: + Tambah Karyawan & Import & Template -->
+            <div class="space-y-2">
+                <a href="<?= BASE_URL ?>/index.php?page=employee-create" 
+                   class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-98">
+                    <i class="fa-solid fa-user-plus text-sm"></i>
+                    <span>+ Tambah Karyawan Baru</span>
                 </a>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="openImportModal()" 
+                            class="py-2 px-3 rounded-xl border border-emerald-500/40 dark:border-emerald-500/60 bg-emerald-50/80 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition active:scale-98">
+                        <i class="fa-solid fa-file-arrow-up text-emerald-600 dark:text-emerald-400"></i> Import Excel
+                    </button>
+                    <a href="<?= BASE_URL ?>/index.php?page=employee-template&format=xlsx" 
+                        class="py-2 px-3 rounded-xl border border-blue-400/40 dark:border-sky-500/60 bg-blue-50/80 dark:bg-sky-950/60 hover:bg-blue-100 dark:hover:bg-sky-900/60 text-blue-700 dark:text-sky-300 font-bold text-xs flex items-center justify-center gap-1.5 transition text-center active:scale-98">
+                        <i class="fa-solid fa-file-excel text-blue-600 dark:text-sky-400"></i> Template (.xlsx)
+                    </a>
+                </div>
             </div>
         <?php endif; ?>
 
@@ -73,7 +80,7 @@ $employees = $stmt->fetchAll();
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
             <input type="text" id="mobileEmpSearch" placeholder="Cari nama, NIK, email, jabatan..." 
                    oninput="filterMobileEmployees(this.value)"
-                   class="w-full pl-9 pr-9 py-2.5 rounded-2xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 shadow-2xs transition">
+                   class="w-full pl-9 pr-9 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 shadow-2xs transition">
             <button type="button" id="clearEmpSearchBtn" onclick="clearEmpSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                 <i class="fa-solid fa-circle-xmark text-xs"></i>
             </button>
@@ -88,15 +95,15 @@ $employees = $stmt->fetchAll();
                 </button>
                 <?php foreach ($departments as $dept): ?>
                     <button type="button" onclick="filterByDept(this, '<?= strtolower(htmlspecialchars($dept['nama_dept'])) ?>')" 
-                            class="dept-chip px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80 shadow-2xs">
+                            class="dept-chip px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700 shadow-2xs">
                         <?= htmlspecialchars($dept['nama_dept']) ?>
                     </button>
                 <?php endforeach; ?>
             </div>
         <?php else: ?>
-            <div class="flex items-center justify-between px-3 py-2 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs">
-                <span class="font-bold text-blue-900 flex items-center gap-1.5">
-                    <i class="fa-solid fa-building text-blue-600"></i> Departemen: <?= htmlspecialchars($currentUser['nama_dept'] ?? '-') ?>
+            <div class="flex items-center justify-between px-3 py-2 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 text-xs">
+                <span class="font-bold text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-building text-blue-600 dark:text-blue-400"></i> Departemen: <?= htmlspecialchars($currentUser['nama_dept'] ?? '-') ?>
                 </span>
                 <span class="px-2 py-0.5 rounded-full bg-blue-600 text-white font-extrabold text-[10.5px]">
                     <?= count($employees) ?> Orang
@@ -109,23 +116,23 @@ $employees = $stmt->fetchAll();
             <?php foreach ($employees as $emp): 
                 $sisa = (float)$emp['sisa_cuti'];
                 $roleName = strtolower($emp['role']);
-                $avatarBg = 'bg-blue-100 text-blue-700';
-                $pillBg = 'bg-blue-50 text-blue-700 border-blue-200';
+                $avatarBg = 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300';
+                $pillBg = 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800';
                 if ($roleName === 'superadmin') {
-                    $avatarBg = 'bg-purple-100 text-purple-700';
-                    $pillBg = 'bg-purple-50 text-purple-700 border-purple-200';
+                    $avatarBg = 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300';
+                    $pillBg = 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800';
                 } elseif ($roleName === 'manager') {
-                    $avatarBg = 'bg-amber-100 text-amber-700';
-                    $pillBg = 'bg-amber-50 text-amber-700 border-amber-200';
+                    $avatarBg = 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300';
+                    $pillBg = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800';
                 } elseif (in_array($roleName, ['leader', 'supervisor'])) {
-                    $avatarBg = 'bg-emerald-100 text-emerald-700';
-                    $pillBg = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                    $avatarBg = 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300';
+                    $pillBg = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800';
                 } elseif ($roleName === 'staff') {
-                    $avatarBg = 'bg-indigo-100 text-indigo-700';
-                    $pillBg = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                    $avatarBg = 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300';
+                    $pillBg = 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800';
                 }
             ?>
-                <div class="emp-mobile-card bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs transition active:scale-[0.99]"
+                <div class="emp-mobile-card bg-white dark:bg-slate-800/95 p-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-700 shadow-2xs transition active:scale-[0.99]"
                      data-name="<?= strtolower(htmlspecialchars($emp['nama_lengkap'])) ?>"
                      data-nik="<?= strtolower(htmlspecialchars($emp['nik'])) ?>"
                      data-email="<?= strtolower(htmlspecialchars($emp['email'])) ?>"
@@ -141,25 +148,25 @@ $employees = $stmt->fetchAll();
                         <!-- Employee Info -->
                         <div class="flex-1 min-w-0">
                             <div class="flex items-start justify-between gap-1.5">
-                                <h4 class="text-sm font-bold text-slate-900 leading-tight truncate"><?= htmlspecialchars($emp['nama_lengkap']) ?></h4>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-white leading-tight truncate"><?= htmlspecialchars($emp['nama_lengkap']) ?></h4>
                                 <span class="px-2 py-0.5 rounded-md text-[10.5px] font-bold border <?= $pillBg ?> flex-shrink-0 truncate max-w-[120px]">
                                     <?= htmlspecialchars($emp['nama_jabatan']) ?>
                                 </span>
                             </div>
                             
-                            <p class="text-[11.5px] text-slate-400 mt-0.5 font-medium">
-                                <?= htmlspecialchars($emp['nik']) ?> &bull; Dept: <span class="text-slate-600 font-semibold"><?= htmlspecialchars($emp['nama_dept']) ?></span>
+                            <p class="text-[11.5px] text-slate-400 dark:text-slate-400 mt-0.5 font-medium">
+                                <?= htmlspecialchars($emp['nik']) ?> &bull; Dept: <span class="text-slate-600 dark:text-slate-300 font-semibold"><?= htmlspecialchars($emp['nama_dept']) ?></span>
                             </p>
 
                             <!-- Bottom Info: Sisa Cuti & No HP -->
                             <div class="flex items-center gap-3 mt-2 text-[11px]">
-                                <span class="inline-flex items-center gap-1 font-bold <?= $sisa > 0 ? 'text-emerald-600' : 'text-rose-600' ?>">
+                                <span class="inline-flex items-center gap-1 font-bold <?= $sisa > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' ?>">
                                     <i class="fa-solid fa-chart-pie text-[10px]"></i> Sisa Cuti: <?= $sisa ?> Hari
                                 </span>
                                 <?php if (!empty($emp['no_hp'])): ?>
                                     <a href="https://wa.me/<?= preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $emp['no_hp'])) ?>" 
                                        target="_blank" 
-                                       class="text-emerald-600 hover:text-emerald-700 font-bold inline-flex items-center gap-1">
+                                       class="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 font-bold inline-flex items-center gap-1">
                                         <i class="fa-brands fa-whatsapp text-[11px]"></i> <?= htmlspecialchars($emp['no_hp']) ?>
                                     </a>
                                 <?php endif; ?>
@@ -168,19 +175,19 @@ $employees = $stmt->fetchAll();
                     </div>
 
                     <!-- Mobile Quick Action Row -->
-                    <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-700/80 flex items-center justify-between gap-2">
                         <span class="text-[10.5px] text-slate-400 font-medium">
-                            Masa Kerja: <strong class="text-slate-700"><?= hitungMasaKerja($emp['tanggal_masuk']) ?></strong>
+                            Masa Kerja: <strong class="text-slate-700 dark:text-slate-300"><?= hitungMasaKerja($emp['tanggal_masuk']) ?></strong>
                         </span>
                         <?php if ($canManageEmployees): ?>
                             <div class="flex items-center gap-1.5">
                                 <a href="<?= BASE_URL ?>/index.php?page=employee-edit&id=<?= $emp['id'] ?>" 
-                                   class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold text-[11px] transition flex items-center gap-1">
+                                   class="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 font-bold text-[11px] transition flex items-center gap-1 border border-transparent dark:border-blue-900">
                                     <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
                                 </a>
                                 <?php if ($emp['id'] != $currentUser['id']): ?>
                                     <button type="button" 
-                                            class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-[11px] transition flex items-center gap-1" 
+                                            class="px-2.5 py-1 rounded-lg bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 font-bold text-[11px] transition flex items-center gap-1 border border-transparent dark:border-rose-900" 
                                             onclick="confirmDelete('<?= BASE_URL ?>/index.php?page=employee-delete&id=<?= $emp['id'] ?>', 'Hapus karyawan <?= addslashes(htmlspecialchars($emp['nama_lengkap'])) ?>?')">
                                         <i class="fa-solid fa-trash text-[10px]"></i> Hapus
                                     </button>
@@ -285,11 +292,11 @@ $employees = $stmt->fetchAll();
                         Total: <?= count($employees) ?> Orang
                     </span>
                     <?php if ($canManageEmployees): ?>
-                        <a href="<?= BASE_URL ?>/index.php?page=employee-template" 
+                        <a href="<?= BASE_URL ?>/index.php?page=employee-template&format=xlsx" 
                            class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-extrabold text-xs transition transform active:scale-95 shadow-2xs"
-                           title="Unduh format template Excel untuk pengisian data karyawan secara massal">
+                           title="Unduh format template Excel resmi dengan dropdown Departemen, Jabatan, dan Role">
                             <i class="fa-solid fa-file-excel text-emerald-600"></i>
-                            <span>Template Excel</span>
+                            <span>Template Excel (.xlsx)</span>
                         </a>
                         <button type="button" onclick="openImportModal()"
                            class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-extrabold text-xs transition transform active:scale-95 shadow-2xs">
@@ -386,7 +393,7 @@ $employees = $stmt->fetchAll();
 </div>
 
 <!-- Modern Modal Import Excel Karyawan -->
-<div id="importModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-sm transition-opacity flex items-center justify-center p-4">
+<div id="importModal" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm transition-opacity items-center justify-center p-4" style="display: none;">
     <div class="relative w-full max-w-2xl rounded-3xl bg-white dark:bg-[#1e293b] p-5 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800 space-y-5 animate-scaleUp max-h-[90vh] flex flex-col">
         
         <!-- Modal Header -->
@@ -423,10 +430,15 @@ $employees = $stmt->fetchAll();
                 <p class="text-xs text-slate-400" id="dropzoneSubtitle">Mendukung format .xlsx dan .csv (Maks. 10MB)</p>
             </div>
 
-            <div class="flex items-center justify-between pt-2">
-                <a href="<?= BASE_URL ?>/index.php?page=employee-template" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700">
-                    <i class="fa-solid fa-download"></i> Unduh Template Excel
-                </a>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+                <div class="flex items-center gap-2">
+                    <a href="<?= BASE_URL ?>/index.php?page=employee-template&format=xlsx" class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:text-emerald-800 bg-emerald-100/70 dark:bg-emerald-950/60 px-3.5 py-2 rounded-xl border border-emerald-300 dark:border-emerald-800 transition shadow-2xs">
+                        <i class="fa-solid fa-file-excel text-emerald-600 text-sm"></i> Unduh Template Excel (.xlsx - 2 Sheet & Dropdown)
+                    </a>
+                    <a href="<?= BASE_URL ?>/index.php?page=employee-template&format=csv" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-800 bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 transition">
+                        <i class="fa-solid fa-file-csv text-blue-500"></i> Format CSV
+                    </a>
+                </div>
                 <button type="button" id="btnProcessPreview" onclick="uploadAndPreview()" disabled class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 text-white font-extrabold text-xs shadow-md transition flex items-center gap-2">
                     <i class="fa-solid fa-magnifying-glass"></i> Periksa & Validasi
                 </button>
@@ -503,24 +515,38 @@ $employees = $stmt->fetchAll();
 let selectedImportFile = null;
 let currentValidRows = [];
 
-function openImportModal() {
-    document.getElementById('importModal').classList.remove('hidden');
+window.openImportModal = function() {
+    const modal = document.getElementById('importModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    }
     resetImportModal();
-}
+};
 
-function closeImportModal() {
-    document.getElementById('importModal').classList.add('hidden');
-}
+window.closeImportModal = function() {
+    const modal = document.getElementById('importModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+};
 
 function resetImportModal() {
     selectedImportFile = null;
     currentValidRows = [];
-    document.getElementById('excelFileInput').value = '';
-    document.getElementById('dropzoneTitle').innerText = 'Klik atau seret file Excel/CSV ke sini';
-    document.getElementById('dropzoneSubtitle').innerText = 'Mendukung format .xlsx dan .csv (Maks. 10MB)';
-    document.getElementById('btnProcessPreview').disabled = true;
-    document.getElementById('uploadSection').classList.remove('hidden');
-    document.getElementById('previewSection').classList.add('hidden');
+    const fileInput = document.getElementById('excelFileInput');
+    if (fileInput) fileInput.value = '';
+    const title = document.getElementById('dropzoneTitle');
+    if (title) title.innerText = 'Klik atau seret file Excel/CSV ke sini';
+    const sub = document.getElementById('dropzoneSubtitle');
+    if (sub) sub.innerText = 'Mendukung format .xlsx dan .csv (Maks. 10MB)';
+    const btn = document.getElementById('btnProcessPreview');
+    if (btn) btn.disabled = true;
+    const upSec = document.getElementById('uploadSection');
+    if (upSec) upSec.classList.remove('hidden');
+    const prevSec = document.getElementById('previewSection');
+    if (prevSec) prevSec.classList.add('hidden');
 }
 
 function handleFileSelected(input) {
@@ -676,6 +702,7 @@ function commitImport() {
                 });
             });
         }
+    });
 }
 
 let selectedMobileDept = '';

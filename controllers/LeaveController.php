@@ -86,6 +86,7 @@ class LeaveController {
                 header('Location: ' . BASE_URL . '/index.php?page=leave-create');
                 exit;
             }
+        }
         // Check Overlap
         $stmtOverlap = $pdo->prepare("
             SELECT id, nomor_surat, tanggal_mulai, tanggal_selesai 
@@ -407,8 +408,8 @@ class LeaveController {
     public function reject() {
         requireLogin();
 
-        $leaveId = (int)($_GET['id'] ?? 0);
-        $reason = cleanInput($_GET['reason'] ?? ($_POST['reason'] ?? ''));
+        $leaveId = (int)($_POST['id'] ?? ($_GET['id'] ?? 0));
+        $reason = cleanInput($_POST['reason'] ?? ($_POST['rejection_reason'] ?? ($_POST['catatan_atasan'] ?? ($_GET['reason'] ?? ($_GET['rejection_reason'] ?? ($_GET['catatan_atasan'] ?? ($_GET['note'] ?? '')))))));
         $currentUser = getCurrentUser();
         $pdo = getDbConnection();
         $hierarki = (int)($currentUser['level_hierarki'] ?? 1);
@@ -461,13 +462,63 @@ class LeaveController {
 
         $stmtReject = $pdo->prepare("
             UPDATE pengajuan_cuti 
-            SET status = 'rejected', approval_step = 'rejected', rejection_reason = ?, approved_by = ?, approved_at = NOW()
+            SET status = 'rejected', 
+                approval_step = 'rejected', 
+                rejection_reason = ?, 
+                catatan_atasan = ?,
+                approved_by = ?, 
+                approved_at = NOW(),
+                notif_read = 0,
+                updated_at = NOW()
             WHERE id = ?
         ");
-        $stmtReject->execute([$reason, $currentUser['id'], $leaveId]);
+        $stmtReject->execute([$reason, $reason, $currentUser['id'], $leaveId]);
 
         setFlash('success', "Permohonan cuti {$leave['nama_lengkap']} telah ditolak.");
         header('Location: ' . BASE_URL . '/index.php?page=leave-approvals');
+        exit;
+    }
+
+    // Cancel Leave Request (by Applicant or Admin)
+    public function cancel() {
+        requireLogin();
+
+        $leaveId = (int)($_POST['id'] ?? ($_GET['id'] ?? 0));
+        $currentUser = getCurrentUser();
+        $pdo = getDbConnection();
+        $isAdmin = in_array($currentUser['role'] ?? '', ['superadmin', 'admin', 'hrd']);
+
+        $stmt = $pdo->prepare("SELECT * FROM pengajuan_cuti WHERE id = ?");
+        $stmt->execute([$leaveId]);
+        $leave = $stmt->fetch();
+
+        if (!$leave) {
+            setFlash('error', 'Data pengajuan cuti tidak ditemukan!');
+            header('Location: ' . BASE_URL . '/index.php?page=leaves-my');
+            exit;
+        }
+
+        if ($leave['employee_id'] != $currentUser['id'] && !$isAdmin) {
+            setFlash('error', 'Akses ditolak! Anda hanya dapat membatalkan pengajuan milik Anda sendiri.');
+            header('Location: ' . BASE_URL . '/index.php?page=leaves-my');
+            exit;
+        }
+
+        if ($leave['status'] !== 'pending') {
+            setFlash('warning', "Pengajuan cuti tidak dapat dibatalkan karena statusnya sudah '{$leave['status']}'.");
+            header('Location: ' . BASE_URL . '/index.php?page=leave-detail&id=' . $leaveId);
+            exit;
+        }
+
+        $stmtUpdate = $pdo->prepare("
+            UPDATE pengajuan_cuti 
+            SET status = 'cancelled', approval_step = 'cancelled', updated_at = NOW() 
+            WHERE id = ?
+        ");
+        $stmtUpdate->execute([$leaveId]);
+
+        setFlash('success', 'Pengajuan cuti berhasil dibatalkan.');
+        header('Location: ' . BASE_URL . '/index.php?page=leaves-my');
         exit;
     }
 }

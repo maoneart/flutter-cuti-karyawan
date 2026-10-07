@@ -72,10 +72,10 @@ class ReportController {
         fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
         // Company Header in CSV
-        fputcsv($output, ['REKAPITULASI DATA CUTI KARYAWAN - PT. NAKAKIN INDONESIA']);
-        fputcsv($output, ['Periode:', $startDate . ' s/d ' . $endDate]);
-        fputcsv($output, ['Diekspor pada:', date('d-m-Y H:i:s') . ' WIB']);
-        fputcsv($output, []); // blank line
+        fputcsv($output, ['REKAPITULASI DATA CUTI KARYAWAN - PT. NAKAKIN INDONESIA'], ',', '"', "\\");
+        fputcsv($output, ['Periode:', $startDate . ' s/d ' . $endDate], ',', '"', "\\");
+        fputcsv($output, ['Diekspor pada:', date('d-m-Y H:i:s') . ' WIB'], ',', '"', "\\");
+        fputcsv($output, [], ',', '"', "\\"); // blank line
 
         // Table Header
         fputcsv($output, [
@@ -93,7 +93,7 @@ class ReportController {
             'Status',
             'Disetujui Oleh',
             'Waktu Pengajuan'
-        ]);
+        ], ',', '"', "\\");
 
         $no = 1;
         foreach ($data as $row) {
@@ -112,7 +112,7 @@ class ReportController {
                 strtoupper($row['status']),
                 $row['nama_atasan'] ?: '-',
                 $row['created_at']
-            ]);
+            ], ',', '"', "\\");
         }
 
         fclose($output);

@@ -298,6 +298,10 @@
         unset($_SESSION['leave_whatsapp_modal']);
     ?>
     document.addEventListener('DOMContentLoaded', function() {
+        <?php 
+            $contacts = $waModal['contacts'] ?? [];
+            $hasMultiple = count($contacts) > 1;
+        ?>
         Swal.fire({
             title: '',
             html: `
@@ -318,7 +322,7 @@
                             <strong class="text-slate-900 font-bold"><?= htmlspecialchars($waModal['nama_pemohon']) ?></strong>
                         </div>
                         <div class="flex items-center justify-between">
-                            <span class="text-slate-400 font-medium">Tujuan Notifikasi:</span>
+                            <span class="text-slate-400 font-medium">Target Atasan:</span>
                             <span class="text-emerald-700 font-extrabold flex items-center gap-1.5">
                                 <i class="fa-brands fa-whatsapp text-emerald-600"></i>
                                 <?= htmlspecialchars($waModal['atasan_nama']) ?> (<?= htmlspecialchars($waModal['atasan_role']) ?>)
@@ -326,16 +330,41 @@
                         </div>
                     </div>
 
+                    <?php if ($hasMultiple): ?>
+                    <div class="space-y-2 pt-1">
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Pilih Kontak Atasan untuk Dikirim WA:</label>
+                        <div class="grid grid-cols-1 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                            <?php foreach ($contacts as $cnt): ?>
+                                <a href="<?= htmlspecialchars($cnt['wa_url']) ?>" target="_blank" 
+                                   class="flex items-center justify-between p-2.5 rounded-xl border <?= !empty($cnt['is_primary']) ? 'border-emerald-300 bg-emerald-50/70 text-emerald-900' : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700' ?> transition shadow-2xs group">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg <?= !empty($cnt['is_primary']) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600' ?> flex items-center justify-center text-xs font-bold">
+                                            <i class="fa-brands fa-whatsapp"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-xs font-bold leading-tight"><?= htmlspecialchars($cnt['nama']) ?></div>
+                                            <div class="text-[10px] <?= !empty($cnt['is_primary']) ? 'text-emerald-700 font-semibold' : 'text-slate-400' ?>"><?= htmlspecialchars($cnt['label']) ?></div>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-emerald-600 group-hover:underline flex items-center gap-1">
+                                        Kirim <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                    </span>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php else: ?>
                     <p class="text-xs text-slate-600 leading-relaxed">
                         Data cuti Anda telah aman tercatat di sistem. Anda dapat langsung mengirimkan pesan notifikasi WhatsApp ke atasan agar permohonan dapat segera ditinjau.
                     </p>
+                    <?php endif; ?>
                 </div>
             `,
             showCancelButton: true,
             confirmButtonColor: '#25D366',
             cancelButtonColor: '#64748b',
-            confirmButtonText: '<i class="fa-brands fa-whatsapp text-lg mr-1.5"></i> Kirim WA ke Atasan',
-            cancelButtonText: 'Selesai / Lihat Riwayat',
+            confirmButtonText: '<i class="fa-brands fa-whatsapp text-lg mr-1.5"></i> Kirim WA ke Atasan Utama',
+            cancelButtonText: 'Selesai / Tutup',
             allowOutsideClick: false,
             customClass: {
                 popup: 'rounded-3xl shadow-2xl border border-slate-200 p-6',
